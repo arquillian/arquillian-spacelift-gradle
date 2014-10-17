@@ -38,6 +38,8 @@ dependencies {
 }
 ----
 
+WARNING: This plugin does not work with Gradle 2.0 and newer. Please use 1.12 instead. We are working on the fix.
+
 == Gradle Tasks
 
 This plugin provides following tasks:
