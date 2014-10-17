@@ -18,7 +18,7 @@ class SpaceliftToolBinaryTest {
     @Test
     public void addEnvironmentPropertyToTool() {
 
-        Assume.assumeNotNull(System.getenv("ANT_HOME"))
+        Assume.assumeThat(System.getenv("ANT_HOME"), is(notNullValue()))
 
         Project project = ProjectBuilder.builder().build()
 
