@@ -2,3 +2,8 @@
 /bin
 /.gradle
 /workspace
+
+.checkstyle
+.classpath
+.project
+.settings/
