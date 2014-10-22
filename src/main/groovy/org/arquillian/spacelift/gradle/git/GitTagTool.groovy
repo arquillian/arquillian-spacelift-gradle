@@ -38,22 +38,22 @@ class GitTagTool extends Tool<File, File> {
         this.delete = delete
         this
     }
-    
+
     GitTagTool force(boolean force) {
         this.force = force
         this
     }
-    
+
     GitTagTool commit(String commit) {
         this.commit = commit
         this
     }
-    
+
     GitTagTool tag(String tag) {
         this.tag = tag
         this
     }
-    
+
     @Override
     protected File process(File repositoryDir) throws Exception {
 

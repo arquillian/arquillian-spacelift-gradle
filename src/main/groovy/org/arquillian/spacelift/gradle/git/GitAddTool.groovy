@@ -2,7 +2,7 @@ package org.arquillian.spacelift.gradle.git
 
 import java.io.File
 import java.util.ArrayList
-import java.util.Collection;
+import java.util.Collection
 import java.util.List
 import java.util.logging.Logger
 
@@ -13,7 +13,7 @@ import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool;
+import org.arquillian.spacelift.tool.Tool
 
 /**
  * 
@@ -82,7 +82,7 @@ class GitAddTool extends Tool<File, File> {
                 }
             }
 
-            if (fileToAdd) {
+            if (notNullAndExists(fileToAdd)) {
                 commandBuilder.parameter(fileToAdd.getAbsolutePath())
             }
         }
@@ -107,7 +107,7 @@ class GitAddTool extends Tool<File, File> {
     }
 
     private boolean notNullAndExists(File value) {
-        value && value.exists();
+        value && value.exists()
     }
 
 }

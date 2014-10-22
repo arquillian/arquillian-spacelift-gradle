@@ -1,8 +1,8 @@
 package org.arquillian.spacelift.gradle.git
 
 import java.io.File
-import java.util.Collection;
-import java.util.logging.Logger;
+import java.util.Collection
+import java.util.logging.Logger
 
 import org.arquillian.spacelift.execution.ExecutionException
 import org.arquillian.spacelift.execution.Task
@@ -11,7 +11,7 @@ import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool;
+import org.arquillian.spacelift.tool.Tool
 
 /**
  * Clones repository as chained input to specified destination.
@@ -49,7 +49,7 @@ class GitCloneTool extends Tool<URI, File> {
      * @return
      */
     GitCloneTool destination(File destination) {
-        this.destination = destination;
+        this.destination = destination
         this
     }
 
@@ -57,7 +57,7 @@ class GitCloneTool extends Tool<URI, File> {
     protected File process(URI uri) throws Exception {
 
         if (destination == null) {
-            destination = File.createTempFile("spacelift-git-clone-", null);
+            destination = File.createTempFile("spacelift-git-clone-", null)
         }
 
         if (!destination.exists()) {

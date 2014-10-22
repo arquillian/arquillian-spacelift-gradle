@@ -1,7 +1,7 @@
 package org.arquillian.spacelift.gradle.git
 
 import java.io.File
-import java.util.Collection;
+import java.util.Collection
 import java.util.logging.Logger
 
 import org.arquillian.spacelift.execution.ExecutionException
@@ -11,7 +11,7 @@ import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool;
+import org.arquillian.spacelift.tool.Tool
 
 /**
  * 
