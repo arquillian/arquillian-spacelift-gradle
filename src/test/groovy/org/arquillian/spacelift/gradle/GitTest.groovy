@@ -100,6 +100,7 @@ class GitTest {
      * @throws IOException
      */
     @Test
+    @Ignore
     public void testGit() throws IOException {
 
         File repositoryCloneDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
