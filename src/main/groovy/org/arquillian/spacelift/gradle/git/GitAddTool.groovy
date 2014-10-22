@@ -2,6 +2,7 @@ package org.arquillian.spacelift.gradle.git
 
 import java.io.File
 import java.util.ArrayList
+import java.util.Collection;
 import java.util.List
 import java.util.logging.Logger
 
@@ -12,26 +13,31 @@ import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
+import org.arquillian.spacelift.tool.Tool;
 
 /**
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
  */
-class GitAddTask extends Task<File, File> {
+class GitAddTool extends Tool<File, File> {
 
-    private Logger logger = Logger.getLogger(GitAddTask.class.getName())
+    private Logger logger = Logger.getLogger(GitAddTool.class.getName())
 
     private List<File> addings = new ArrayList<File>()
 
+    @Override
+    protected Collection<String> aliases() {
+        ["git_add"]
+    }
+
     /**
-     * Resources to add. Null values and empty strings will be skipped from adding.
+     * Resource to add. Null value and empty string will be skipped from adding.
      * 
      * @param file file to add
-     * @param files other files to add
      * @return
      */
-    GitAddTask add(File file) {
+    GitAddTool add(File file) {
 
         if (notNullAndExists(file)) {
             addings.add(file)
@@ -40,7 +46,12 @@ class GitAddTask extends Task<File, File> {
         this
     }
 
-    GitAddTask add(List<File> files) {
+    /**
+     * Resources to add. Null values and empty strings will be skipped from adding.
+     * @param files files to add
+     * @return
+     */
+    GitAddTool add(List<File> files) {
 
         for (File f : files) {
             add(f)
@@ -54,13 +65,10 @@ class GitAddTask extends Task<File, File> {
 
         // nothing to add
         if (addings.isEmpty()) {
-            return repositoryDir
+            addings.add(repositoryDir) // mimics 'git add .'
         }
 
-        CommandBuilder commandBuilder = new CommandBuilder("git")
-                .parameter("--git-dir=" + repositoryDir.getAbsolutePath() + System.getProperty("file.separator") + ".git")
-                .parameter("--work-tree=" + repositoryDir.getAbsolutePath())
-                .parameter("add")
+        CommandBuilder commandBuilder = new CommandBuilder("git").parameter("add")
 
         for (final File file : addings) {
 
@@ -82,7 +90,7 @@ class GitAddTask extends Task<File, File> {
         logger.info(command.toString())
 
         try {
-            result = Tasks.prepare(CommandTool.class).command(command).execute().await()
+            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
         } catch (ExecutionException ex) {
             if (result) {
                 throw new ExecutionException(
@@ -91,7 +99,7 @@ class GitAddTask extends Task<File, File> {
             }
         }
 
-        return repositoryDir
+        repositoryDir
     }
 
     private boolean notNullAndExists(File value) {

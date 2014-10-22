@@ -1,6 +1,7 @@
 package org.arquillian.spacelift.gradle.git
 
 import java.io.File
+import java.util.Collection;
 import java.util.logging.Logger
 
 import org.arquillian.spacelift.execution.ExecutionException
@@ -10,21 +11,27 @@ import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
+import org.arquillian.spacelift.tool.Tool;
 
 /**
- * By default it commits to "origin master". You can override this by {@link #remote(String) and {@link #branch(String)}
+ * By default it commits to "origin master". You can override this by {@link #remote(String) and {@link #branch(String)}.
  * methods.
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
  */
-class GitPushTask extends Task<File, File> {
+class GitPushTool extends Tool<File, File> {
 
-    private Logger logger = Logger.getLogger(GitPushTask.class.getName())
+    private Logger logger = Logger.getLogger(GitPushTool.class.getName())
 
     private String remote = "origin"
 
     private String branch = "master"
+
+    @Override
+    protected Collection<String> aliases() {
+        ["git_push"]
+    }
 
     /**
      * By default set to "origin".
@@ -32,7 +39,7 @@ class GitPushTask extends Task<File, File> {
      * @param remote
      * @return
      */
-    public GitPushTask remote(String remote) {
+    public GitPushTool remote(String remote) {
         this.remote = remote;
         this
     }
@@ -43,7 +50,7 @@ class GitPushTask extends Task<File, File> {
      * @param branch
      * @return
      */
-    public GitPushTask branch(String branch) {
+    public GitPushTool branch(String branch) {
         this.branch = branch;
         this
     }
@@ -52,8 +59,6 @@ class GitPushTask extends Task<File, File> {
     protected File process(File repositoryDir) throws Exception {
 
         Command command = new CommandBuilder("git")
-                .parameter("--git-dir=" + repositoryDir.getAbsolutePath() + System.getProperty("file.separator") + ".git")
-                .parameter("--work-tree=" + repositoryDir.getAbsolutePath())
                 .parameter("push")
                 .parameter(remote)
                 .parameter(branch)
@@ -64,7 +69,7 @@ class GitPushTask extends Task<File, File> {
         logger.info(command.toString())
 
         try {
-            result = Tasks.prepare(CommandTool.class).command(command).execute().await()
+            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
         } catch (ExecutionException ex) {
             if (result != null) {
                 throw new ExecutionException(

@@ -1,6 +1,7 @@
 package org.arquillian.spacelift.gradle.git
 
 import java.io.File
+import java.util.Collection;
 import java.util.logging.Logger
 
 import org.arquillian.spacelift.execution.ExecutionException
@@ -10,39 +11,47 @@ import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
+import org.arquillian.spacelift.tool.Tool;
 
 /**
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
  */
-class GitBranchTask extends Task<File, File> {
+class GitBranchTool extends Tool<File, File> {
 
-    private Logger logger = Logger.getLogger(GitBranchTask.class.getName())
+    private Logger logger = Logger.getLogger(GitBranchTool.class.getName())
 
     private String branch = null
 
-    private String trackingBranch = "origin/master"
+    private String trackingBranch = "master"
+
+    @Override
+    protected Collection<String> aliases() {
+        ["git_branch"]
+    }
 
     /**
+     * Creates a branch.
      * 
-     * @param branch, branch to create, it is skipped when it is null object or it is empty
+     * @param branch, branch to create, null value and empty string will be skipped from adding.
      * @return
      */
-    GitBranchTask branch(String branch) {
-        if (branch != null && !branch.isEmpty()) {
+    GitBranchTool branch(String branch) {
+        if (notNullAndNotEmpty(branch)) {
             this.branch = branch
         }
         this
     }
 
     /**
+     * Sets tracking branch.
      * 
-     * @param trackingBranch, by default origin/master
+     * @param trackingBranch, by default master, it is skipped if it is null object or it is an empty string.
      * @return
      */
-    GitBranchTask trackingBranch(String trackingBranch) {
-        if (trackingBranch && !trackingBranch.isEmpty()) {
+    GitBranchTool trackingBranch(String trackingBranch) {
+        if (notNullAndNotEmpty(trackingBranch)) {
             this.trackingBranch = trackingBranch
         }
         this
@@ -57,8 +66,6 @@ class GitBranchTask extends Task<File, File> {
         }
 
         Command command = new CommandBuilder("git")
-                .parameter("--git-dir=" + repositoryDir.getAbsolutePath() + System.getProperty("file.separator") + ".git")
-                .parameter("--work-tree=" + repositoryDir.getAbsolutePath())
                 .parameter("branch")
                 .parameter("--track")
                 .parameter(branch)
@@ -70,11 +77,11 @@ class GitBranchTask extends Task<File, File> {
         logger.info(command.toString())
 
         try {
-            result = Tasks.prepare(CommandTool.class).command(command).execute().await()
+            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
         } catch (ExecutionException ex) {
             if (result != null) {
                 throw new ExecutionException(
-                String.format("Creating branch '%s' in repository %s was not successful. Command '%s', exit code: %s",
+                String.format("Creating branch '%s' in repository '%s' was not successful. Command '%s', exit code: %s",
                 branch, repositoryDir.getAbsolutePath(), command.toString(), result.exitValue()),
                 ex)
             }
@@ -83,4 +90,7 @@ class GitBranchTask extends Task<File, File> {
         repositoryDir
     }
 
+    private boolean notNullAndNotEmpty(String value) {
+        value && !value.isEmpty()
+    }
 }

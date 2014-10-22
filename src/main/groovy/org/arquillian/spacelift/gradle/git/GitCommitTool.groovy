@@ -1,6 +1,7 @@
 package org.arquillian.spacelift.gradle.git
 
 import java.io.File
+import java.util.Collection;
 import java.util.Date
 import java.util.logging.Logger
 
@@ -11,24 +12,30 @@ import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
+import org.arquillian.spacelift.tool.Tool;
 
 /**
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
  */
-class GitCommitTask extends Task<File, File> {
+class GitCommitTool extends Tool<File, File> {
 
-    private Logger logger = Logger.getLogger(GitCommitTask.class.getName())
+    private Logger logger = Logger.getLogger(GitCommitTool.class.getName())
 
     private String message = "<unknown>"
+
+    @Override
+    protected Collection<String> aliases() {
+        ["git_commit"]
+    }
 
     /**
      * 
      * @param message commit message, by default current date
      * @return
      */
-    GitCommitTask message(String message) {
+    GitCommitTool message(String message) {
         this.message = message
         this
     }
@@ -37,10 +44,7 @@ class GitCommitTask extends Task<File, File> {
     protected File process(File repositoryDir) throws Exception {
 
         Command command = new CommandBuilder("git")
-                .parameter("--git-dir=" + repositoryDir.getAbsolutePath() + System.getProperty("file.separator") + ".git")
-                .parameter("--work-tree=" + repositoryDir.getAbsolutePath())
                 .parameter("commit")
-                .parameter("-a")
                 .parameter("-m")
                 .parameter(message)
                 .build()
@@ -50,11 +54,11 @@ class GitCommitTask extends Task<File, File> {
         ProcessResult result = null
 
         try {
-            result = Tasks.prepare(CommandTool.class).command(command).execute().await()
+            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
         } catch (ExecutionException ex) {
             if (result != null) {
                 throw new ExecutionException(
-                String.format("Committing changes in repository %s was not successful. Command '%s', exit code: %s",
+                String.format("Committing changes in repository '%s' was not successful. Command '%s', exit code: %s",
                 repositoryDir.getAbsolutePath(), command.toString(), result.exitValue()),
                 ex)
             }
