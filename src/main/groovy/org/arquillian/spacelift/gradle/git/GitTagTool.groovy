@@ -1,82 +1,79 @@
 package org.arquillian.spacelift.gradle.git
 
 import java.io.File
-import java.util.Collection;
+import java.util.Collection
 import java.util.logging.Logger
 
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool;
+import org.arquillian.spacelift.tool.Tool
 
 /**
- * By default it commits to "origin master". You can override this by {@link #remote(String) and {@link #branch(String)}.
- * methods.
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
- * 
+ *
  */
-class GitPushTool extends Tool<File, File> {
+class GitTagTool extends Tool<File, File> {
 
-    private Logger logger = Logger.getLogger(GitPushTool.class.getName())
+    private Logger logger = Logger.getLogger(GitTagTool.class.getName())
 
-    private String remote = "origin"
+    private boolean delete
 
-    private String branch = ":."
+    private boolean force
 
-    private boolean tags
+    private String commit
+
+    private String tag = "unknown tag"
 
     @Override
     protected Collection<String> aliases() {
-        ["git_push"]
+        ["git_tag"]
     }
 
-    /**
-     * By default set to "origin".
-     * 
-     * @param remote
-     * @return
-     */
-    GitPushTool remote(String remote) {
-        this.remote = remote;
+    GitTagTool delete(boolean delete) {
+        this.delete = delete
         this
     }
-
-    /**
-     * By default set to ":."
-     * 
-     * @param branch
-     * @return
-     */
-    GitPushTool branch(String branch) {
-        this.branch = branch;
+    
+    GitTagTool force(boolean force) {
+        this.force = force
         this
     }
-
-    /**
-     * Pushes tags as well.
-     * 
-     * @return 
-     */
-    GitPushTool tags() {
-        tags = true
+    
+    GitTagTool commit(String commit) {
+        this.commit = commit
         this
     }
-
+    
+    GitTagTool tag(String tag) {
+        this.tag = tag
+        this
+    }
+    
     @Override
     protected File process(File repositoryDir) throws Exception {
 
-        CommandBuilder commandBuilder = new CommandBuilder("git").parameter("push")
+        CommandBuilder commandBuilder = new CommandBuilder("git").parameter("tag")
 
-        if (tags) {
-            commandBuilder.parameter("--tags")
+        if (delete) {
+            commandBuilder.parameter("-d")
         }
 
-        Command command = commandBuilder.parameter(remote).parameter(branch).build()
+        if (force && !delete) {
+            commandBuilder.parameter("-f")
+        }
+
+        commandBuilder.parameter(tag)
+
+        if (commit && !delete) {
+            commandBuilder.parameter(commit)
+        }
+
+        Command command = commandBuilder.build()
 
         ProcessResult result = null
 

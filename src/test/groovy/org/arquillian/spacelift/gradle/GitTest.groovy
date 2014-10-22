@@ -16,6 +16,7 @@ import org.arquillian.spacelift.gradle.git.GitCommitTool;
 import org.arquillian.spacelift.gradle.git.GitFetchTool;
 import org.arquillian.spacelift.gradle.git.GitInitTool;
 import org.arquillian.spacelift.gradle.git.GitPushTool;
+import org.arquillian.spacelift.gradle.git.GitTagTool;
 import org.hamcrest.core.Is;
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,25 +48,33 @@ class GitTest {
 
         Tasks.chain(repositoryInitDir, GitInitTool).then(GitCloneTool).destination(repositoryCloneDir).execute().await()
 
-        new File(repositoryCloneDir, "dummyFile").createNewFile()
-        new File(repositoryCloneDir, "dummyFile2").createNewFile()
+        File dummyFile1 = new File(repositoryCloneDir, "dummyFile");
+        File dummyFile2 = new File(repositoryCloneDir, "dummyFile2")
+        
+        dummyFile1.createNewFile()
+        dummyFile2.createNewFile()
 
-        Tasks.chain(repositoryCloneDir, GitAddTool)
+        // this will not be added
+        File outsideOfRepository = new File(repositoryCloneDir.getParentFile(), "outsideOfRepository")
+        outsideOfRepository.createNewFile()
+        
+        Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile1, dummyFile2, outsideOfRepository])
             .then(GitCommitTool).message("added some files")
             .then(GitPushTool)
             .then(GitBranchTool.class).branch("dummyBranch")
             .then(GitCheckoutTool.class).checkout("dummyBranch")
-            .execute().await();
-
+            .execute().await()
+            
         File dummyFile3 = new File(repositoryCloneDir, "dummyFile3")
         File dummyFile4 = new File(repositoryCloneDir, "dummyFile4")
-
+        
         dummyFile3.createNewFile()
         dummyFile4.createNewFile()
 
         Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile3, dummyFile4])
             .then(GitCommitTool).message("added some other files")
-            .then(GitPushTool).branch("dummyBranch")
+            .then(GitTagTool).tag("1.0.0")
+            .then(GitPushTool).tags().branch("dummyBranch")
             .execute().await()
 
         File repository2CloneDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())

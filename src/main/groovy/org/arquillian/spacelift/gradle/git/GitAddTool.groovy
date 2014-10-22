@@ -77,10 +77,14 @@ class GitAddTool extends Tool<File, File> {
             if (!file.isAbsolute()) {
                 fileToAdd = new File(repositoryDir.getAbsoluteFile(), file.getPath())
             } else {
-                fileToAdd = file
+                if (file.getAbsolutePath().startsWith(repositoryDir.getAbsolutePath())) {
+                    fileToAdd = file
+                }
             }
 
-            commandBuilder.parameter(fileToAdd.getAbsolutePath())
+            if (fileToAdd) {
+                commandBuilder.parameter(fileToAdd.getAbsolutePath())
+            }
         }
 
         ProcessResult result = null
