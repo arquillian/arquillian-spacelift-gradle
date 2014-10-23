@@ -6,15 +6,14 @@ import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.gradle.GradleSpacelift
 import org.arquillian.spacelift.gradle.xml.XmlFileLoader
-import org.arquillian.spacelift.gradle.xml.XmlTextLoader;
-import org.arquillian.spacelift.gradle.xml.XmlUpdater;
-
+import org.arquillian.spacelift.gradle.xml.XmlTextLoader
+import org.arquillian.spacelift.gradle.xml.XmlUpdater
 import org.slf4j.LoggerFactory
 
 class SettingsXmlUpdater extends Task<Object, Void> {
 
     def static final log = LoggerFactory.getLogger('SettingsXmlUpdater')
-    
+
     def static final PROFILE_TEMPLATE = '''
         <profile>
             <id>{0}</id>
@@ -79,7 +78,10 @@ class SettingsXmlUpdater extends Task<Object, Void> {
 
             if(!defaultFile.exists()) {
                 log.warn("No settings.xml file found in ${defaultFile.getAbsolutePath()}, using fallback template")
-                defaultFile = new File(project.rootDir, "patches/settings.xml-template")
+                defaultFile = File.createTempFile("settings.xml", "-spacelift");
+                this.getClass().getResource("/settings.xml-template").withInputStream { ris ->
+                    defaultFile.withOutputStream { fos -> fos << ris }
+                }
             }
 
             ant.copy(file: "${defaultFile}", tofile: "${settingsXmlFile}")
@@ -132,7 +134,6 @@ class SettingsXmlUpdater extends Task<Object, Void> {
         settings.children().add(0, new Node(null, 'localRepository', "${localRepositoryDir.getAbsolutePath()}"))
 
         Tasks.chain(settings, XmlUpdater).file(settingsXmlFile).execute().await()
-        // TODO Auto-generated method stub
         return null;
     }
 
