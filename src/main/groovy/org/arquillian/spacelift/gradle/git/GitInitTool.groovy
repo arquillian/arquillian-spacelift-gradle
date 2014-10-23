@@ -13,6 +13,7 @@ import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
 /**
+ * Initializes repository. Initialized repository is bare.
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *

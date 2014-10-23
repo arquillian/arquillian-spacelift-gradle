@@ -14,8 +14,13 @@ import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
 /**
- * By default it commits to "origin master". You can override this by {@link #remote(String) and {@link #branch(String)}.
+ * By default it pushes to "{@literal origin :.}". You can override this by {@link #remote(String) and {@link #branch(String)}.
  * methods.
+ * <p>
+ * In case you use ssh protocol to push to a repository, be sure the key of host to push to is known to your system otherwise 
+ * processing of this tool will be blocking. By default, key is saved into {@literal ~/.ssh/know_hosts}. You can disable 
+ * string host checking by setting {@literal StrictHostKeyChecking} to 'no' in {@literal ~/.ssh/config} as well.
+ * </p>
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
@@ -36,24 +41,28 @@ class GitPushTool extends Tool<File, File> {
     }
 
     /**
-     * By default set to "origin".
+     * By default set to "origin". Null values and empty strings are not taken into consideration.
      * 
      * @param remote
      * @return
      */
     GitPushTool remote(String remote) {
-        this.remote = remote
+        if (notNullAndNotEmpty(remote)) {
+            this.remote = remote
+        }
         this
     }
 
     /**
-     * By default set to ":."
+     * By default set to ":.". Null values and empty strings are not taken into consideration.
      * 
      * @param branch
      * @return
      */
     GitPushTool branch(String branch) {
-        this.branch = branch
+        if (notNullAndNotEmpty(branch)) {
+            this.branch = branch
+        }
         this
     }
 
@@ -93,5 +102,9 @@ class GitPushTool extends Tool<File, File> {
         }
 
         repositoryDir
+    }
+
+    private boolean notNullAndNotEmpty(String value) {
+        value && !value.isEmpty()
     }
 }

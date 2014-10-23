@@ -14,8 +14,14 @@ import org.arquillian.spacelift.tool.Tool
 
 /**
  * Fetches branches from remote repository.
- * 
+ * <p>
  * When {@link #remote(String)} and {@link #branch(String)} are not set, we fetch all remote branches (git fetch --all).
+ * </p>
+ * <p>
+ * In case you use ssh protocol to fetch from a repository, be sure the key of host to fetch from is known to your system otherwise 
+ * processing of this tool will be blocking. By default, key is saved into {@literal ~/.ssh/know_hosts}. You can disable 
+ * string host checking by setting {@literal StrictHostKeyChecking} to 'no' in {@literal ~/.ssh/config} as well.
+ * </p>
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
@@ -41,7 +47,9 @@ class GitFetchTool extends Tool<File, File> {
      * @return
      */
     GitFetchTool remote(String remote) {
-        this.remote = remote
+        if (notNullAndNotEmpty(remote)) {
+            this.remote = remote
+        }
         this
     }
 
@@ -51,7 +59,9 @@ class GitFetchTool extends Tool<File, File> {
      * @return
      */
     GitFetchTool branch(String branch) {
-        this.branch = branch
+        if (notNullAndNotEmpty(branch)) {
+            this.branch = branch
+        }
         this
     }
 
@@ -62,7 +72,9 @@ class GitFetchTool extends Tool<File, File> {
      * @return
      */
     GitFetchTool local(String local) {
-        this.local = local
+        if (notNullAndNotEmpty(local)) {
+            this.local = local
+        }
         this
     }
 
@@ -103,5 +115,9 @@ class GitFetchTool extends Tool<File, File> {
         }
 
         repositoryDir
+    }
+
+    private boolean notNullAndNotEmpty(String value) {
+        value && !value.isEmpty()
     }
 }

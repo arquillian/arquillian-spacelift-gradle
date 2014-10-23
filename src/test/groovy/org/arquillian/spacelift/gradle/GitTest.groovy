@@ -58,17 +58,16 @@ class GitTest {
         // this will not be added
         File outsideOfRepository = new File(repositoryCloneDir.getParentFile(), UUID.randomUUID().toString())
         outsideOfRepository.createNewFile()
+        
+        File outsideOfRepositoryRelative = new File(repositoryCloneDir, "../" + UUID.randomUUID().toString())
+        outsideOfRepositoryRelative.createNewFile()
 
-        Tasks.chain(repositoryCloneDir, GitAddTool).add([
-            dummyFile1,
-            dummyFile2,
-            outsideOfRepository
-        ])
-        .then(GitCommitTool).message("added some files")
-        .then(GitPushTool)
-        .then(GitBranchTool.class).branch("dummyBranch")
-        .then(GitCheckoutTool.class).checkout("dummyBranch")
-        .execute().await()
+        Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile1,dummyFile2,outsideOfRepository])
+            .then(GitCommitTool).message("added some files")
+            .then(GitPushTool)
+            .then(GitBranchTool.class).branch("dummyBranch")
+            .then(GitCheckoutTool.class).checkout("dummyBranch")
+            .execute().await()
 
         File dummyFile3 = new File(repositoryCloneDir, "dummyFile3")
         File dummyFile4 = new File(repositoryCloneDir, "dummyFile4")
@@ -76,19 +75,19 @@ class GitTest {
         dummyFile3.createNewFile()
         dummyFile4.createNewFile()
 
-        Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile3, dummyFile4])
-        .then(GitRemoveTool).force().remove(dummyFile3).remove(outsideOfRepository)
-        .then(GitCommitTool).message("deleted dummyFile4 and added dummyFile3")
-        .then(GitTagTool).tag("1.0.0")
-        .then(GitPushTool).tags().branch("dummyBranch")
-        .execute().await()
+        Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile3, dummyFile4, outsideOfRepositoryRelative])
+            .then(GitRemoveTool).force().remove(dummyFile3).remove([outsideOfRepository, outsideOfRepositoryRelative])
+            .then(GitCommitTool).message("deleted dummyFile3 and added dummyFile4")
+            .then(GitTagTool).tag("1.0.0")
+            .then(GitPushTool).tags().branch("dummyBranch")
+            .execute().await()
 
         File repository2CloneDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
 
         Tasks.chain(repositoryInitDir.toURI(), GitCloneTool).destination(repository2CloneDir)
-                .then(GitFetchTool)
-                .then(GitCheckoutTool).checkout("dummyBranch")
-                .execute().await()
+            .then(GitFetchTool)
+            .then(GitCheckoutTool).checkout("dummyBranch")
+            .execute().await()
 
         Assert.assertFalse(dummyFile3.exists())
         Assert.assertTrue(dummyFile4.exists())
@@ -107,7 +106,8 @@ class GitTest {
 
         Tasks.chain(new URI("ssh://git@github.com/smiklosovic/test.git"), GitCloneTool).destination(repositoryCloneDir)
                 .then(GitBranchTool.class).branch("dummyBranch")
-                .then(GitCheckoutTool.class).checkout("dummyBranch").execute().await()
+                .then(GitCheckoutTool.class).checkout("dummyBranch")
+                .execute().await()
 
         File file1 = new File(repositoryCloneDir, UUID.randomUUID().toString())
         File file2 = new File(repositoryCloneDir, UUID.randomUUID().toString())
@@ -116,8 +116,10 @@ class GitTest {
         file2.createNewFile()
 
         Tasks.chain(repositoryCloneDir, GitAddTool).add([file1, file2])
-        .then(GitCommitTool).message("added some files")
-        .then(GitPushTool).remote("origin").branch("dummyBranch")
-        .execute().await()
+            .then(GitCommitTool).message("added some files")
+            .then(GitPushTool).remote("origin").branch("dummyBranch")
+            .then(GitPushTool).remote("origin").branch(":dummyBranch") // delete that branch
+            .execute().await()
     }
+
 }

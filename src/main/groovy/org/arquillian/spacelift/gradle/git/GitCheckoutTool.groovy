@@ -32,7 +32,7 @@ class GitCheckoutTool extends Tool<File, File> {
 
     /**
      * 
-     * @param branch, branch to check out, it is skipped when it is null object or it is empty
+     * @param branch, branch to check out, it is skipped when it is null object or it is empty string.
      * @return
      */
     GitCheckoutTool checkout(String branch) {

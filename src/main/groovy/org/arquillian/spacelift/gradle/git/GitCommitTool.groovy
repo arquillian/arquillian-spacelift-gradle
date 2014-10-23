@@ -15,6 +15,12 @@ import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
 /**
+ * Commits changes to repository.
+ * <p>
+ * In case you use ssh protocol to commit to a repository, be sure the key of host to commit to is known to your system otherwise 
+ * processing of this tool will be blocking. By default, key is saved into {@literal ~/.ssh/know_hosts}. You can disable 
+ * string host checking by setting {@literal StrictHostKeyChecking} to 'no' in {@literal ~/.ssh/config} as well.
+ * </p>
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
@@ -32,11 +38,13 @@ class GitCommitTool extends Tool<File, File> {
 
     /**
      * 
-     * @param message commit message, by default current date
+     * @param message commit message, by default '{@literal <unknown>}'. Null values and empty strings are not taken into consideration.
      * @return
      */
     GitCommitTool message(String message) {
-        this.message = message
+        if (notNullAndNotEmpty(message)) {
+            this.message = message
+        }
         this
     }
 
@@ -65,5 +73,9 @@ class GitCommitTool extends Tool<File, File> {
         }
 
         repositoryDir
+    }
+    
+    private boolean notNullAndNotEmpty(String value) {
+        value && !value.isEmpty()
     }
 }

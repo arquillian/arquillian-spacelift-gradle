@@ -15,9 +15,15 @@ import org.arquillian.spacelift.tool.Tool
 
 /**
  * Clones repository as chained input to specified destination.
- * 
+ * <p>
  * If destination is not specified, temporary directory is created dynamically and used afterwards. Destination directory has to
  * be empty. In case you specify it and it does not exist, there is an attempt to create it.
+ * </p>
+ * <p>
+ * In case you use ssh protocol to clone a repository, be sure the key of host to clone from is known to your system otherwise 
+ * processing of this tool will be blocking. By default, key is saved into {@literal ~/.ssh/know_hosts}. You can disable 
+ * string host checking by setting {@literal StrictHostKeyChecking} to 'no' in {@literal ~/.ssh/config} as well.
+ * </p>
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
@@ -49,7 +55,7 @@ class GitCloneTool extends Tool<URI, File> {
      * @return
      */
     GitCloneTool destination(File destination) {
-        this.destination = destination
+        this.destination = destination.getCanonicalFile()
         this
     }
 

@@ -16,6 +16,7 @@ import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
 /**
+ * Adds files to repository.
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
@@ -32,7 +33,7 @@ class GitAddTool extends Tool<File, File> {
     }
 
     /**
-     * Resource to add. Null value and empty string will be skipped from adding.
+     * Resource to add. Null value and non existing file will be skipped from adding.
      * 
      * @param file file to add
      * @return
@@ -47,7 +48,8 @@ class GitAddTool extends Tool<File, File> {
     }
 
     /**
-     * Resources to add. Null values and empty strings will be skipped from adding.
+     * Resources to add. Null values and non existing files will be skipped from adding.
+     * 
      * @param files files to add
      * @return
      */
@@ -75,15 +77,18 @@ class GitAddTool extends Tool<File, File> {
             File fileToAdd = null
 
             if (!file.isAbsolute()) {
-                fileToAdd = new File(repositoryDir.getAbsoluteFile(), file.getPath())
+                File f = new File(repositoryDir.getAbsolutePath(), file.getPath())
+                if (f.getCanonicalPath().startsWith(repositoryDir.getAbsolutePath())) {
+                    fileToAdd = f
+                }
             } else {
-                if (file.getAbsolutePath().startsWith(repositoryDir.getAbsolutePath())) {
+                if (file.getCanonicalPath().startsWith(repositoryDir.getAbsolutePath())) {
                     fileToAdd = file
                 }
             }
 
             if (notNullAndExists(fileToAdd)) {
-                commandBuilder.parameter(fileToAdd.getAbsolutePath())
+                commandBuilder.parameter(fileToAdd.getCanonicalPath())
             }
         }
 

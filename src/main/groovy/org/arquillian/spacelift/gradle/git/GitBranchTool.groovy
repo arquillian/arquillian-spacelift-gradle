@@ -14,7 +14,9 @@ import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
 /**
- * 
+ * Creates a branch and sets it as a tracking branch, by default to branch 'master'. When a branch to create 
+ * is not set by method {@link #branch(String)}, processing of this tool does effectively nothing with repository.
+ *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
  */
@@ -34,7 +36,7 @@ class GitBranchTool extends Tool<File, File> {
     /**
      * Creates a branch.
      * 
-     * @param branch, branch to create, null value and empty string will be skipped from adding.
+     * @param branch, branch to create, null value and empty string will not be taken into consideration
      * @return
      */
     GitBranchTool branch(String branch) {
@@ -45,9 +47,9 @@ class GitBranchTool extends Tool<File, File> {
     }
 
     /**
-     * Sets tracking branch.
+     * Sets tracking branch, by default master
      * 
-     * @param trackingBranch, by default master, it is skipped if it is null object or it is an empty string.
+     * @param trackingBranch, null value and empty string will be not be taken into consideration
      * @return
      */
     GitBranchTool trackingBranch(String trackingBranch) {

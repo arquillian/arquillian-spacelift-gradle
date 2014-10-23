@@ -13,6 +13,12 @@ import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
+/**
+ * Removes files from repository.
+ * 
+ * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
+ *
+ */
 class GitRemoveTool extends Tool<File, File> {
 
     private Logger logger = Logger.getLogger(GitRemoveTool.class.getName())
@@ -30,21 +36,40 @@ class GitRemoveTool extends Tool<File, File> {
         ["git_rm"]
     }
 
+    /**
+     * Turns {@plain -f} flag on.
+     * @return
+     */
     GitRemoveTool force() {
         force = true
         this
     }
 
+    /**
+     * Turns {@plain -r} flag on.
+     * 
+     * @return
+     */
     GitRemoveTool recursive() {
         recursive = true
         this
     }
 
+    /**
+     * Turns {@plain -q} flag on.
+     * 
+     * @return
+     */
     GitRemoveTool quiet() {
         quiet = true
         this
     }
 
+    /**
+     * 
+     * @param file file to remove, null values or nonexisting files are not taken into consideration
+     * @return
+     */
     GitRemoveTool remove(File file) {
         if (notNullAndExists(file)) {
             toRemove.add(file)
@@ -52,10 +77,16 @@ class GitRemoveTool extends Tool<File, File> {
         this
     }
 
+    /**
+     * 
+     * @param files files to remove, null values or nonexisting files are not taken into consideration
+     * @return
+     */
     GitRemoveTool remove(List<File> files) {
         for (File f : files) {
             remove(f)
         }
+        this
     }
 
     @Override
@@ -80,15 +111,18 @@ class GitRemoveTool extends Tool<File, File> {
             File fileToRemove = null
 
             if (!file.isAbsolute()) {
-                fileToRemove = new File(repositoryDir.getAbsoluteFile(), file.getPath())
+                File f = new File(repositoryDir.getCanonicalPath(), file.getPath())
+                if (f.getCanonicalPath().startsWith(repositoryDir.getCanonicalPath())) {
+                    fileToRemove = f
+                }
             } else {
-                if (file.getAbsolutePath().startsWith(repositoryDir.getAbsolutePath())) {
+                if (file.getCanonicalPath().startsWith(repositoryDir.getCanonicalPath())) {
                     fileToRemove = file
                 }
             }
 
             if (notNullAndExists(fileToRemove)) {
-                commandBuilder.parameter(fileToRemove.getAbsolutePath())
+                commandBuilder.parameter(fileToRemove.getCanonicalPath())
             }
         }
 
@@ -99,7 +133,7 @@ class GitRemoveTool extends Tool<File, File> {
         ProcessResult result = null
 
         try {
-            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getCanonicalPath()).command(command).execute().await()
         } catch (ExecutionException ex) {
             if (result != null) {
                 throw new ExecutionException(
