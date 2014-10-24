@@ -40,6 +40,8 @@ dependencies {
 
 WARNING: This plugin does not work with Gradle 2.0 and newer. Please use 1.12 instead. We are working on the fix.
 
+NOTE: In order to build and publish SNAPSHOT plugin, use 'gradle build publishToMavenLocal'.
+
 == Gradle Tasks
 
 This plugin provides following tasks:
