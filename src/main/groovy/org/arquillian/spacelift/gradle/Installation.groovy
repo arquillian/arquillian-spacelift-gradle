@@ -166,6 +166,10 @@ class Installation {
                     case ~/.*tar\.gz/:
                         ant.untar(src: getFsPath(), dest: project.spacelift.workspace, compression: 'gzip', extractMapper)
                         break
+                    case ~/.*tbz/:
+                    case ~/.*tar\.bz2/:
+                        ant.untar(src: getFsPath(), dest: project.spacelift.workspace, compression: 'bzip2', extractMapper)
+                        break    
                     default:
                         throw new RuntimeException("Invalid file type for installation ${getFileName()}")
                 }
