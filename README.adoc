@@ -13,11 +13,13 @@ apply plugin: 'spacelift'
 buildscript {
     repositories {
         mavenCentral()
-        // you need this only if you plan to use SNAPSHOT version of this plugin
+        // you need this only if you plan to use staged version of this plugin
         maven {
             name 'jboss-staging-repository-group'
             url 'https://repository.jboss.org/nexus/content/groups/staging'
         }
+        // you need this only if you plan to use version in your local Maven repository
+        mavenLocal()
     }
     dependencies {
         classpath 'org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-1'
@@ -39,8 +41,6 @@ dependencies {
 ----
 
 WARNING: This plugin does not work with Gradle 2.0 and newer. Please use 1.12 instead. We are working on the fix.
-
-NOTE: In order to build and publish SNAPSHOT plugin, use +gradle build publishToMavenLocal+.
 
 == Gradle Tasks
 
@@ -305,10 +305,16 @@ You can benefit from following tools and tasks, either from Spacelift itself or 
 
 == Release new version
 
-Follow this process to release new version
+Follow this process to release new version:
 
 1. Update version to release version in _build.gradle_
 2. Execute +gradle publish -Dmaven.settings=/path/to/settings.xml+. Note that your settings.xml need to contain JBoss Nexus repository configuration, according to
     *Deploy to the JBoss Repository* section at https://developer.jboss.org/wiki/MavenGettingStarted-Developers
 3. Tag current commit via +git tag+
 4. Bump version to next development version
+
+== Releasing SNAPSHOT version to local Maven Repository
+
+In order to build and publish SNAPSHOT plugin, use +gradle build publishToMavenLocal+.
+
+
