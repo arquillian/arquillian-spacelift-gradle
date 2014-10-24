@@ -59,24 +59,31 @@ class SpaceliftPlugin implements Plugin<Project> {
             GradleSpacelift.currentProject(project)
 
             // find default profile and propagate enabled installations and tests
-            // check for -Pprofile, fallback to default if not defined
+            // check for -Pprofile=profileName and then for Mavenism -PprofileName
+            // fallback to default if not defined
             def profileName = 'default'
             if(project.hasProperty('profile')){
                 profileName = project.profile
             }
             else {
-                // task closure has access to "logger" object
-                logger.warn(":init: Please select profile by -Pprofile=name, now using default")
+                try {
+                    // try to find profile by Maven based -PprofileName
+                    profileName = project.spacelift.profiles.find { p -> project.hasProperty(p.name) }.name
+                }
+                catch(NullPointerException e) {
+                    logger.warn(":init: Please select profile by -Pprofile=name, now using default")
+                }
             }
 
             // find if such profile is available
-            def profile = project.spacelift.profiles.find { profile -> profile.name == profileName }
+            def profile = project.spacelift.profiles.find { p -> p.name == profileName }
             if(profile==null) {
                 def availableProfiles = project.spacelift.profiles.collect { it.name }.join(', ')
                 throw new GradleException("Unable to find ${profileName} profile in build.gradle file, available profiles were: ${availableProfiles}")
             }
 
             // make selected profile global
+            logger.lifecycle("init:profile " + profile.name)
             project.ext.set("selectedProfile", profile)
 
             // find installations that were specified by profile or enabled manually from command line
@@ -223,8 +230,8 @@ class SpaceliftPlugin implements Plugin<Project> {
     private void setDefaultDataProviders(Project project) {
         // parse both properties defined deprecated way and project.ext way. find the ones starting with default
         def defaultValues = project.getProperties()
-                .findAll {key, value -> return (key.startsWith("default") && !key.startsWith("defaultTask")) } << project.ext.properties
-                .findAll {key, value -> return (key.startsWith("default"))}
+                .findAll {key, value -> return (key.startsWith("default") && !key.startsWith("defaultTask") && key!="default") } << project.ext.properties
+                .findAll {key, value -> return (key.startsWith("default") && key!="default")}
 
         defaultValues.each { key, value ->
             def overrideKey = key.substring("default".length(), key.length())
