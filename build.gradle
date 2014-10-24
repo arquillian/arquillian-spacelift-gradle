@@ -3,7 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 
 group 'org.arquillian.spacelift.gradle'
-version '1.0.0-alpha-2-SNAPSHOT'
+version '1.0.0-alpha-2'
 
 repositories {
     mavenCentral()
@@ -42,6 +42,10 @@ dependencies {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+
+            // redefine artifactId as it does not match directory name
+            artifactId 'arquillian-spacelift-gradle'
+
             from components.java
 
             artifact sourcesJar {
@@ -51,14 +55,9 @@ publishing {
             pom.withXml {
                 def Node root = asNode();
 
-                //node.appendNode('groupId', 'org.arquillian.spacelift.gradle')
-                //node.appendNode('artifactId', 'spacelift-plugin')
-                //node.appendNode('version', project.version)
-
-
                 root.appendNode('name', 'Gradle Plugin for Arquillian Spacelift')
                 root.appendNode('description', 'Gradle Plugin to provide test environment')
-                root.appendNode('url', 'https://github.com/aerogear/aerogear-testing-tools/tree/master/arquillian-spacelift-gradle')
+                root.appendNode('url', 'https://github.com/arquillian/arquillian-spacelift-gradle-plugin')
 
                 def org = root.appendNode( 'organization' )
                 org.appendNode( 'name', 'Arquillian.org' )
