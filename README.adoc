@@ -22,7 +22,7 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath 'org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-1'
+        classpath 'org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-2'
     }
 }
 
