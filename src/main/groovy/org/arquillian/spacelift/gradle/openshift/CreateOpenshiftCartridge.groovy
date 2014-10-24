@@ -18,6 +18,7 @@ class CreateOpenshiftCartridge extends Tool<Object, Void> {
     def force = false
     def ignoreIfExists = false
     def cartridges = []
+    def repo
 
     // credentials
     def password
@@ -80,6 +81,9 @@ class CreateOpenshiftCartridge extends Tool<Object, Void> {
         }
         if(token) {
             command.parameters("--token", token)
+        }
+        if (repo) {
+            command.parameters("--repo", repo)
         }
         if(ignoreIfExists) {
             command.shouldExitWith(0,1)
@@ -150,5 +154,10 @@ class CreateOpenshiftCartridge extends Tool<Object, Void> {
     def token(token) {
         this.token = token
         this;
+    }
+    
+    def repo(repo) {
+        this.repo = repo
+        this
     }
 }
