@@ -47,25 +47,31 @@ class AndroidSdkUpdater extends Task<Object, Void>{
 
         def exitCodes = 0..255
 
+        // additional packages to be update based on Android version selected externally
+        def androidVersionSpecificPackages = "android-${androidVersion},addon-google_apis-google-${androidVersion},addon-google_apis_x86-google-${androidVersion}";
+        // handle system images, installing only x86 platform
+        if(target.contains("Google APIs")) {
+            androidVersionSpecificPackages += ",sys-img-x86-addon-google_apis-google-${androidVersion}"
+        }
+        else {
+            androidVersionSpecificPackages += ",sys-img-x86-android-${androidVersion}"
+        }
+
         GradleSpacelift.tools('android').parameters([
             "update",
             "sdk",
             "--filter",
             //
-            // The version of build-tools is statically set to 19.1.0 - the latest one by 27/5/2014.
+            // The version of build-tools is statically set to 21.0.2 - the latest one by 29/10/2014.
             // Investigate, how to get the latest build-tools version programmatically.
             //
             // Backed by JIRA: https://issues.jboss.org/browse/MP-209
             //
             "platform-tools," +
-            "build-tools-19.1.0," +
+            "build-tools-21.0.2," +
             "extra-google-google_play_services," +
             "extra-android-support," +
-            "android-${androidVersion}," +
-            "sysimg-${androidVersion}," +
-            "addon-google_apis-google-${androidVersion}," +
-            "addon-google_apis_x86-google-${androidVersion}"
-            ,
+            androidVersionSpecificPackages,
             "--all",
             "--no-ui"]
         ).interaction(new ProcessInteractionBuilder()

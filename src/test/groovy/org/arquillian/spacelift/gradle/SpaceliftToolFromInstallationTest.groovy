@@ -4,6 +4,7 @@ import org.arquillian.spacelift.execution.Tasks
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.arquillian.spacelift.gradle.android.AndroidSdkOptForStats
+import org.arquillian.spacelift.gradle.android.AndroidSdkUpdater
 import org.arquillian.spacelift.gradle.arquillian.ArquillianXmlUpdater
 import org.junit.Test
 
@@ -18,7 +19,7 @@ public class SpaceliftToolFromInstallationTest {
 
         project.apply plugin: 'spacelift'
 
-        project.ext.set("androidTargets", ["19"])
+        project.ext.set("androidTargets", ["19", "android-19", "Google Inc.:Google APIs (x86 System Image):21"])
 
         project.spacelift {
             workspace = new File(System.getProperty("user.dir"), "workspace")
@@ -26,8 +27,8 @@ public class SpaceliftToolFromInstallationTest {
                 androidSdk {
                     product = 'aerogear'
                     version = '1.0.0'
-                    remoteUrl = [linux:"http://dl.google.com/android/android-sdk_r22.6.2-linux.tgz", windows:"http://dl.google.com/android/android-sdk_r22.6.2-windows.zip", mac:"http://dl.google.com/android/android-sdk_r22.6.2-macosx.zip"]
-                    fileName = [linux:"android-sdk_r22.6.2-linux.tgz", windows:"android-sdk_r22.6.2-windows.zip", mac:"android-sdk_r22.6.2-macosx.zip"]
+                    remoteUrl = [linux:"http://dl.google.com/android/android-sdk_r23.0.2-linux.tgz", windows:"http://dl.google.com/android/android-sdk_r23.0.2-windows.zip", mac:"http://dl.google.com/android/android-sdk_r23.0.2-macosx.zip"]
+                    fileName = [linux:"android-sdk_r23.0.2-linux.tgz", windows:"android-sdk_r23.0.2-windows.zip", mac:"android-sdk_r23.0.2-macosx.zip"]
                     home = [linux:"android-sdk-linux", windows:"android-sdk-windows", mac:"android-sdk-macosx"]
                     // tools provided by installation
                     tool {
@@ -47,6 +48,7 @@ public class SpaceliftToolFromInstallationTest {
                         project.ant.chmod(dir: "${home}/tools", perm:"a+x", includes:"*", excludes:"*.txt")
 
                         // update Android SDK, download / update each specified Android SDK version
+                        // This is disabled by default as it takes too long to be executed
                         //project.androidTargets.each { v ->
                         //    Tasks.prepare(AndroidSdkUpdater).target(v).execute().await()
                         //}
