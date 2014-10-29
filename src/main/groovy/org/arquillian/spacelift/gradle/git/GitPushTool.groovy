@@ -16,11 +16,6 @@ import org.arquillian.spacelift.tool.Tool
 /**
  * By default it pushes to "{@literal origin :.}". You can override this by {@link #remote(String) and {@link #branch(String)}.
  * methods.
- * <p>
- * In case you use ssh protocol to push to a repository, be sure the key of host to push to is known to your system otherwise 
- * processing of this tool will be blocking. By default, key is saved into {@literal ~/.ssh/know_hosts}. You can disable 
- * string host checking by setting {@literal StrictHostKeyChecking} to 'no' in {@literal ~/.ssh/config} as well.
- * </p>
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
@@ -31,7 +26,7 @@ class GitPushTool extends Tool<File, File> {
 
     private String remote = "origin"
 
-    private String branch = ":."
+    private String branch = ":"
 
     private boolean tags
 
@@ -56,7 +51,7 @@ class GitPushTool extends Tool<File, File> {
     }
 
     /**
-     * By default set to ":.". Null values and empty strings are not taken into consideration.
+     * By default set to ":". Null values and empty strings are not taken into consideration.
      * 
      * @param branch
      * @return
