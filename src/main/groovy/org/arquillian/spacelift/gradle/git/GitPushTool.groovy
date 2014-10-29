@@ -16,11 +16,6 @@ import org.arquillian.spacelift.tool.Tool
 /**
  * By default it pushes to "{@literal origin :.}". You can override this by {@link #remote(String) and {@link #branch(String)}.
  * methods.
- * <p>
- * In case you use ssh protocol to push to a repository, be sure the key of host to push to is known to your system otherwise 
- * processing of this tool will be blocking. By default, key is saved into {@literal ~/.ssh/know_hosts}. You can disable 
- * string host checking by setting {@literal StrictHostKeyChecking} to 'no' in {@literal ~/.ssh/config} as well.
- * </p>
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
@@ -31,10 +26,12 @@ class GitPushTool extends Tool<File, File> {
 
     private String remote = "origin"
 
-    private String branch = ":."
+    private String branch = ":"
 
     private boolean tags
 
+    private File gitSsh
+    
     @Override
     protected Collection<String> aliases() {
         ["git_push"]
@@ -54,7 +51,7 @@ class GitPushTool extends Tool<File, File> {
     }
 
     /**
-     * By default set to ":.". Null values and empty strings are not taken into consideration.
+     * By default set to ":". Null values and empty strings are not taken into consideration.
      * 
      * @param branch
      * @return
@@ -76,6 +73,18 @@ class GitPushTool extends Tool<File, File> {
         this
     }
 
+    /**
+     *
+     * @param gitSsh file to use as GIT_SSH script, skipped when it does not exist, it is not a file or is a null object
+     * @return
+     */
+    GitPushTool gitSsh(File gitSsh) {
+        if (gitSsh && gitSsh.exists() && gitSsh.isFile() && gitSsh.canExecute()) {
+            this.gitSsh = gitSsh
+        }
+        this
+    }
+    
     @Override
     protected File process(File repositoryDir) throws Exception {
 
@@ -92,7 +101,13 @@ class GitPushTool extends Tool<File, File> {
         logger.info(command.toString())
 
         try {
-            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            CommandTool push = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command)
+            
+            if (gitSsh) {
+                push.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
+            }
+            
+            result = push.execute().await()
         } catch (ExecutionException ex) {
             if (result != null) {
                 throw new ExecutionException(

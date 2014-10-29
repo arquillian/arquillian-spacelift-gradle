@@ -17,6 +17,7 @@ import org.arquillian.spacelift.gradle.git.GitFetchTool
 import org.arquillian.spacelift.gradle.git.GitInitTool
 import org.arquillian.spacelift.gradle.git.GitPushTool
 import org.arquillian.spacelift.gradle.git.GitRemoveTool
+import org.arquillian.spacelift.gradle.git.GitSshFileTask
 import org.arquillian.spacelift.gradle.git.GitTagTool
 import org.hamcrest.core.Is
 import org.junit.Assert
@@ -58,7 +59,7 @@ class GitTest {
         // this will not be added
         File outsideOfRepository = new File(repositoryCloneDir.getParentFile(), UUID.randomUUID().toString())
         outsideOfRepository.createNewFile()
-        
+
         File outsideOfRepositoryRelative = new File(repositoryCloneDir, "../" + UUID.randomUUID().toString())
         outsideOfRepositoryRelative.createNewFile()
 
@@ -104,10 +105,13 @@ class GitTest {
 
         File repositoryCloneDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
 
-        Tasks.chain(new URI("ssh://git@github.com/smiklosovic/test.git"), GitCloneTool).destination(repositoryCloneDir)
-                .then(GitBranchTool.class).branch("dummyBranch")
-                .then(GitCheckoutTool.class).checkout("dummyBranch")
-                .execute().await()
+        File gitSshFile = Tasks.prepare(GitSshFileTask).execute().await()
+
+        Tasks.chain(new URI("ssh://git@github.com/smiklosovic/test.git"), GitCloneTool).gitSsh(gitSshFile).destination(repositoryCloneDir)
+            .then(GitFetchTool)
+            .then(GitBranchTool).branch("dummyBranch")
+            .then(GitCheckoutTool).checkout("dummyBranch")
+            .execute().await()
 
         File file1 = new File(repositoryCloneDir, UUID.randomUUID().toString())
         File file2 = new File(repositoryCloneDir, UUID.randomUUID().toString())
@@ -121,5 +125,4 @@ class GitTest {
             .then(GitPushTool).remote("origin").branch(":dummyBranch") // delete that branch
             .execute().await()
     }
-
 }

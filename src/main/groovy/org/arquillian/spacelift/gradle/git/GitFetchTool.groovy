@@ -17,11 +17,6 @@ import org.arquillian.spacelift.tool.Tool
  * <p>
  * When {@link #remote(String)} and {@link #branch(String)} are not set, we fetch all remote branches (git fetch --all).
  * </p>
- * <p>
- * In case you use ssh protocol to fetch from a repository, be sure the key of host to fetch from is known to your system otherwise 
- * processing of this tool will be blocking. By default, key is saved into {@literal ~/.ssh/know_hosts}. You can disable 
- * string host checking by setting {@literal StrictHostKeyChecking} to 'no' in {@literal ~/.ssh/config} as well.
- * </p>
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
@@ -36,6 +31,8 @@ class GitFetchTool extends Tool<File, File> {
 
     private String local
 
+    private File gitSsh
+    
     @Override
     protected Collection<String> aliases() {
         ["git_fetch"]
@@ -78,6 +75,18 @@ class GitFetchTool extends Tool<File, File> {
         this
     }
 
+    /**
+     *
+     * @param gitSsh file to use as GIT_SSH script, skipped when it does not exist, it is not a file or is a null object
+     * @return
+     */
+    GitFetchTool gitSsh(File gitSsh) {
+        if (gitSsh && gitSsh.exists() && gitSsh.isFile() && gitSsh.canExecute()) {
+            this.gitSsh = gitSsh
+        }
+        this
+    }
+    
     @Override
     protected File process(File repositoryDir) throws Exception {
 
@@ -104,11 +113,18 @@ class GitFetchTool extends Tool<File, File> {
         ProcessResult result = null
 
         try {
-            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            
+            CommandTool fetch = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command)
+            
+            if (gitSsh) {
+                fetch.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
+            }
+            
+            result = fetch.execute().await()
         } catch (ExecutionException ex) {
             if (result != null) {
                 throw new ExecutionException(
-                String.format("Committing changes in repository '%s' was not successful. Command '%s', exit code: %s",
+                String.format("Fetching changes from repository '%s' was not successful. Command '%s', exit code: %s",
                 repositoryDir.getAbsolutePath(), command.toString(), result.exitValue()),
                 ex)
             }
