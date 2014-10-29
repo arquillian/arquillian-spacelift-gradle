@@ -108,7 +108,7 @@ class GitTest {
         File gitSshFile = Tasks.prepare(GitSshFileTask).execute().await()
 
         Tasks.chain(new URI("ssh://git@github.com/smiklosovic/test.git"), GitCloneTool).gitSsh(gitSshFile).destination(repositoryCloneDir)
-            .then(GitFetchTool).gitSsh(gitSshFile)
+            .then(GitFetchTool)
             .then(GitBranchTool).branch("dummyBranch")
             .then(GitCheckoutTool).checkout("dummyBranch")
             .execute().await()
@@ -121,8 +121,8 @@ class GitTest {
 
         Tasks.chain(repositoryCloneDir, GitAddTool).add([file1, file2])
             .then(GitCommitTool).message("added some files")
-            .then(GitPushTool).gitSsh(gitSshFile).remote("origin").branch("dummyBranch")
-            .then(GitPushTool).gitSsh(gitSshFile).remote("origin").branch(":dummyBranch") // delete that branch
+            .then(GitPushTool).remote("origin").branch("dummyBranch")
+            .then(GitPushTool).remote("origin").branch(":dummyBranch") // delete that branch
             .execute().await()
     }
 }

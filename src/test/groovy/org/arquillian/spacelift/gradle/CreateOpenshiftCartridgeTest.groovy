@@ -38,8 +38,6 @@ public class CreateOpenshiftCartridgeTest {
 
         // initialize current project tools - this is effectively init-tools task
         GradleSpacelift.currentProject(project)
-
-        File gitSshFile = Tasks.prepare(GitSshFileTask).execute().await()
         
         // kill servers
         Tasks.prepare(CreateOpenshiftCartridge)
