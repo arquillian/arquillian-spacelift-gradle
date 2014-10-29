@@ -1,13 +1,15 @@
 package org.arquillian.spacelift.gradle.openshift
 
-import org.arquillian.spacelift.execution.Tasks;
-import org.arquillian.spacelift.process.ProcessInteractionBuilder;
-import org.arquillian.spacelift.process.impl.CommandTool;
+import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.process.ProcessInteractionBuilder
+import org.arquillian.spacelift.process.ProcessResult;
+import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 import org.arquillian.spacelift.gradle.GradleSpacelift
-import org.jboss.as.controller.parsing.Namespace;
+import org.arquillian.spacelift.gradle.git.GitSshFileTask
+import org.jboss.as.controller.parsing.Namespace
 
-class CreateOpenshiftCartridge extends Tool<Object, Void> {
+class CreateOpenshiftCartridge extends Tool<Object, ProcessResult> {
 
     def name
     def namespace
@@ -19,6 +21,7 @@ class CreateOpenshiftCartridge extends Tool<Object, Void> {
     def ignoreIfExists = false
     def cartridges = []
     def repo
+    File gitSsh
 
     // credentials
     def password
@@ -31,7 +34,7 @@ class CreateOpenshiftCartridge extends Tool<Object, Void> {
     }
 
     @Override
-    protected Void process(Object unused) throws Exception {
+    protected ProcessResult process(Object unused) throws Exception {
 
         // delete app if it exists
         if(force) {
@@ -51,10 +54,14 @@ class CreateOpenshiftCartridge extends Tool<Object, Void> {
                 command.parameters("--token", token)
             }
 
-            command.execute().await();
+            command.execute().await()
         }
 
         def command = GradleSpacelift.tools('rhc')
+
+        if (gitSsh) {
+            command.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
+        }
 
         command.parameters("app", "create")
 
@@ -91,9 +98,9 @@ class CreateOpenshiftCartridge extends Tool<Object, Void> {
 
         command.parameters(cartridges)
 
-        command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        ProcessResult result = command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
 
-        return null
+        result
     }
 
     def ignoreIfExists() {
@@ -107,8 +114,8 @@ class CreateOpenshiftCartridge extends Tool<Object, Void> {
     }
 
     def named(name) {
-        this.name = name;
-        this;
+        this.name = name
+        this
     }
 
     def cartridges(CharSequence...cartridges) {
@@ -153,11 +160,18 @@ class CreateOpenshiftCartridge extends Tool<Object, Void> {
 
     def token(token) {
         this.token = token
-        this;
+        this
     }
-    
+
     def repo(repo) {
         this.repo = repo
+        this
+    }
+
+    def gitSsh(File gitSsh) {
+        if (gitSsh && gitSsh.exists() && gitSsh.isFile()) {
+            this.gitSsh = gitSsh
+        }
         this
     }
 }

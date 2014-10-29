@@ -35,6 +35,8 @@ class GitPushTool extends Tool<File, File> {
 
     private boolean tags
 
+    private File gitSsh
+    
     @Override
     protected Collection<String> aliases() {
         ["git_push"]
@@ -76,6 +78,18 @@ class GitPushTool extends Tool<File, File> {
         this
     }
 
+    /**
+     *
+     * @param gitSsh file to use as GIT_SSH script, skipped when it does not exist, it is not a file or is a null object
+     * @return
+     */
+    GitPushTool gitSsh(File gitSsh) {
+        if (gitSsh && gitSsh.exists() && gitSsh.isFile()) {
+            this.gitSsh = gitSsh
+        }
+        this
+    }
+    
     @Override
     protected File process(File repositoryDir) throws Exception {
 
@@ -92,7 +106,13 @@ class GitPushTool extends Tool<File, File> {
         logger.info(command.toString())
 
         try {
-            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            CommandTool push = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command)
+            
+            if (gitSsh) {
+                push.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
+            }
+            
+            result = push.execute().await()
         } catch (ExecutionException ex) {
             if (result != null) {
                 throw new ExecutionException(

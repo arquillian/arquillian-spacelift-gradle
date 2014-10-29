@@ -19,11 +19,6 @@ import org.arquillian.spacelift.tool.Tool
  * If destination is not specified, temporary directory is created dynamically and used afterwards. Destination directory has to
  * be empty. In case you specify it and it does not exist, there is an attempt to create it.
  * </p>
- * <p>
- * In case you use ssh protocol to clone a repository, be sure the key of host to clone from is known to your system otherwise 
- * processing of this tool will be blocking. By default, key is saved into {@literal ~/.ssh/know_hosts}. You can disable 
- * string host checking by setting {@literal StrictHostKeyChecking} to 'no' in {@literal ~/.ssh/config} as well.
- * </p>
  * 
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  * 
@@ -34,6 +29,7 @@ class GitCloneTool extends Tool<URI, File> {
 
     private File destination = null
 
+    private File gitSsh
 
     @Override
     protected Collection<String> aliases() {
@@ -59,6 +55,18 @@ class GitCloneTool extends Tool<URI, File> {
         this
     }
 
+    /**
+     * 
+     * @param gitSsh file to use as GIT_SSH script, skipped when it does not exist, it is not a file or is a null object
+     * @return
+     */
+    GitCloneTool gitSsh(File gitSsh) {
+        if (gitSsh && gitSsh.exists() && gitSsh.isFile()) {
+            this.gitSsh = gitSsh
+        }
+        this
+    }
+    
     @Override
     protected File process(URI uri) throws Exception {
 
@@ -98,7 +106,13 @@ class GitCloneTool extends Tool<URI, File> {
         logger.info(command.toString())
 
         try {
-            result = Tasks.prepare(CommandTool).command(command).execute().await()
+            CommandTool clone = Tasks.prepare(CommandTool).command(command)
+            
+            if (gitSsh) {
+                clone.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
+            }
+            
+            result = clone.execute().await()
         } catch (ExecutionException ex) {
             if (result != null) {
                 throw new ExecutionException(
