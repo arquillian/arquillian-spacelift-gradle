@@ -61,7 +61,7 @@ class GitCloneTool extends Tool<URI, File> {
      * @return
      */
     GitCloneTool gitSsh(File gitSsh) {
-        if (gitSsh && gitSsh.exists() && gitSsh.isFile()) {
+        if (gitSsh && gitSsh.exists() && gitSsh.isFile() && gitSsh.canExecute()) {
             this.gitSsh = gitSsh
         }
         this

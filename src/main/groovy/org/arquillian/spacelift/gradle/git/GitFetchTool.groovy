@@ -81,7 +81,7 @@ class GitFetchTool extends Tool<File, File> {
      * @return
      */
     GitFetchTool gitSsh(File gitSsh) {
-        if (gitSsh && gitSsh.exists() && gitSsh.isFile()) {
+        if (gitSsh && gitSsh.exists() && gitSsh.isFile() && gitSsh.canExecute()) {
             this.gitSsh = gitSsh
         }
         this

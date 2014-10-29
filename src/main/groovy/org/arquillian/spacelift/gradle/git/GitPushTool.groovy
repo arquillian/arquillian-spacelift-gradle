@@ -79,7 +79,7 @@ class GitPushTool extends Tool<File, File> {
      * @return
      */
     GitPushTool gitSsh(File gitSsh) {
-        if (gitSsh && gitSsh.exists() && gitSsh.isFile()) {
+        if (gitSsh && gitSsh.exists() && gitSsh.isFile() && gitSsh.canExecute()) {
             this.gitSsh = gitSsh
         }
         this
