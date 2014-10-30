@@ -4,6 +4,7 @@ import java.io.File
 
 import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.gradle.GradleSpacelift
 
 /**
  * Default GIT_SSH file does not check host key of a remote host so when used with git tools, 
@@ -14,86 +15,30 @@ import org.arquillian.spacelift.execution.Tasks
  */
 class GitSshFileTask extends Task<Object, File> {
 
-    private File file
+    private File toFile
 
-    private File sshFile
-
-    /**
-     * 
-     * @param file file where GIT_SSH script will be written
-     * @return
-     */
-    GitSshFileTask to(File file) {
-        if (file) {
-            this.file = file
-        }
-        this
-    }
-
-    /**
-     * 
-     * @param file file with GIT_SSH script to write to {@link #to(File)}.
-     * @return
-     */
-    GitSshFileTask from(File file) {
-        if (file && file.exists() && file.isFile()) {
-            this.sshFile = sshFile
-        }
+    def toFile(File toFile) {
+        this.toFile = toFile
         this
     }
 
     @Override
     protected File process(Object input) throws Exception {
 
-        File writeFile
+        def sshFile = toFile
 
-        if (!file) {
-            writeFile = new File(System.getProperty("java.io.tmpdir"), "gitssh.sh")
-        } else {
-            writeFile = file
+        if (!sshFile) {
+            sshFile = new File(System.getProperty("java.io.tmpdir"), "gitssh.sh")
         }
 
-        InputStream sshFile
-
-        if (!this.sshFile) {
-            sshFile = getStream()
-        } else {
-            if (!this.sshFile.exists()) {
-                sshFile = getStream()
-            } else {
-                sshFile = new FileInputStream(this.sshFile)
+        if (!sshFile.exists()) {
+            this.getClass().getResource("/scripts/gitssh.sh").withInputStream { ris ->
+                sshFile.withOutputStream { fos -> fos << ris }
             }
         }
 
-        if (!writeFile.exists()) {
-            getFile(sshFile, writeFile)
-        }
+        sshFile.setExecutable(true)
 
-        writeFile.setExecutable(true)
-
-        writeFile
-    }
-
-    private def getStream() {
-        getClass().getResourceAsStream("/scripts/gitssh.sh")
-    }
-
-    private def getFile(InputStream inStream, File file) {
-
-        if (inStream == null || file == null) {
-            return null
-        }
-
-        OutputStream outStream = new FileOutputStream(file)
-
-        byte[] buffer = new byte[1024]
-
-        int length
-
-        while ((length = inStream.read(buffer)) > 0) {
-            outStream.write(buffer, 0, length)
-        }
-
-        outStream.close()
+        sshFile
     }
 }
