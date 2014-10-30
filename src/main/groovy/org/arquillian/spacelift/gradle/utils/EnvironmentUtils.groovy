@@ -40,15 +40,19 @@ class EnvironmentUtils {
 
     /**
     * Get a bindable address for IPv4/v6.
-    * First, try searching environment variables in ``ip_envs``,
-    * then try if at least loopback is working,
+    * Try if at least loopback is working,
     * if there is no relevant env-var set, and lo is inot working, return null
+    * Formerly, try searching environment variables in ``ip_envs``,
+    * disabled due to cert issues
     */
     static def getIp (IP v) {
         def preset_ips = ip_envs[v].collect({System.getenv(it)}).findAll()
+        /* Disabling nonlocalhost ips due to cert issues
         if(preset_ips){
             return preset_ips.first()
-        }else if(InetAddress.getByName(lo[v]).isReachable(3000)){
+        }else 
+        */
+        if(InetAddress.getByName(lo[v]).isReachable(3000)){
             return lo[v]
         }else{
             return null
