@@ -140,7 +140,6 @@ public class KeyTool extends CommandTool {
     @Override
     public Execution<ProcessResult> execute() throws ExecutionException {
     	this.buildKeytoolCommand();
-        System.out.println("EXEC" + this.commandBuilder + "\n");
         return super.execute();
     }
 }
