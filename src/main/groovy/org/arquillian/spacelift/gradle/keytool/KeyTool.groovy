@@ -100,6 +100,13 @@ public class KeyTool extends CommandTool {
         this
     }
 
+    KeyTool cmdGenKeyPair(String keyalg, String validity, String dname){
+        command = "genkeypair";
+        this.opts.put("keyalg",keyalg);
+        this.opts.put("validity",validity);
+        this.opts.put("dname",dname);
+        this
+    }
 
     KeyTool cmdGenKeyPair(String keyalg, String validity, String dname, String ext){
         command = "genkeypair";
@@ -118,10 +125,9 @@ public class KeyTool extends CommandTool {
     }
 
     protected void buildKeytoolCommand(){
-    	CommandBuilder builder = new CommandBuilder("keytool");
-        if (EnvironmentUtils.runsOnWindows()){
-            builder = new CommandBuilder("keytool.exe");
-        }
+        CommandTool t =  GradleSpacelift.tools("keytool");
+    	CommandBuilder builder = t.commandBuilder;
+
         builder.parameter("-"+command);
         for(Map.Entry<String, String> entry: opts.entrySet()) {
             builder.parameter("-"+entry.getKey());
