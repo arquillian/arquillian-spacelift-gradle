@@ -7,7 +7,6 @@ import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 import org.arquillian.spacelift.gradle.GradleSpacelift
 import org.arquillian.spacelift.gradle.git.GitSshFileTask
-import org.jboss.as.controller.parsing.Namespace
 
 class CreateOpenshiftCartridge extends Tool<Object, ProcessResult> {
 
