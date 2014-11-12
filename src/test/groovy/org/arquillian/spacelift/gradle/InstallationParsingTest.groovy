@@ -5,7 +5,6 @@ import static org.junit.Assert.assertThat
 
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.jboss.as.controller.operations.common.SystemPropertyAddHandler;
 import org.junit.Test
 
 /**
