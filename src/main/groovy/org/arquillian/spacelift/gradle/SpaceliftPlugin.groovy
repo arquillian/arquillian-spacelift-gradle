@@ -16,7 +16,11 @@ class SpaceliftPlugin implements Plugin<Project> {
 
     // this plugin prepares aerogear environment
     void apply(Project project) {
-        project.extensions.create("spacelift", SpaceliftConventions, project)
+        
+        // set default values if not specified from command line
+        setDefaultDataProviders(project);
+        
+        project.extensions.create("spacelift", SpaceliftExtension, project)
 
         // add tools definitions
         project.spacelift.extensions.tools = project.container(GradleSpaceliftTool) { toolAlias ->
@@ -37,10 +41,6 @@ class SpaceliftPlugin implements Plugin<Project> {
         project.spacelift.extensions.tests = project.container(Test) { testName ->
             project.gradle.services.get(Instantiator).newInstance(Test, testName, project)
         }
-
-        // set default values if not specified from command line
-        setDefaultDataProviders(project);
-
 
         // set current project and initialize tools
         // parses default profile, installations and tests
@@ -207,20 +207,20 @@ class SpaceliftPlugin implements Plugin<Project> {
         project.task('testreport') << {
             logger.lifecycle(":testreport:generating JUnit report for all tests in ${project.spacelift.workspace}")
 
-			ant.mkdir(dir: "${project.spacelift.workspace}/test-reports")
-			ant.mkdir(dir: "${project.spacelift.workspace}/test-reports/html")
-			ant.taskdef(name: 'junitreport',
-						classname: 'org.apache.tools.ant.taskdefs.optional.junit.XMLResultAggregator',
-						classpath: project.configurations.junitreport.asPath)
-			ant.junitreport(todir: "${project.spacelift.workspace}/test-reports") {
-				fileset(dir: "${project.spacelift.workspace}") {
-					include(name: "**/TEST*.xml")
-					exclude(name: "test-reports/*.xml")
-					exclude(name: "test-reports/html/*")
-				}
-				report(format: "noframes", todir: "${project.spacelift.workspace}/test-reports/html")
-			}
-						
+            ant.mkdir(dir: "${project.spacelift.workspace}/test-reports")
+            ant.mkdir(dir: "${project.spacelift.workspace}/test-reports/html")
+            ant.taskdef(name: 'junitreport',
+            classname: 'org.apache.tools.ant.taskdefs.optional.junit.XMLResultAggregator',
+            classpath: project.configurations.junitreport.asPath)
+            ant.junitreport(todir: "${project.spacelift.workspace}/test-reports") {
+                fileset(dir: "${project.spacelift.workspace}") {
+                    include(name: "**/TEST*.xml")
+                    exclude(name: "test-reports/*.xml")
+                    exclude(name: "test-reports/html/*")
+                }
+                report(format: "noframes", todir: "${project.spacelift.workspace}/test-reports/html")
+            }
+
             logger.lifecycle(":testreport:test report available in file://${project.spacelift.workspace}/test-reports/html/junit-noframes.html")
         }
 
@@ -240,7 +240,12 @@ class SpaceliftPlugin implements Plugin<Project> {
                 // get and parse new value to always return a collection
                 def newValue = project.property(overrideKey)
                 newValue = (newValue instanceof Object[] || newValue instanceof Collection) ? newValue : newValue.toString().split(",")
-                //project.setProperty(overrideKey, newValue)
+
+                // unwrap value from array if only single value is provided
+                if(newValue instanceof String[] && newValue.size()==1) {
+                    newValue = newValue[0];
+                }
+
                 project.ext.set(overrideKey, newValue)
                 log.info("Set ${overrideKey} from command line property -P${overrideKey}=${newValue}")
             }

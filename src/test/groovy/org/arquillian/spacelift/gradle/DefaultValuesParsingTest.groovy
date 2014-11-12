@@ -45,6 +45,34 @@ class DefaultValuesParsingTest {
     }
 
     @Test
+    public void useDefaultValuesInDSL() {
+
+        Project project = ProjectBuilder.builder().build()
+
+        project.ext.set("defaultRhcVersion", "10")
+
+        project.apply plugin: 'spacelift'
+
+        project.spacelift {
+            tools {
+                rhc { command = "rhc${project.rhcVersion}" }
+            }
+            profiles {
+            }
+        }
+        
+        // initialize current project tools - this is effectively init-tools task
+        GradleSpacelift.currentProject(project)
+
+        // find rhc tool
+        def rhcTool = GradleSpacelift.tools("rhc")
+        assertThat rhcTool, is(notNullValue())
+
+        // ensure it is pointing to the right binary
+        assertThat rhcTool.toString(), containsString("rhc10")
+    }
+
+    @Test
     public void overrideDefaultValues() {
 
         Project project = ProjectBuilder.builder().build()

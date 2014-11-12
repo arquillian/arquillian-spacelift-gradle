@@ -2,11 +2,12 @@ package org.arquillian.spacelift.gradle
 
 import org.gradle.api.Project
 
+
 /**
- * Defines a default configuration for Aerogear Test Environment Plugin
+ * Defines a default configuration for Arquillian Spacelift Gradle Plugin
  *
  */
-class SpaceliftConventions {
+class SpaceliftExtension {
 
     // workspace configuration
     File workspace
@@ -30,7 +31,7 @@ class SpaceliftConventions {
     // snapshots JBoss repository
     boolean enableSnapshots
 
-    SpaceliftConventions(Project project) {
+    SpaceliftExtension(Project project) {
         this.workspace = project.rootDir
         this.installationsDir = new File(workspace, "installations")
 
