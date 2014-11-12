@@ -40,8 +40,6 @@ dependencies {
 }
 ----
 
-WARNING: This plugin does not work with Gradle 2.0 and newer. Please use 1.12 instead. We are working on the fix.
-
 == Gradle Tasks
 
 This plugin provides following tasks:
@@ -85,14 +83,14 @@ Plugin uses following DSL structure:
 ----
 spacelift {
 
-    workspace
-    installationsDir
-    localRepository
-    killServers
-    keystoreFile
-    truststoreFile
-    enableStaging
-    enableSnapshots
+    workspace value
+    installationsDir value
+    localRepository value
+    killServers value
+    keystoreFile value
+    truststoreFile value
+    enableStaging value
+    enableSnapshots value
 
     tools {
         tool1 {
@@ -129,6 +127,19 @@ globalSetupProperties::
 * truststoreFile - path to JKS truststore file
 * enableStaging - enable JBoss Staging repository
 * enableSnapshots - enable JBoss Snapshots repository
++
+value::
+    Value definition in accepted in following format. If it is defined in _block_, is is always lazy evaluated.
++
+* plain - such as +false+, +"mydir"+, +'mydir'+ or +"${project.rootDir}/mydir"+.
+* block - such as +{ false }+ or +{ /* a lot of code */ }+. Block does has access to properties of defining installation, profile, test or tool, whatever is relevant. It can also reference current project by using +project+ property
+* map - a map with keys denoting operating system and value either in _plain_ or _block_ form, for instance +[linux:"foo", windows: {"foo"}]+. Following OS values are supported:
+** +linux+
+** +windows+
+** +mac+
+** +solaris+
++ 
+NOTE: If you are using map, you need to use parenthesis around parameter
 
 tools::
     Tools allow you to define external commands that should be available on local system. Syntax is following:
@@ -136,7 +147,7 @@ tools::
 [source,groovy]
 ----
 toolName {
-    command = string | list of strings | block | map of strings or blocks
+    command value
 }
 ----
 +
@@ -148,18 +159,21 @@ command::
     Following tools are always expected to be present: _ant_ and _mvn_
 
 profiles::
-    Profiles consist of installations to be installed and tests to be executed. You can use -Pprofile=_profileName_ to trigger
+    Profiles consist of installations to be installed and tests to be executed. You can use -P_profileName_ to trigger
     specific profile, otherwise default profile is triggered. _default_ profile is expected to be present. Note, you need
     define profileName quoted in case of _default_.
 +
 [source,groovy]
 ----
 profileName {
-    enabledInstallations = ['installation1', 'installation2']
-    tests = ['test1', 'test3', 'test27']
+    enabledInstallations 'installation1', 'installation2'
+    tests 'test1', 'test3', 'test27'
 }
 ----
 +
+NOTE: You can also use +*+ to enable all defined installations and or tests for profile. And you can also use _value_ notion and construct a list of strings to match installation names.
+
+
 installations::
     Installations provides a way how to bring additional tools to you test environment. Installation is automatically downloaded
     or fetched from local cache and extracted, based on current OS.
@@ -167,22 +181,19 @@ installations::
 [source,groovy]
 ----
 installationName {
-    product = string
-    version = string
-    fileName = string | list of strings | block | map of strings or blocks
-    remoteUrl =  string | list of strings | block | map of strings or blocks
-    home =  string | list of strings | block | map of strings or blocks
-    autoExtract = true | false
-    forceReinstall = true | false
-    preconditions {
-        // has to return true or false, false skips installation execution 
+    product value
+    version value
+    fileName value
+    remoteUrl value
+    home value
+    autoExtract value
+    forceReinstall value 
+    preconditions value 
     }
-    extractMapper {
-        any ant mapper
-    }
+    extractMapper { any ant mapper }
     tool {
-        name = 'toolName'
-        command = same as command for tool in tools block
+        name = 'toolName' // must not contain - or space
+        command value
     }
     postActions {
     }

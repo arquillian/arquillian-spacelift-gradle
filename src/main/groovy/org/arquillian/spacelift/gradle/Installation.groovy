@@ -1,6 +1,5 @@
 package org.arquillian.spacelift.gradle
 
-import org.apache.commons.lang3.SystemUtils
 import org.gradle.api.Project
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,6 +11,8 @@ import org.slf4j.LoggerFactory
 // * windows
 // * mac
 // * linux
+// * solaris
+@Mixin(ValueExtractor)
 class Installation {
     static final Logger log = LoggerFactory.getLogger('Installation')
 
@@ -19,117 +20,170 @@ class Installation {
     final String name
 
     // version of the product installation belongs to
-    def version
+    Closure version = {}
 
     // product name
-    def product
+    Closure product = {}
 
     // these two variables allow to directly specify fs path or remote url of the installation bits
-    def fsPath
-    def remoteUrl
+    Closure fsPath = {}
+    Closure remoteUrl = {}
 
     // zip file name
-    def fileName
+    Closure fileName = {}
 
     // represents directory where installation is extracted to
-    def home
+    Closure home = {}
 
     // automatically extract archive
-    def autoExtract = true
+    Closure autoExtract =  { true }
 
     // application of Ant mapper during extraction
-    def extractMapper = {}
+    Closure extractMapper = {}
 
-    def forceReinstall = false
+    Closure forceReinstall = { false }
+
+    // actions to be invoked after installation is done
+    Closure postActions = {}
+
+    // precondition closure returning boolean
+    // if true, installation will be installed, if false, skipped
+    Closure preconditions = { true }
 
     // tools provided by this installation
     def tools = []
 
-    // actions to be invoked after installation is done
-    def postActions
-
-    // precondition closure returning boolean
-    // if true, installation will be installed, if false, skipped
-    def preconditions
-
-    // internal access to project defined variables
-    private Project project
+    // access to project defined variables
+    Project project
 
     Installation(String productName, Project project) {
-        this.name = this.product = productName
+        this.name = productName
+        this.product = { productName }
         this.project = project
     }
 
-    // gets os specific value
-    def getOsSpecificValue(mapClosureOrCollection) {
+    def autoExtract(arg) {
+        this.autoExtract = extractValueAsLazyClosure(arg).dehydrate()
+        this.autoExtract.resolveStrategy = Closure.DELEGATE_FIRST
+    }
 
-        // if this is a closure, execute it
-        if(mapClosureOrCollection instanceof Closure) {
-            mapClosureOrCollection.delegate = this
-            return mapClosureOrCollection.doCall()
+    def getAutoExtract() {
+        def shouldExtract = autoExtract.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(shouldExtract==null) {
+            return true
         }
-        // if this is a single value, just return it
-        else if(mapClosureOrCollection instanceof Map) {
-            // expecting we have a map here
+        return Boolean.parseBoolean(shouldExtract.toString())
+    }
+    
+    def forceReinstall(arg) {
+        this.forceReinstall = extractValueAsLazyClosure(arg).dehydrate()
+        this.forceReinstall.resolveStrategy = Closure.DELEGATE_FIRST
+    }
 
-            // try to figure out value given the family
-            if(SystemUtils.IS_OS_WINDOWS) {
-                return getOsSpecificValue(mapClosureOrCollection['windows'])
-            }
-            else if(SystemUtils.IS_OS_MAC_OSX) {
-                return getOsSpecificValue(mapClosureOrCollection['mac'])
-            }
-            else if(SystemUtils.IS_OS_LINUX) {
-                return getOsSpecificValue(mapClosureOrCollection['linux'])
-            }
-            else if(SystemUtils.IS_OS_SOLARIS || SystemUtils.IS_OS_SUN_OS) {
-                return getOsSpecificValue(mapClosureOrCollection['solaris'])
-            }
-            else {
-                throw new IllegalStateException("Unknown system ${System.getProperty('os.name')}")
-            }
+    def getForceReinstall() {
+        def shouldReinstall = forceReinstall.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(shouldReinstall==null) {
+            return false
         }
-        // got a string value here
-        return mapClosureOrCollection == null ? "" : mapClosureOrCollection;
+        return Boolean.parseBoolean(shouldReinstall.toString())
+    }
+
+    def fsPath(arg) {
+        this.fsPath = extractValueAsLazyClosure(arg).dehydrate()
+        this.fsPath.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getFsPath() {
-        fsPath ? new File(getOsSpecificValue(fsPath)) : new File("${project.spacelift.installationsDir}/${product}/${getVersion()}/${getFileName()}")
+        def filePath = fsPath.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(filePath==null) {
+            filePath = "${project.spacelift.installationsDir}/${getProduct()}/${getVersion()}/${getFileName()}"
+        }
+        return new File(filePath.toString());
+    }
+
+    def remoteUrl(arg) {
+        this.remoteUrl = extractValueAsLazyClosure(arg).dehydrate()
+        this.remoteUrl.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getRemoteUrl() {
-        new URL(getOsSpecificValue(remoteUrl))
+        def remoteUrlString = remoteUrl.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(remoteUrlString==null) {
+            return null;
+        }
+        return new URL(remoteUrlString.toString())
+    }
+
+    def home(arg) {
+        this.home = extractValueAsLazyClosure(arg).dehydrate()
+        this.home.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getHome() {
-        new File(project.spacelift.workspace, getOsSpecificValue(home))
+        def homeDir = home.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(homeDir==null) {
+            return project.spacelift.workspace
+        }
+
+        new File(project.spacelift.workspace, homeDir)
+    }
+
+    def fileName(arg) {
+        this.fileName = extractValueAsLazyClosure(arg).dehydrate()
+        this.fileName.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getFileName() {
-        getOsSpecificValue(fileName)
+        def fileNameString = fileName.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(fileNameString==null) {
+            return ""
+        }
+
+        return fileNameString.toString()
+    }
+
+    def product(arg) {
+        this.product = extractValueAsLazyClosure(arg).dehydrate()
+        this.product.resolveStrategy = Closure.DELEGATE_FIRST
+    }
+
+    def getProduct() {
+        def productName = product.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(productName==null) {
+            return ""
+        }
+
+        return productName.toString()
+    }
+
+    def version(arg) {
+        this.version = extractValueAsLazyClosure(arg).dehydrate()
+        this.version.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getVersion() {
-        getOsSpecificValue(version)
+        def versionString = version.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(versionString==null) {
+            return ""
+        }
+
+        return versionString.toString();
     }
 
     // get installation and perform steps defined in closure after it is extracted
     void install() {
 
-        if (preconditions) {
-            preconditions.delegate = this
+        if (!preconditions.rehydrate(new GradleSpaceliftDelegate(), this, this).call()) {
             // if closure returns false, we did not meet preconditions
             // so we return from installation process
-            if (! preconditions.doCall()) {
-                log.info("Installation '" + name + "' did not meet preconditions - it will be excluded from execution.")
-                return
-            }
+            log.info("Installation '" + name + "' did not meet preconditions - it will be excluded from execution.")
+            return
         }
 
         def ant = project.ant
 
         File targetFile = getFsPath()
-        if(forceReinstall == false && targetFile.exists()) {
+        if(getForceReinstall() == false && targetFile.exists()) {
             log.info("Grabbing ${getFileName()} from file system")
         }
         else {
@@ -141,7 +195,7 @@ class Installation {
             ant.get(src: getRemoteUrl(), dest: getFsPath(), usetimestamp: true)
         }
 
-        if(autoExtract) {
+        if(getAutoExtract()) {
             if(forceReinstall == false && getHome().exists()) {
                 log.info("Reusing existing installation ${getHome()}")
             }
@@ -151,6 +205,8 @@ class Installation {
                     log.info("Deleting previous installation ${getHome()}")
                     ant.delete(dir: getHome())
                 }
+
+                extractMapper = extractMapper.rehydrate(new GradleSpaceliftDelegate(), this.project, this)
 
                 log.info("Extracting installation to ${project.spacelift.workspace}")
 
@@ -169,7 +225,7 @@ class Installation {
                     case ~/.*tbz/:
                     case ~/.*tar\.bz2/:
                         ant.untar(src: getFsPath(), dest: project.spacelift.workspace, compression: 'bzip2', extractMapper)
-                        break    
+                        break
                     default:
                         throw new RuntimeException("Invalid file type for installation ${getFileName()}")
                 }
@@ -187,38 +243,34 @@ class Installation {
 
         // register installed tools
         tools.each { tool ->
-            tool.registerInSpacelift(GradleSpacelift.toolRegistry())
+            // use project.configure method to user closure to configure the tool
+            def gradleTool = project.configure(new GradleSpaceliftTool(project), tool.rehydrate(new GradleSpaceliftDelegate(), this, this))
+            gradleTool.registerInSpacelift(GradleSpacelift.toolRegistry())
         }
         // execute post actions
-        if(postActions) {
-            postActions.delegate = this
-            postActions.doCall()
-        }
+        postActions.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
     }
 
     // we keep extraction mapper to be a part of ant extract command
     def extractMapper(Closure closure) {
-        this.extractMapper = closure;
+        this.extractMapper = extractValueAsLazyClosure(closure).dehydrate()
+        this.extractMapper.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     // we keep post actions to be executed after installation is done
     def postActions(Closure closure) {
-        this.postActions = closure;
+        this.postActions = extractValueAsLazyClosure(closure).dehydrate()
+        this.postActions.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def preconditions(Closure closure) {
-        this.preconditions = closure
+        this.preconditions = extractValueAsLazyClosure(closure).dehydrate()
+        this.preconditions.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def tool(Closure closure) {
-        def tool = new GradleSpaceliftTool(project)
-
-        // FIXME here we are dynamically adding home property to the tool instance
-        // so we can reference it in the closure, this is Groovy magic and there might be a better way
-        //tool.metaClass.home = getHome()
-        closure.delegate = this
-        project.configure(tool, closure)
-
+        def tool = extractValueAsLazyClosure(closure).dehydrate()
+        tool.resolveStrategy = Closure.DELEGATE_FIRST
         tools << tool
     }
 }

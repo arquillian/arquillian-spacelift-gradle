@@ -14,7 +14,7 @@ class SpaceliftPlugin implements Plugin<Project> {
 
     static final Logger log = LoggerFactory.getLogger('SpaceliftPlugin')
 
-    // this plugin prepares aerogear environment
+    // this plugin prepares Arquillian Spacelift environment
     void apply(Project project) {
         
         // set default values if not specified from command line
@@ -40,7 +40,7 @@ class SpaceliftPlugin implements Plugin<Project> {
         // add test definitions
         project.spacelift.extensions.tests = project.container(Test) { testName ->
             project.gradle.services.get(Instantiator).newInstance(Test, testName, project)
-        }
+        }        
 
         // set current project and initialize tools
         // parses default profile, installations and tests
@@ -191,8 +191,8 @@ class SpaceliftPlugin implements Plugin<Project> {
         // it used prepared environment created by previous task
         project.task('test') << {
             project.selectedTests.each { test ->
-                logger.lifecycle("test:test ${test.name}")
-                test.executeTest()
+                logger.lifecycle(":test:test ${test.name}")
+                test.executeTest(logger)
             }
         }
 

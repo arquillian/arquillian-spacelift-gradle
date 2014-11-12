@@ -55,7 +55,7 @@ class DefaultValuesParsingTest {
 
         project.spacelift {
             tools {
-                rhc { command = "rhc${project.rhcVersion}" }
+                rhc { command "rhc${project.rhcVersion}" }
             }
             profiles {
             }
@@ -78,7 +78,7 @@ class DefaultValuesParsingTest {
         Project project = ProjectBuilder.builder().build()
 
         project.ext.set("defaultAndroidTargets", ["19", "18", "google-17"])
-        project.androidTargets = "18, 19"
+        project.ext.androidTargets = "18, 19"
 
         project.apply plugin: 'spacelift'
 

@@ -27,7 +27,7 @@ public class CreateOpenshiftCartridgeTest {
         project.apply plugin: 'spacelift'
 
         project.spacelift {
-            tools { rhc { command = "rhc" } }
+            tools { rhc { command "rhc" } }
             profiles {
             }
             installations {

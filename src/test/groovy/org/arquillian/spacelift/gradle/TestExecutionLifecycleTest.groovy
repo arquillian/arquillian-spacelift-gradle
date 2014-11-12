@@ -17,24 +17,12 @@ class TestExecutionLifecycleTest {
         project.spacelift {
             tests {
                 bar {
-                    dataProvider {
-                        ["first", "second"]
-                    }
-                    beforeSuite {
-                        println "beforeSuite"
-                    }
-                    beforeTest { value ->
-                        println value + " in beforeTest"
-                    }
-                    execute { value ->
-                        println value
-                    }
-                    afterTest { value -> 
-                        println value + " in afterTest"
-                    }
-                    afterSuite {
-                        println "after suite"
-                    }
+                    dataProvider { ["first", "second"] }
+                    beforeSuite { println "Executing beforeSuite" }
+                    beforeTest { value -> println "Executing beforeTest with data ${value}" }
+                    execute { value -> println "Executing test with data ${value}" }
+                    afterTest { value -> println "Executing afterTest with data ${value}" }
+                    afterSuite { println "Executing afterSuite" }
                 }
             }
             tools {
@@ -44,11 +32,42 @@ class TestExecutionLifecycleTest {
             installations {
             }
         }
-        
+
         GradleSpacelift.currentProject(project)
-        
+
         project.spacelift.tests.each { test ->
-            test.executeTest()
+            test.executeTest(project.logger)
+        }
+    }
+
+    @Test
+    public void noDataProviderTest() {
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'spacelift'
+
+        project.spacelift {
+            tests {
+                bar {
+                    beforeSuite { println "Executing beforeSuite" }
+                    beforeTest {  println "Executing beforeTest" }
+                    execute {  println "Executing test" }
+                    afterTest {  println "Executing afterTest" }
+                    afterSuite { println "Executing afterSuite" }
+                }
+            }
+            tools {
+            }
+            profiles {
+            }
+            installations {
+            }
+        }
+
+        GradleSpacelift.currentProject(project)
+
+        project.spacelift.tests.each { test ->
+            test.executeTest(project.logger)
         }
     }
 }

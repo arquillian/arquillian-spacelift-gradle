@@ -13,6 +13,7 @@ import org.gradle.api.Project
  * @author <a href="kpiwko@redhat.com">Karel Piwko</a>
  *
  */
+@Mixin(ValueExtractor)
 class GradleSpaceliftTool {
     private static final Logger logger = Logger.getLogger("Spacelift")
 
@@ -20,9 +21,9 @@ class GradleSpaceliftTool {
     String name
 
     // prepared command tool
-    def command
+    Closure command
 
-    private Project project
+    Project project
 
     GradleSpaceliftTool(String toolName, Project project) {
         this.name = toolName
@@ -70,7 +71,7 @@ class GradleSpaceliftTool {
         def instance = clazz.newInstance()
 
         // FIXME here we access static fields via instance as we don't have class object
-        instance.commandTool = getOsSpecificCommand(command)
+        instance.commandTool = getCommand()
 
         // register tool using dynamically constructed class
         registry.register(clazz)
@@ -78,53 +79,35 @@ class GradleSpaceliftTool {
         logger.info("Tool ${name} was registered")
     }
 
-    // get command tool
-    CommandTool getOsSpecificCommand(mapClosureOrCollection) {
+    def command(arg) {
+        this.command = extractValueAsLazyClosure(arg).dehydrate()
+        this.command.resolveStrategy = Closure.DELEGATE_FIRST
+    }
 
-        // if this is a closure, execute it
-        if(mapClosureOrCollection instanceof Closure) {
-            mapClosureOrCollection.setProperty('project', this.project)
-            return mapClosureOrCollection.doCall()
+    def getCommand() {
+        def commandTool = command.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(commandTool==null) {
+            return Tasks.prepare(CommandTool)
         }
-        // if this is a single value, just return it
-        else if(mapClosureOrCollection instanceof Map) {
-            // expecting we have a map here
 
-            // try to figure out value given the family
-            if(SystemUtils.IS_OS_WINDOWS) {
-                return getOsSpecificCommand(mapClosureOrCollection['windows'])
-            }
-            else if(SystemUtils.IS_OS_MAC_OSX) {
-                return getOsSpecificCommand(mapClosureOrCollection['mac'])
-            }
-            else if(SystemUtils.IS_OS_LINUX) {
-                return getOsSpecificCommand(mapClosureOrCollection['linux'])
-            }
-            else if(SystemUtils.IS_OS_SOLARIS || SystemUtils.IS_OS_SUN_OS) {
-                return getOsSpecificCommand(mapClosureOrCollection['solaris'])
-            }
-            else {
-                throw new IllegalStateException("Unknown system ${System.getProperty('os.name')}")
-            }
+        if (commandTool instanceof CommandTool) {
+            return commandTool
         }
-        else if (mapClosureOrCollection instanceof CommandTool) {
-            return mapClosureOrCollection
-        }
-        else if(mapClosureOrCollection instanceof Collection) {
-            CommandBuilder command = new CommandBuilder(mapClosureOrCollection[0].toString())
-            mapClosureOrCollection.eachWithIndex { param, i ->
+        else if(commandTool instanceof Collection) {
+            CommandBuilder theCommand = new CommandBuilder(commandTool[0].toString())
+            commandTool.eachWithIndex { param, i ->
                 if(i!=0) {
-                    command.parameters(param.toString())
+                    theCommand.parameters(param.toString())
                 }
             }
-            return Tasks.prepare(CommandTool).command(command)
+            return Tasks.prepare(CommandTool).command(theCommand)
         }
 
-        return Tasks.prepare(CommandTool).command(new CommandBuilder(mapClosureOrCollection));
+        return Tasks.prepare(CommandTool).command(new CommandBuilder(commandTool.toString()));
     }
 
     @Override
     public String toString() {
-        return "SpaceliftTool ${name}, commandTool: ${getOsSpecificCommand(command)}"
+        return "SpaceliftTool ${name}, commandTool: ${getCommand()}"
     }
 }

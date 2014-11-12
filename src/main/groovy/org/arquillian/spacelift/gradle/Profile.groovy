@@ -1,24 +1,54 @@
 package org.arquillian.spacelift.gradle
 
-import org.gradle.api.Project;
+import groovy.lang.Closure
+import groovy.lang.Mixin
+
+import org.gradle.api.Project
 
 // this class represents a profile enumerating installations to be installed
+@Mixin(ValueExtractor)
 class Profile {
 
     // this is required in order to use project container abstraction
     final String name
 
     // list of enabled installations
-    def enabledInstallations
+    Closure enabledInstallations = { []}
 
     // list of tests to execute
-    def tests
+    Closure tests = { []}
 
-    private Project project
+    Project project
 
     Profile(String profileName, Project project) {
         this.name = profileName
         this.project = project
+    }
+
+    def enabledInstallations(Object... args) {
+        this.enabledInstallations = extractValueAsLazyClosure(args).dehydrate()
+        this.enabledInstallations.resolveStrategy = Closure.DELEGATE_FIRST
+    }
+
+    def getEnabledInstallations() {
+        def enabledInstallationsList = enabledInstallations.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(enabledInstallationsList==null) {
+            return []
+        }
+        return enabledInstallationsList
+    }
+
+    def tests(Object... args) {
+        this.tests = extractValueAsLazyClosure(arg).dehydrate()
+        this.tests.resolveStrategy = Closure.DELEGATE_FIRST
+    }
+
+    def getTests() {
+        def enabledTestList = tests.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if(enabledTestList==null) {
+            return []
+        }
+        return enabledTestList
     }
 
     @Override
@@ -29,13 +59,13 @@ class Profile {
 
         // installations
         sb.append("\tInstallations: ")
-        enabledInstallations.each {
+        getEnabledInstallations().each {
             sb.append(it).append(" ")
         }
         sb.append("\n")
 
         sb.append("\tTests: ")
-        tests.each {
+        getTests().each {
             sb.append(it).append(" ")
         }
 

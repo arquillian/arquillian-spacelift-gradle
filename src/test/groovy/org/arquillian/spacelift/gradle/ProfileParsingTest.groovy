@@ -26,15 +26,57 @@ public class ProfileParsingTest {
         project.apply plugin: 'spacelift'
 
         project.spacelift {
-            tools { 
-                rhc { command = "rhc" } 
+            tools {  rhc { command "rhc" }  }
+            profiles { foobar { enabledInstallations "eap" } }
+            installations {  eap { }  }
+            tests {
             }
-            profiles {
-                foobar { enabledInstallations = ["eap"] }
+        }
+
+        // initialize current project tools - this is effectively init-tools task
+        GradleSpacelift.currentProject(project)
+
+        project.spacelift.installations.each { installation ->
+            assertThat installation.home, is(notNullValue())
+            assertThat installation.home.exists(), is(true)
+        }
+    }
+
+    @Test
+    public void profilesInstallationsAsArray() {
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'spacelift'
+
+        project.spacelift {
+            tools {  rhc { command "rhc" }  }
+            profiles { foobar { enabledInstallations ["eap"] } }
+            installations {  eap { }  }
+            tests {
             }
-            installations { 
-                eap {
-                } 
+        }
+
+        // initialize current project tools - this is effectively init-tools task
+        GradleSpacelift.currentProject(project)
+
+        project.spacelift.installations.each { installation ->
+            assertThat installation.home, is(notNullValue())
+            assertThat installation.home.exists(), is(true)
+        }
+    }
+
+    @Test
+    public void profilesInstallationsMultipleArgs() {
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'spacelift'
+
+        project.spacelift {
+            tools {  rhc { command "rhc" }  }
+            profiles { foobar { enabledInstallations "eap","ews" } }
+            installations {  
+                eap {} 
+                ews {} 
             }
             tests {
             }

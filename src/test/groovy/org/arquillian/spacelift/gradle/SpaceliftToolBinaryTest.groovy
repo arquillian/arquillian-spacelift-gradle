@@ -27,10 +27,10 @@ class SpaceliftToolBinaryTest {
         project.spacelift {
             tools {
                 ant {
-                    command = {
+                    command {
                         Tasks.prepare(CommandTool)
-                            .command(new CommandBuilder("ant"))
-                            .addEnvironment("ANT_HOME", System.getenv("ANT_HOME"))
+                                .command(new CommandBuilder("ant"))
+                                .addEnvironment("ANT_HOME", System.getenv("ANT_HOME"))
                     }
                 }
             }
@@ -98,11 +98,8 @@ class SpaceliftToolBinaryTest {
         project.apply plugin: 'spacelift'
 
         project.spacelift {
-            tools {
-                ant {
-                    command = "ant"
-                }
-            }
+            tools { ant { command "ant"
+                } }
             profiles {
             }
             installations {
@@ -131,7 +128,7 @@ class SpaceliftToolBinaryTest {
         project.spacelift {
             tools {
                 ant {
-                    command = [linux:"ant", windows:"ant.bat"]
+                    command ([linux:"ant", windows:"ant.bat"])
                 }
             }
             profiles {
@@ -162,7 +159,7 @@ class SpaceliftToolBinaryTest {
         project.spacelift {
             tools {
                 ant {
-                    command = {
+                    command {
                         def antHome = System.getenv("ANT_HOME")
                         if (antHome != null && !antHome.isEmpty()) {
                             return Tasks.prepare(CommandTool).command(new CommandBuilder(antHome + "/bin/ant"))
@@ -198,19 +195,19 @@ class SpaceliftToolBinaryTest {
 
         project.apply plugin: 'spacelift'
 
-        project.setProperty("androidHome", "foobar")
+        project.ext.set("androidHome", "foobar")
 
         project.spacelift {
             tools {
                 android {
-                    command = [
+                    command ([
                         linux: {
                             Tasks.prepare(CommandTool).command(new CommandBuilder(new File(project.androidHome, "tools/android.bat").getAbsolutePath()))
                         },
                         windows: {
                             Tasks.prepare(CommandTool).command(new CommandBuilder("cmd.exe", "/C", new File(project.androidHome, "tools/android.bat").getAbsolutePath()))
                         }
-                    ]
+                    ])
                 }
             }
             profiles {
@@ -235,12 +232,12 @@ class SpaceliftToolBinaryTest {
 
         project.apply plugin: 'spacelift'
 
-        project.setProperty("androidHome", "foobar")
+        project.ext.set("androidHome", "foobar")
 
         project.spacelift {
             tools {
                 android {
-                    command = [
+                    command ([
                         linux: [
                             new File(project.androidHome, "tools/android.bat").getAbsolutePath()
                         ],
@@ -249,7 +246,7 @@ class SpaceliftToolBinaryTest {
                             "/C",
                             new File(project.androidHome, "tools/android.bat").getAbsolutePath()
                         ]
-                    ]
+                    ])
                 }
             }
             profiles {

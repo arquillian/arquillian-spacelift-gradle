@@ -1,8 +1,9 @@
 package org.arquillian.spacelift.gradle
 
-import org.eclipse.jdt.core.dom.ThisExpression;
 import org.gradle.api.Project
+import org.slf4j.Logger
 
+@Mixin(ValueExtractor)
 class Test {
 
     // required by gradle to be defined
@@ -10,96 +11,88 @@ class Test {
 
     final String testName
 
-    def execute
+    Closure execute
 
-    def dataProvider
+    Closure dataProvider = { [null]}
 
-    def beforeSuite
+    Closure beforeSuite = {}
 
-    def beforeTest
+    Closure beforeTest = {}
 
-    def afterSuite
+    Closure afterSuite = {}
 
-    def afterTest
+    Closure afterTest = {}
 
-    private Project project
+    Project project
 
     Test(String testName, Project project) {
         this.name = this.testName = testName
         this.project = project
     }
 
-    def executeTest() {
+    def executeTest(Logger logger) {
 
-        if (beforeSuite) {
-            beforeSuite.delegate = this
-            beforeSuite.doCall()
-        }
+        // before suite
+        beforeSuite.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
 
-        if (execute) {
+        // iterate through beforeTest, execute and afterTest based on data provider
+        dataProvider.rehydrate(new GradleSpaceliftDelegate(), this, this).call().each { data ->
 
-            if (dataProvider) {
-                dataProvider.delegate = this
-                dataProvider.doCall().each { data ->
-
-                    if (beforeTest) {
-                        beforeTest.delegate = this
-                        beforeTest.doCall(data)
-                    }
-
-                    execute.delegate = this
-                    execute.doCall(data)
-
-                    if (afterTest) {
-                        afterTest.delegate = this
-                        afterTest.doCall(data)
-                    }
-                }
-            } else {
-
-                if (beforeTest) {
-                    beforeTest.delegate = this
-                    beforeTest.doCall()
-                }
-
-                execute.delegate = this
-                execute.doCall()
-
-                if (afterTest) {
-                    afterTest.delegate = this
-                    afterTest.doCall()
-                }
+            if(data==null) {
+                beforeTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+            }
+            else {
+                beforeTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call(data)
             }
 
+            if(data==null) {
+                logger.lifecycle(":test:${name}")
+                afterTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+            }
+            else {
+                logger.lifecycle(":test:${name} (${data})")
+                execute.rehydrate(new GradleSpaceliftDelegate(), this, this).call(data)
+            }
+            if(data==null) {
+                afterTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+            }
+            else {
+                afterTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call(data)
+            }
         }
 
-        if (afterSuite) {
-            afterSuite.delegate = this
-            afterSuite.doCall()
-        }
+        // after suite
+        afterSuite.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+
     }
 
-    def execute(Closure closure) {
-        this.execute = closure
+    def execute(arg) {                
+        this.execute = extractValueAsLazyClosure(arg).dehydrate()
+        this.execute.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
-    def dataProvider(Closure closure) {
-        this.dataProvider = closure
+    def dataProvider(arg) {
+        this.dataProvider = extractValueAsLazyClosure(arg).dehydrate()
+        this.dataProvider.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
-    def beforeSuite(Closure closure) {
-        this.beforeSuite = closure
+    def beforeSuite(arg) {
+        this.beforeSuite = extractValueAsLazyClosure(arg).dehydrate()
+        this.beforeSuite.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
-    def beforeTest(Closure closure) {
-        this.beforeTest = closure
+    def beforeTest(arg) {
+        this.beforeTest = extractValueAsLazyClosure(arg).dehydrate()
+        this.beforeTest.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
-    def afterSuite(Closure closure) {
-        this.afterSuite = closure
+    def afterSuite(arg) {
+        this.afterSuite = extractValueAsLazyClosure(arg).dehydrate()
+        this.afterSuite.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
-    def afterTest(Closure closure) {
-        this.afterTest = closure
+    def afterTest(arg) {
+        this.afterTest = extractValueAsLazyClosure(arg).dehydrate()
+        this.afterTest.resolveStrategy = Closure.DELEGATE_FIRST
     }
 }

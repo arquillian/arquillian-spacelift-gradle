@@ -29,10 +29,10 @@ class MavenSettingsTest {
 
         project.spacelift {
             tools {
-                rhc { command = "rhc" }
+                rhc { command "rhc" }
             }
             profiles {
-                foobar { enabledInstallations = ["eap"] }
+                foobar { enabledInstallations ["eap"] }
             }
             installations {
                 eap {

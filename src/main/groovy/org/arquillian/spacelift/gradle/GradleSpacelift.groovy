@@ -34,6 +34,7 @@ class GradleSpacelift {
         project.spacelift.tools.each { tool ->
             tool.registerInSpacelift(ProjectHolder.tools)
         }
+        GradleSpaceliftDelegate.init()
     }
 
     public static Project currentProject() {

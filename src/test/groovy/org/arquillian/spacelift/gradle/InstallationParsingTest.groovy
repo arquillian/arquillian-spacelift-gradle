@@ -21,8 +21,7 @@ public class InstallationParsingTest {
         project.apply plugin: 'spacelift'
 
         project.spacelift {
-            tools { rhc { command = "rhc"
-                } }
+            tools { rhc {  command "rhc" } }
             profiles {
             }
             installations { eap { } }
@@ -38,12 +37,12 @@ public class InstallationParsingTest {
             assertThat installation.home.exists(), is(true)
         }
     }
-    
+
     @Test
     public void preconditionTest() {
-        
+
         Project project = ProjectBuilder.builder().build()
-        
+
         project.apply plugin: 'spacelift'
 
         project.spacelift {
@@ -55,22 +54,20 @@ public class InstallationParsingTest {
             }
             installations {
                 didNotMeetPreconditionInstallation {
-                    preconditions {
-                        false
-                    }
+                    preconditions { false }
                     postActions {
                         new File(System.getProperty("java.io.tmpdir"), "preconditionTestFile.tmp").createNewFile()
                     }
                 }
             }
         }
-        
+
         GradleSpacelift.currentProject(project)
-        
-        project.spacelift.installations.each { installation -> 
+
+        project.spacelift.installations.each { installation ->
             installation.install()
         }
-        
+
         assertThat new File(System.getProperty("java.io.tmpdir"), "preconditionTestFile.tmp").exists(), is(false)
     }
 }
