@@ -26,8 +26,10 @@ public class ProfileParsingTest {
         project.apply plugin: 'spacelift'
 
         project.spacelift {
-            tools {  rhc { command "rhc" }  }
-            profiles { foobar { enabledInstallations "eap" } }
+            tools {  rhc { command "rhc"
+                }  }
+            profiles { foobar { enabledInstallations "eap"
+                } }
             installations {  eap { }  }
             tests {
             }
@@ -74,12 +76,42 @@ public class ProfileParsingTest {
         project.spacelift {
             tools {  rhc { command "rhc" }  }
             profiles { foobar { enabledInstallations "eap","ews" } }
-            installations {  
-                eap {} 
-                ews {} 
+            installations {
+                eap {}
+                ews {}
             }
             tests {
             }
+        }
+
+        // initialize current project tools - this is effectively init-tools task
+        GradleSpacelift.currentProject(project)
+
+        project.spacelift.installations.each { installation ->
+            assertThat installation.home, is(notNullValue())
+            assertThat installation.home.exists(), is(true)
+        }
+    }
+
+    @Test
+    public void profilesInstallationsMultipleArgsTests() {
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'spacelift'
+
+        project.spacelift {
+            tools {  rhc { command "rhc" }  }
+            profiles {
+                foobar {
+                    enabledInstallations "eap","ews"
+                    tests "fooTest"
+                }
+            }
+            installations {
+                eap {}
+                ews {}
+            }
+            tests { fooTest {} }
         }
 
         // initialize current project tools - this is effectively init-tools task

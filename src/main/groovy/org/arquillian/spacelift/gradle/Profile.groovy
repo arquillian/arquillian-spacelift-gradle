@@ -39,7 +39,7 @@ class Profile {
     }
 
     def tests(Object... args) {
-        this.tests = extractValueAsLazyClosure(arg).dehydrate()
+        this.tests = extractValueAsLazyClosure(args).dehydrate()
         this.tests.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
