@@ -119,27 +119,29 @@ spacelift {
 globalSetupProperties::
     There are a few properties with sane default. You can modify them to alter execution flow.
 +
-* workspace - a directory where you work, by default this directory 
-* installationsDir - a directory where installation files are cached
-* localRepository - Maven local repository path
-* killServers - {true|false} whether to kill Java processes first
-* keystoreFile - path to JKS keystore file
-* truststoreFile - path to JKS truststore file
-* enableStaging - enable JBoss Staging repository
-* enableSnapshots - enable JBoss Snapshots repository
-+
+* +workspace+ - a directory where you work, by default this directory 
+* +installationsDir+ - a directory where installation files are cached
+* +localRepository+ - Maven local repository path
+* +killServers+ - {true|false} whether to kill Java processes first
+* +keystoreFile+ - path to JKS keystore file
+* +truststoreFile+ - path to JKS truststore file
+* +enableStaging+ - enable JBoss Staging repository
+* +enableSnapshots+ - enable JBoss Snapshots repository
+
+
 value::
     Value definition in accepted in following format. If it is defined in _block_, is is always lazy evaluated.
 +
-* plain - such as +false+, +"mydir"+, +'mydir'+ or +"${project.rootDir}/mydir"+.
-* block - such as +{ false }+ or +{ /* a lot of code */ }+. Block does has access to properties of defining installation, profile, test or tool, whatever is relevant. It can also reference current project by using +project+ property
-* map - a map with keys denoting operating system and value either in _plain_ or _block_ form, for instance +[linux:"foo", windows: {"foo"}]+. Following OS values are supported:
+* _plain_ - such as +false+, +"mydir"+, +'mydir'+ or +"${project.rootDir}/mydir"+.
+* _block_ - such as +{ false }+ or +{ /* a lot of code */ }+. Block does has access to properties of defining installation, profile, test or tool, whatever is relevant. It can also reference current project by using +project+ property
+* _map_ - a map with keys denoting operating system and value either in _plain_ or _block_ form, for instance +[linux:"foo", windows: {"foo"}]+. Following OS values are supported:
 ** +linux+
 ** +windows+
 ** +mac+
 ** +solaris+
-+ 
-NOTE: If you are using map, you need to use parenthesis around parameter
+
+ 
+NOTE: If you are using _map_, you need to use parenthesis around parameter
 
 tools::
     Tools allow you to define external commands that should be available on local system. Syntax is following:
@@ -159,7 +161,7 @@ command::
     Following tools are always expected to be present: _ant_ and _mvn_
 
 profiles::
-    Profiles consist of installations to be installed and tests to be executed. You can use -P_profileName_ to trigger
+    Profiles consist of installations to be installed and tests to be executed. You can use -P__profileName__ to trigger
     specific profile, otherwise default profile is triggered. _default_ profile is expected to be present. Note, you need
     define profileName quoted in case of _default_.
 +
