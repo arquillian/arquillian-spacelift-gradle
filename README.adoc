@@ -192,7 +192,7 @@ installationName {
     forceReinstall value 
     preconditions value 
     }
-    extractMapper { any ant mapper }
+    extractMapper { /* Any UncompressTool call(s) */ }
     tool {
         name = 'toolName' // must not contain - or space
         command value
@@ -211,7 +211,16 @@ Following properties are used::
 * home - name of dir in _workspace_ where installation is extracted. Can be map, same keys as for _tool_
 * autoExtract - by default +true+, consider installation an archive and extract it to _workspace_ directory
 * forceReinstall - by default +false+, ignores installation download and extract if already available in _installationDir_ or extracted in _workspace_
-* extractMapper - optional Ant mapper to be applied while installation is extracted. For instance +globmapper(from: "foo/*", to: "bar/*")+
+* extractMapper - optional calls on https://github.com/arquillian/arquillian-spacelift/blob/master/spacelift-impl/src/main/java/org/arquillian/spacelift/tool/basic/UncompressTool.java[UncompressTool] performed prior extraction happens. For instance, this removes first directory from extracted path and extracts archive to directory defined by +home+
++
+[source]
+----
+extractMapper {
+    toDir(home)
+    cutdirs()
+}
+----
++
 * tool - allows to define +tool+ that will be available after installation is done
 * postActions - defines actions to be performed after installation is extracted
 * preconditions - this closure is optional and when specified, it has to return boolean value. If it returns false, installation is skipped, if true, installation is executed.

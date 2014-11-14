@@ -31,7 +31,7 @@ class ClosureEvaluationTest {
                         org.junit.Assert.assertThat project.spacelift, is(notNullValue())
                         org.junit.Assert.assertThat project.spacelift.installationsDir, is(notNullValue())
                         org.junit.Assert.assertThat "${fsPath}".toString(), containsString("${project.spacelift.installationsDir}/test/1/index.html")
-                        org.junit.Assert.assertThat tool('java'), is(notNullValue())                        
+                        org.junit.Assert.assertThat tool('java'), is(notNullValue())
                         org.junit.Assert.assertThat tool(AndroidSdkUpdater), is(notNullValue())
                     }
                 }
@@ -70,7 +70,7 @@ class ClosureEvaluationTest {
         GradleSpacelift.currentProject(testProject)
 
         testProject.spacelift.installations.each { installation ->
-            installation.install()
+            installation.install(project.logger)
         }
 
         testProject.spacelift.tests.each { test ->
@@ -79,5 +79,42 @@ class ClosureEvaluationTest {
 
         def java2Tool = GradleSpacelift.tools("java2")
         assertThat java2Tool, is(notNullValue())
+    }
+
+    @Test
+    public void extractMapperDelegateBindingsTest() {
+        Project testProject = ProjectBuilder.builder().build()
+
+        testProject.ext.set("defaultPropagatedProperty", "10")
+
+        def project = testProject
+        testProject.apply plugin: 'spacelift'
+
+        testProject.spacelift {
+            installations {
+                foo {
+                    product "test"
+                    version "1"
+                    fileName "arquillian-selenium-bom-master.zip"
+                    remoteUrl "https://github.com/arquillian/arquillian-selenium-bom/archive/master.zip"
+                    home {"arquillian-selenium-${project.propagatedProperty}" }
+                    extractMapper {
+                        remap("arquillian-selenium-bom-master/*").with("arquillian-selenium-${project.propagatedProperty}/*")
+                    }
+                    postActions {
+                        org.junit.Assert.assertThat project, is(notNullValue())
+                        org.junit.Assert.assertThat project.spacelift, is(notNullValue())
+                        org.junit.Assert.assertThat project.spacelift.installationsDir, is(notNullValue())
+                        org.junit.Assert.assertThat "${home}".toString(), containsString("${project.spacelift.workspace}/arquillian-selenium-${project.propagatedProperty}")
+                    }
+                }
+            }
+        }
+
+        GradleSpacelift.currentProject(testProject)
+
+        testProject.spacelift.installations.each { installation ->
+            installation.install(project.logger)
+        }
     }
 }

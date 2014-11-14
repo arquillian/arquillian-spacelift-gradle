@@ -3,7 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 
 group 'org.arquillian.spacelift.gradle'
-version '1.0.0-alpha-3-SNAPSHOT'
+version '1.0.0-alpha-3'
 
 repositories {
     mavenCentral()
@@ -31,7 +31,7 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.1'
 
     // Spacelift abstracts execution of external commands
-    compile 'org.arquillian.spacelift:arquillian-spacelift:1.0.0.Alpha2'
+    compile 'org.arquillian.spacelift:arquillian-spacelift:1.0.0.Alpha3'
     compile 'org.jboss.aerogear.test:spacelift-jboss-manager:0.2.0'
 
     testCompile 'junit:junit:4.11'

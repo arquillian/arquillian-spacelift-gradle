@@ -183,7 +183,7 @@ class SpaceliftPlugin implements Plugin<Project> {
 
             project.selectedInstallations.each { installation ->
                 logger.lifecycle(":prepare-env:install ${installation.name}")
-                installation.install()
+                installation.install(logger)
             }
         }
 

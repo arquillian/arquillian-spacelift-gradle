@@ -1,8 +1,11 @@
 package org.arquillian.spacelift.gradle
 
+import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.tool.basic.DownloadTool
+import org.arquillian.spacelift.tool.basic.UnzipTool
+import org.arquillian.spacelift.tool.basic.UntarTool
 import org.gradle.api.Project
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 
 // this class represents anything installable
@@ -14,7 +17,6 @@ import org.slf4j.LoggerFactory
 // * solaris
 @Mixin(ValueExtractor)
 class Installation {
-    static final Logger log = LoggerFactory.getLogger('Installation')
 
     // this is required in order to use project container abstraction
     final String name
@@ -74,7 +76,7 @@ class Installation {
         }
         return Boolean.parseBoolean(shouldExtract.toString())
     }
-    
+
     def forceReinstall(arg) {
         this.forceReinstall = extractValueAsLazyClosure(arg).dehydrate()
         this.forceReinstall.resolveStrategy = Closure.DELEGATE_FIRST
@@ -122,7 +124,13 @@ class Installation {
     def getHome() {
         def homeDir = home.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         if(homeDir==null) {
-            return project.spacelift.workspace
+            URL url = getRemoteUrl()
+            if(url!=null) {
+                homeDir = guessDirNameFromUrl(url)
+            }
+            else {
+                return project.spacelift.workspace
+            }
         }
 
         new File(project.spacelift.workspace, homeDir)
@@ -136,6 +144,10 @@ class Installation {
     def getFileName() {
         def fileNameString = fileName.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         if(fileNameString==null) {
+            URL url = getRemoteUrl()
+            if(url!=null) {
+                return guessFileNameFromUrl(url)
+            }
             return ""
         }
 
@@ -171,12 +183,12 @@ class Installation {
     }
 
     // get installation and perform steps defined in closure after it is extracted
-    void install() {
+    void install(Logger logger) {
 
         if (!preconditions.rehydrate(new GradleSpaceliftDelegate(), this, this).call()) {
             // if closure returns false, we did not meet preconditions
             // so we return from installation process
-            log.info("Installation '" + name + "' did not meet preconditions - it will be excluded from execution.")
+            logger.info("Installation '" + name + "' did not meet preconditions - it will be excluded from execution.")
             return
         }
 
@@ -184,60 +196,61 @@ class Installation {
 
         File targetFile = getFsPath()
         if(getForceReinstall() == false && targetFile.exists()) {
-            log.info("Grabbing ${getFileName()} from file system")
+            logger.info("Grabbing ${getFileName()} from file system")
         }
-        else {
+        else if(getRemoteUrl()!=null){
             // ensure parent directory exists
             targetFile.getParentFile().mkdirs()
 
             // dowload bits if they do not exists
-            log.info("Downloading ${getFileName()} from URL ${getRemoteUrl()} to ${getFsPath()}")
-            ant.get(src: getRemoteUrl(), dest: getFsPath(), usetimestamp: true)
+            logger.info("Downloading ${getFileName()} from URL ${getRemoteUrl()} to ${targetFile}")
+            Tasks.prepare(DownloadTool).from(getRemoteUrl()).to(targetFile).execute().await()
         }
 
         if(getAutoExtract()) {
             if(forceReinstall == false && getHome().exists()) {
-                log.info("Reusing existing installation ${getHome()}")
+                logger.info("Reusing existing installation ${getHome()}")
             }
             else {
 
                 if(forceReinstall && getHome().exists()) {
-                    log.info("Deleting previous installation ${getHome()}")
-                    ant.delete(dir: getHome())
+                    logger.info("Deleting previous installation ${getHome()}")
+                    project.ant.delete(dir: getHome())
                 }
 
-                extractMapper = extractMapper.rehydrate(new GradleSpaceliftDelegate(), this.project, this)
+                def remap = extractMapper.rehydrate(new GradleSpaceliftDelegate(), this, this)
 
-                log.info("Extracting installation to ${project.spacelift.workspace}")
+                logger.info("Extracting installation to ${project.spacelift.workspace}")
 
                 // based on installation type, we might want to unzip/untar/something else
                 switch(getFileName()) {
                     case ~/.*jar/:
-                        ant.unzip (src: getFsPath(), dest: new File(project.spacelift.workspace, getFileName()), extractMapper)
+                        project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(new File(project.spacelift.workspace, getFileName())), remap)
+                        .execute().await()
                         break
                     case ~/.*zip/:
-                        ant.unzip (src: getFsPath(), dest: project.spacelift.workspace, extractMapper)
+                        project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(project.spacelift.workspace), remap).execute().await()
                         break
                     case ~/.*tgz/:
                     case ~/.*tar\.gz/:
-                        ant.untar(src: getFsPath(), dest: project.spacelift.workspace, compression: 'gzip', extractMapper)
+                        project.configure(Tasks.chain(getFsPath(),UntarTool).toDir(project.spacelift.workspace), remap).execute().await()
                         break
                     case ~/.*tbz/:
                     case ~/.*tar\.bz2/:
-                        ant.untar(src: getFsPath(), dest: project.spacelift.workspace, compression: 'bzip2', extractMapper)
+                        project.configure(Tasks.chain(getFsPath(),UntarTool).bzip2(true).toDir(project.spacelift, remap).workspace).execute().await()
                         break
                     default:
-                        throw new RuntimeException("Invalid file type for installation ${getFileName()}")
+                        logger.warn("Unable to extract ${getFileName()}, ignored")
                 }
             }
         }
         else {
             if(new File(getHome(), getFileName()).exists()) {
-                log.info("Reusing existing installation ${new File(getHome(),getFileName())}")
+                logger.info("Reusing existing installation ${new File(getHome(),getFileName())}")
             }
             else {
-                log.info("Copying installation to ${project.spacelift.workspace}")
-                ant.copy(file: getFsPath(), tofile: new File(getHome(), getFileName()))
+                logger.info("Copying installation to ${project.spacelift.workspace}")
+                project.ant.copy(file: getFsPath(), tofile: new File(getHome(), getFileName()))
             }
         }
 
@@ -273,4 +286,27 @@ class Installation {
         tool.resolveStrategy = Closure.DELEGATE_FIRST
         tools << tool
     }
+
+    private String guessFileNameFromUrl(URL url) {
+        String path = url.getPath()
+
+        if (path==null || "".equals(path) || path.endsWith("/")) {
+            return ""
+        }
+
+        File file = new File(url.getPath())
+        return file.getName()
+    }
+
+    private String guessDirNameFromUrl(URL url) {
+        String dirName = guessFileNameFromUrl(url)
+
+        int dot = dirName.lastIndexOf(".")
+        if(dot!=-1) {
+            return dirName.substring(0, dot)
+        }
+
+        return dirName
+    }
+
 }
