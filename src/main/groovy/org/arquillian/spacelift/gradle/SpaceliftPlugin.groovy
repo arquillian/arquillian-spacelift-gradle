@@ -86,7 +86,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
 
             // make selected profile global
-            logger.lifecycle("init:profile " + profile.name)
+            logger.lifecycle(":init:profile-" + profile.name)
             project.ext.set("selectedProfile", profile)
 
             // find installations that were specified by profile or enabled manually from command line
@@ -107,11 +107,11 @@ class SpaceliftPlugin implements Plugin<Project> {
             installations = installationNames.inject(new ArrayList()) { list, installationName ->
                 def installation = project.spacelift.installations[installationName]
                 if(installation) {
-                    logger.info("init: Installation ${installationName} will be installed.")
+                    logger.info(":init: Installation ${installationName} will be installed.")
                     list << installation
                     return list
                 }
-                logger.warn("init: Selected installation ${installationName} does not exist and will be ignored")
+                logger.warn(":init: Selected installation ${installationName} does not exist and will be ignored")
                 return list
             }
 
@@ -136,11 +136,11 @@ class SpaceliftPlugin implements Plugin<Project> {
             tests = testNames.inject(new ArrayList()) { list, testName ->
                 def test = project.spacelift.tests[testName]
                 if(test) {
-                    logger.info("init: Selected test ${testName} will be tested (if task 'test' is run).")
+                    logger.info(":init: Selected test ${testName} will be tested (if task 'test' is run).")
                     list << test
                     return list
                 }
-                logger.warn("init: Selected tests ${testName} does not exist and will be ignored")
+                logger.warn(":init: Selected tests ${testName} does not exist and will be ignored")
                 return list
             }
 
@@ -185,7 +185,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
 
             project.selectedInstallations.each { installation ->
-                logger.lifecycle(":prepare-env:install ${installation.name}")
+                logger.lifecycle(":install:${installation.name} will be installed")
                 installation.install(logger)
             }
         }
@@ -194,7 +194,7 @@ class SpaceliftPlugin implements Plugin<Project> {
         // it used prepared environment created by previous task
         project.task('test') << {
             project.selectedTests.each { test ->
-                logger.lifecycle(":test:test ${test.name}")
+                logger.lifecycle(":test:test-${test.name} will be executed")
                 test.executeTest(logger)
             }
         }
