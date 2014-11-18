@@ -122,4 +122,44 @@ public class ProfileParsingTest {
             assertThat installation.home.exists(), is(true)
         }
     }
+
+    @Test
+    public void profilesInstallationsTestsArrays() {
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'spacelift'
+
+        // enable foobar profile
+        project.ext.set("foobar", "true")
+        
+        project.spacelift {
+            tools {  rhc { command "rhc" }  }
+            profiles {
+                foobar {
+                    enabledInstallations ([
+                        "eap",
+                        "ews"
+                    ])
+                    tests (["fooTest", "barTest"])
+                }
+            }
+            installations {
+                eap {}
+                ews {}
+            }
+            tests {
+                fooTest {}
+                barTest {}
+            }
+        }
+
+        // initialize current project tools - this is effectively init-tools task
+        GradleSpacelift.currentProject(project)
+
+        project.getTasks()['init'].execute()
+        assertThat project.selectedProfile, is(notNullValue())
+        assertThat project.selectedProfile.name, is('foobar')
+        assertThat project.selectedInstallations.size(), is(2)
+        //assertThat project.selectedTests.size(), is(2)            
+    }
 }

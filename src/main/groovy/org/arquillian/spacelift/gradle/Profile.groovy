@@ -13,10 +13,10 @@ class Profile {
     final String name
 
     // list of enabled installations
-    Closure enabledInstallations = { []}
+    Closure enabledInstallations = { [] }
 
     // list of tests to execute
-    Closure tests = { []}
+    Closure tests = { [] }
 
     Project project
 
@@ -35,7 +35,7 @@ class Profile {
         if(enabledInstallationsList==null) {
             return []
         }
-        return enabledInstallationsList
+        return enabledInstallationsList.flatten()
     }
 
     def tests(Object... args) {
@@ -48,7 +48,7 @@ class Profile {
         if(enabledTestList==null) {
             return []
         }
-        return enabledTestList
+        return enabledTestList.flatten()
     }
 
     @Override
