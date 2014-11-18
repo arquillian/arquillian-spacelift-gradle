@@ -202,7 +202,7 @@ class Installation {
 
             // dowload bits if they do not exists
             logger.info(":install:${name} Grabbing from ${getRemoteUrl()}, storing at ${targetFile}")
-            Tasks.prepare(DownloadTool).from(getRemoteUrl()).to(targetFile).execute().await()
+            Tasks.prepare(DownloadTool).from(getRemoteUrl()).timeout(60000).to(targetFile).execute().await()
         }
 
         // extract file if set to and at the same time file is defined
@@ -245,10 +245,10 @@ class Installation {
         }
         else {
             if(new File(getHome(), getFileName()).exists()) {
-                logger.info("Reusing existing installation ${new File(getHome(),getFileName())}")
+                logger.info(":install:${name} Reusing existing installation ${new File(getHome(),getFileName())}")
             }
             else {
-                logger.info("Copying installation to ${project.spacelift.workspace}")
+                logger.info(":install:${name} Copying installation to ${project.spacelift.workspace}")
                 project.ant.copy(file: getFsPath(), tofile: new File(getHome(), getFileName()))
             }
         }
