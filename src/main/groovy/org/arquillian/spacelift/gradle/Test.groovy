@@ -50,7 +50,7 @@ class Test {
 
             if(data==null) {
                 logger.lifecycle(":test:${name}")
-                afterTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+                execute.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
             }
             else {
                 logger.lifecycle(":test:${name} (${data})")
