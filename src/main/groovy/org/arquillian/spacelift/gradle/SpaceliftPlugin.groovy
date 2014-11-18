@@ -1,12 +1,13 @@
 package org.arquillian.spacelift.gradle
 
 import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.execution.impl.DefaultExecutionServiceFactory
+import org.arquillian.spacelift.gradle.maven.SettingsXmlUpdater
+import org.arquillian.spacelift.gradle.utils.KillJavas
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.internal.reflect.Instantiator
-import org.arquillian.spacelift.gradle.maven.SettingsXmlUpdater
-import org.arquillian.spacelift.gradle.utils.KillJavas
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -17,6 +18,8 @@ class SpaceliftPlugin implements Plugin<Project> {
     // this plugin prepares Arquillian Spacelift environment
     void apply(Project project) {
         
+        // initialize Spacelift task factory
+        Tasks.setDefaultExecutionServiceFactory(new DefaultExecutionServiceFactory())
         // set default values if not specified from command line
         setDefaultDataProviders(project);
         
