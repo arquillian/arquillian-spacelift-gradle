@@ -188,39 +188,38 @@ class Installation {
         if (!preconditions.rehydrate(new GradleSpaceliftDelegate(), this, this).call()) {
             // if closure returns false, we did not meet preconditions
             // so we return from installation process
-            logger.info("Installation '" + name + "' did not meet preconditions - it will be excluded from execution.")
+            logger.info(":install:${name} Skipping, did not meet preconditions.")
             return
         }
 
-        def ant = project.ant
-
         File targetFile = getFsPath()
         if(getForceReinstall() == false && targetFile.exists()) {
-            logger.info("Grabbing ${getFileName()} from file system")
+            logger.info(":install:${name} Grabbing ${getFileName()} from file system")
         }
         else if(getRemoteUrl()!=null){
             // ensure parent directory exists
             targetFile.getParentFile().mkdirs()
 
             // dowload bits if they do not exists
-            logger.info("Downloading ${getFileName()} from URL ${getRemoteUrl()} to ${targetFile}")
+            logger.info(":install:${name} Grabbing from ${getRemoteUrl()}, storing at ${targetFile}")
             Tasks.prepare(DownloadTool).from(getRemoteUrl()).to(targetFile).execute().await()
         }
 
-        if(getAutoExtract()) {
-            if(forceReinstall == false && getHome().exists()) {
-                logger.info("Reusing existing installation ${getHome()}")
+        // extract file if set to and at the same time file is defined
+        if(getAutoExtract() && getFileName() != "") {
+            if(getForceReinstall() == false && getHome().exists()) {
+                logger.info(":install:${name} Reusing existing installation at ${getHome()}")
             }
             else {
 
-                if(forceReinstall && getHome().exists()) {
-                    logger.info("Deleting previous installation ${getHome()}")
+                if(getForceReinstall() == true && getHome().exists()) {
+                    logger.info(":install:${name} Deleting previous installation at ${getHome()}")
                     project.ant.delete(dir: getHome())
                 }
 
                 def remap = extractMapper.rehydrate(new GradleSpaceliftDelegate(), this, this)
 
-                logger.info("Extracting installation to ${project.spacelift.workspace}")
+                logger.info(":install:${name} Extracting installation from ${getFileName()}")
 
                 // based on installation type, we might want to unzip/untar/something else
                 switch(getFileName()) {
@@ -240,7 +239,7 @@ class Installation {
                         project.configure(Tasks.chain(getFsPath(),UntarTool).bzip2(true).toDir(project.spacelift, remap).workspace).execute().await()
                         break
                     default:
-                        logger.warn("Unable to extract ${getFileName()}, ignored")
+                        logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
                 }
             }
         }

@@ -33,15 +33,18 @@ class Test {
     def executeTest(Logger logger) {
 
         // before suite
+        logger.info("test:${name} before suite execution")
         beforeSuite.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
 
         // iterate through beforeTest, execute and afterTest based on data provider
         dataProvider.rehydrate(new GradleSpaceliftDelegate(), this, this).call().each { data ->
 
             if(data==null) {
+                logger.info("test:${name} before test execution")
                 beforeTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
             }
             else {
+                logger.info("test:${name} before test execution (${data})")
                 beforeTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call(data)
             }
 
@@ -54,14 +57,17 @@ class Test {
                 execute.rehydrate(new GradleSpaceliftDelegate(), this, this).call(data)
             }
             if(data==null) {
+                logger.info("test:${name} after test execution")
                 afterTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
             }
             else {
+                logger.info("test:${name} after test execution (${data})")
                 afterTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call(data)
             }
         }
 
         // after suite
+        logger.info("test:${name} after suite execution")
         afterSuite.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
 
     }
