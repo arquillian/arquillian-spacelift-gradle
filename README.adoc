@@ -170,9 +170,13 @@ profiles::
 profileName {
     enabledInstallations 'installation1', 'installation2'
     tests 'test1', 'test3', 'test27'
+    excludedTests 'test3'
 }
 ----
 +
+
+You can exclude tests from execution by _excludedTests_ on profile where you specify which tests you do not want to execute. By triggering the above profile, only _test1_ and _test27_ will be executed.
+
 NOTE: You can also use +*+ to enable all defined installations and or tests for profile. And you can also use _value_ notion and construct a list of strings to match installation names.
 
 
