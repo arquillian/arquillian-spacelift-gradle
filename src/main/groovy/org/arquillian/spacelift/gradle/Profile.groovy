@@ -14,6 +14,9 @@ class Profile implements ValueExtractor{
     // list of tests to execute
     Closure tests = { []}
 
+    // list of tests to exclude
+    Closure excludedTests = { []}
+    
     Project project
 
     Profile(String profileName, Project project) {
@@ -39,6 +42,11 @@ class Profile implements ValueExtractor{
         this.tests.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
+    def excludedTests(Object... args) {
+        this.excludedTests = extractValueAsLazyClosure(args).dehydrate()
+        this.tests.resolveStrategy = Closure.DELEGATE_FIRST
+    }
+    
     def getTests() {
         def enabledTestList = tests.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         if(enabledTestList==null) {
@@ -47,6 +55,14 @@ class Profile implements ValueExtractor{
         return enabledTestList.flatten()
     }
 
+    def getExcludedTests() {
+        def excludedTestList = excludedTests.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        if (excludedTestList == null) {
+            return []
+        }
+        return excludedTestList.flatten()
+    }
+    
     @Override
     public String toString() {
 
@@ -62,6 +78,11 @@ class Profile implements ValueExtractor{
 
         sb.append("\tTests: ")
         getTests().each {
+            sb.append(it).append(" ")
+        }
+        
+        sb.append("\tExcluded tests: ")
+        getExcludedTests().each {
             sb.append(it).append(" ")
         }
 

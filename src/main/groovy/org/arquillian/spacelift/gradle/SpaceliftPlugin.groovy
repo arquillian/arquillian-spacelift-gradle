@@ -119,7 +119,6 @@ class SpaceliftPlugin implements Plugin<Project> {
             project.ext.set("selectedInstallations", installations)
 
             // find tests that were specified by profile or enabled manually from command line
-            def tests = []
             def testNames = []
             if(project.hasProperty('tests')) {
                 testNames = project.tests.split(',').findAll { return !it.isEmpty() }
@@ -133,7 +132,21 @@ class SpaceliftPlugin implements Plugin<Project> {
             else {
                 testNames = profile.tests
             }
-            tests = testNames.inject(new ArrayList()) { list, testName ->
+            
+            def excludedTestNames = []
+            if (project.hasProperty('excludedTests')) {
+                excludedTestNames = project.excludedTests.split(',').findAll { return !it.isEmpty() }
+            }
+            else if (profile.excludedTests == null) {
+                excludedTestNames = []
+            }
+            else {
+                excludedTestNames = profile.excludedTests
+            }
+            
+            def testsToExecute = testNames - excludedTestNames
+
+            def tests = testsToExecute.inject(new ArrayList()) { list, testName ->
                 def test = project.spacelift.tests[testName]
                 if(test) {
                     logger.info(":init: Selected test ${testName} will be tested (if task 'test' is run).")
