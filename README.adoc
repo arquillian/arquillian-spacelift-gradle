@@ -193,9 +193,10 @@ installationName {
     preconditions value 
     }
     extractMapper { /* Any UncompressTool call(s) */ }
-    tool {
-        name = 'toolName' // must not contain - or space
-        command value
+    tools {
+        tool1 {
+            command value
+        }
     }
     postActions {
     }
@@ -221,11 +222,9 @@ extractMapper {
 }
 ----
 +
-* tool - allows to define +tool+ that will be available after installation is done
+* tools - allows to define tool(s) that will be available after installation is done, same syntax as _tools_ block_
 * postActions - defines actions to be performed after installation is extracted
 * preconditions - this closure is optional and when specified, it has to return boolean value. If it returns false, installation is skipped, if true, installation is executed.
-+
-NOTE: Installation can bring multiple tools. You can provide more then one tool block.
 
 tests::
     Tests define a block of commands to be executed in *test* Gradle task. If you provide +dataProvider+ block, test

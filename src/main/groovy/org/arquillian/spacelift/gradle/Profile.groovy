@@ -1,22 +1,18 @@
 package org.arquillian.spacelift.gradle
 
-import groovy.lang.Closure
-import groovy.lang.Mixin
-
 import org.gradle.api.Project
 
 // this class represents a profile enumerating installations to be installed
-@Mixin(ValueExtractor)
-class Profile {
+class Profile implements ValueExtractor{
 
     // this is required in order to use project container abstraction
     final String name
 
     // list of enabled installations
-    Closure enabledInstallations = { [] }
+    Closure enabledInstallations = { []}
 
     // list of tests to execute
-    Closure tests = { [] }
+    Closure tests = { []}
 
     Project project
 

@@ -2,8 +2,8 @@ package org.arquillian.spacelift.gradle
 
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.tool.basic.DownloadTool
-import org.arquillian.spacelift.tool.basic.UnzipTool
 import org.arquillian.spacelift.tool.basic.UntarTool
+import org.arquillian.spacelift.tool.basic.UnzipTool
 import org.gradle.api.Project
 import org.slf4j.Logger
 
@@ -15,8 +15,7 @@ import org.slf4j.Logger
 // * mac
 // * linux
 // * solaris
-@Mixin(ValueExtractor)
-class Installation {
+class Installation implements ValueExtractor {
 
     // this is required in order to use project container abstraction
     final String name
@@ -53,7 +52,7 @@ class Installation {
     Closure preconditions = { true }
 
     // tools provided by this installation
-    def tools = []
+    InheritanceAwareContainer<GradleSpaceliftTool> tools
 
     // access to project defined variables
     Project project
@@ -62,6 +61,7 @@ class Installation {
         this.name = productName
         this.product = { productName }
         this.project = project
+        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool)
     }
 
     def autoExtract(arg) {
@@ -255,9 +255,7 @@ class Installation {
 
         // register installed tools
         tools.each { tool ->
-            // use project.configure method to user closure to configure the tool
-            def gradleTool = project.configure(new GradleSpaceliftTool(project), tool.rehydrate(new GradleSpaceliftDelegate(), this, this))
-            gradleTool.registerInSpacelift(GradleSpacelift.toolRegistry())
+            tool.registerInSpacelift(GradleSpacelift.toolRegistry())
         }
         // execute post actions
         postActions.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
@@ -280,10 +278,9 @@ class Installation {
         this.preconditions.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
-    def tool(Closure closure) {
-        def tool = extractValueAsLazyClosure(closure).dehydrate()
-        tool.resolveStrategy = Closure.DELEGATE_FIRST
-        tools << tool
+    def tools(Closure closure) {
+        tools.configure(closure)
+        this
     }
 
     private String guessFileNameFromUrl(URL url) {

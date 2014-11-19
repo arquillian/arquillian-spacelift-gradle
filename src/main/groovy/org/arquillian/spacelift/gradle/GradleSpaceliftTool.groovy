@@ -1,10 +1,9 @@
 package org.arquillian.spacelift.gradle
 
-import org.apache.commons.lang3.SystemUtils
 import org.apache.log4j.Logger
+import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.tool.ToolRegistry
 import org.gradle.api.Project
 
@@ -13,8 +12,7 @@ import org.gradle.api.Project
  * @author <a href="kpiwko@redhat.com">Karel Piwko</a>
  *
  */
-@Mixin(ValueExtractor)
-class GradleSpaceliftTool {
+class GradleSpaceliftTool implements ValueExtractor {
     private static final Logger logger = Logger.getLogger("Spacelift")
 
     // required by gradle to be defined
@@ -29,11 +27,6 @@ class GradleSpaceliftTool {
         this.name = toolName
         this.project = project
     }
-
-    GradleSpaceliftTool(Project project) {
-        this.project = project
-    }
-
 
     void registerInSpacelift(ToolRegistry registry) {
 
@@ -80,6 +73,7 @@ class GradleSpaceliftTool {
     }
 
     def command(arg) {
+        println "Called command!! for ${name}"
         this.command = extractValueAsLazyClosure(arg).dehydrate()
         this.command.resolveStrategy = Closure.DELEGATE_FIRST
     }
@@ -108,6 +102,6 @@ class GradleSpaceliftTool {
 
     @Override
     public String toString() {
-        return "SpaceliftTool ${name}, commandTool: ${getCommand()}"
+        return "SpaceliftTool ${name}"
     }
 }

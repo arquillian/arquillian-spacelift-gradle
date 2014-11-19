@@ -44,16 +44,17 @@ public class SpaceliftToolFromInstallationTest {
                         mac:"android-sdk-macosx"
                     ])
                     // tools provided by installation
-                    tool {
-                        name = "android"
-                        command ([
-                            linux: ["${home}/tools/android"],
-                            windows: [
-                                "cmd.exe",
-                                "/C",
-                                "${home}/tools/android.bat"
-                            ]
-                        ])
+                    tools {                        
+                        android {
+                            command ([
+                                linux: ["${home}/tools/android"],
+                                windows: [
+                                    "cmd.exe",
+                                    "/C",
+                                    "${home}/tools/android.bat"
+                                ]
+                            ])
+                        }
                     }
                     // actions performed after extraction
                     postActions {

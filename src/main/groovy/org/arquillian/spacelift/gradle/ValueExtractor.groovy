@@ -4,7 +4,7 @@ import org.apache.commons.lang3.SystemUtils
 
 
 
-class ValueExtractor {
+trait ValueExtractor {
 
     def osMapping = [
         windows: { return SystemUtils.IS_OS_WINDOWS },

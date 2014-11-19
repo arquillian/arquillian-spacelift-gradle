@@ -3,8 +3,7 @@ package org.arquillian.spacelift.gradle
 import org.gradle.api.Project
 import org.slf4j.Logger
 
-@Mixin(ValueExtractor)
-class Test {
+class Test implements ValueExtractor {
 
     // required by gradle to be defined
     final String name
