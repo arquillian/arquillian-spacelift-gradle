@@ -1,5 +1,6 @@
 package org.arquillian.spacelift.gradle
 
+import org.arquillian.spacelift.execution.ExecutionException
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.execution.impl.DefaultExecutionServiceFactory
 import org.arquillian.spacelift.gradle.git.*
@@ -47,12 +48,17 @@ class GitTest {
         File outsideOfRepositoryRelative = new File(repositoryCloneDir, "../" + UUID.randomUUID().toString())
         outsideOfRepositoryRelative.createNewFile()
 
-        Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile1, dummyFile2, outsideOfRepository])
-                .then(GitCommitTool).message("added some files")
-                .then(GitPushTool).branch("master")
-                .then(GitBranchTool.class).branch("dummyBranch")
-                .then(GitCheckoutTool.class).checkout("dummyBranch")
-                .execute().await()
+        try {
+            Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile1, dummyFile2, outsideOfRepository])
+                    .then(GitCommitTool).message("added some files")
+                    .then(GitPushTool).branch("master")
+                    .then(GitBranchTool.class).branch("dummyBranch")
+                    .then(GitCheckoutTool.class).checkout("dummyBranch")
+                    .execute().await()
+        } catch (ExecutionException e) {
+            e.printStackTrace()
+            throw e
+        }
 
         File dummyFile3 = new File(repositoryCloneDir, "dummyFile3")
         File dummyFile4 = new File(repositoryCloneDir, "dummyFile4")
