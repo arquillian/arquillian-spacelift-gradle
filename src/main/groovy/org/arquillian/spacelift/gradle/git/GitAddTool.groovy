@@ -1,25 +1,19 @@
 package org.arquillian.spacelift.gradle.git
 
-import java.io.File
-import java.util.ArrayList
-import java.util.Collection
-import java.util.List
-import java.util.logging.Logger
-
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
+import java.util.logging.Logger
+
 /**
  * Adds files to repository.
- * 
+ *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
- * 
+ *
  */
 class GitAddTool extends Tool<File, File> {
 
@@ -34,7 +28,7 @@ class GitAddTool extends Tool<File, File> {
 
     /**
      * Resource to add. Null value and non existing file will be skipped from adding.
-     * 
+     *
      * @param file file to add
      * @return
      */
@@ -49,7 +43,7 @@ class GitAddTool extends Tool<File, File> {
 
     /**
      * Resources to add. Null values and non existing files will be skipped from adding.
-     * 
+     *
      * @param files files to add
      * @return
      */
@@ -72,40 +66,28 @@ class GitAddTool extends Tool<File, File> {
 
         CommandBuilder commandBuilder = new CommandBuilder("git").parameter("add")
 
-        for (final File file : addings) {
-
-            File fileToAdd = null
-
+        for (File file : addings) {
             if (!file.isAbsolute()) {
-                File f = new File(repositoryDir.getAbsolutePath(), file.getPath())
-                if (f.getCanonicalPath().startsWith(repositoryDir.getAbsolutePath())) {
-                    fileToAdd = f
-                }
-            } else {
-                if (file.getCanonicalPath().startsWith(repositoryDir.getAbsolutePath())) {
-                    fileToAdd = file
-                }
+                file = new File(repositoryDir, file.getPath())
             }
 
-            if (notNullAndExists(fileToAdd)) {
-                commandBuilder.parameter(fileToAdd.getCanonicalPath())
+            // The file has to exist and its path has to start with repository path meaning the file is in the repository
+            if (!notNullAndExists(file) || !file.getCanonicalPath().startsWith(repositoryDir.getCanonicalPath())) {
+                logger.warning("Skipping file $file because it is not in the repository.")
+                continue
             }
+
+            commandBuilder.parameter(file.getAbsolutePath())
         }
-
-        ProcessResult result = null
 
         Command command = commandBuilder.build()
 
         logger.info(command.toString())
 
         try {
-            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
         } catch (ExecutionException ex) {
-            if (result) {
-                throw new ExecutionException(
-                String.format("Unable to add file to repository, command: %s, exit code: %s", command.toString(), result.exitValue()),
-                ex.getMessage())
-            }
+            throw new ExecutionException(ex, "Unable to add file to repository, command: {0}.", command.toString())
         }
 
         repositoryDir

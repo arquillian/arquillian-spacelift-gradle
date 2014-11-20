@@ -1,24 +1,20 @@
 package org.arquillian.spacelift.gradle.git
 
-import java.io.File
-import java.util.Collection
-import java.util.logging.Logger
-
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
+
+import java.util.logging.Logger
 
 /**
  * Creates a branch and sets it as a tracking branch, by default to branch 'master'. When a branch to create 
  * is not set by method {@link #branch(String)}, processing of this tool does effectively nothing with repository.
  *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
- * 
+ *
  */
 class GitBranchTool extends Tool<File, File> {
 
@@ -35,8 +31,8 @@ class GitBranchTool extends Tool<File, File> {
 
     /**
      * Creates a branch.
-     * 
-     * @param branch, branch to create, null value and empty string will not be taken into consideration
+     *
+     * @param branch , branch to create, null value and empty string will not be taken into consideration
      * @return
      */
     GitBranchTool branch(String branch) {
@@ -48,8 +44,8 @@ class GitBranchTool extends Tool<File, File> {
 
     /**
      * Sets tracking branch, by default master
-     * 
-     * @param trackingBranch, null value and empty string will be not be taken into consideration
+     *
+     * @param trackingBranch , null value and empty string will be not be taken into consideration
      * @return
      */
     GitBranchTool trackingBranch(String trackingBranch) {
@@ -74,19 +70,14 @@ class GitBranchTool extends Tool<File, File> {
                 .parameter(trackingBranch)
                 .build()
 
-        ProcessResult result = null
-
         logger.info(command.toString())
 
         try {
-            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
         } catch (ExecutionException ex) {
-            if (result != null) {
-                throw new ExecutionException(
-                String.format("Creating branch '%s' in repository '%s' was not successful. Command '%s', exit code: %s",
-                branch, repositoryDir.getAbsolutePath(), command.toString(), result.exitValue()),
-                ex)
-            }
+            throw new ExecutionException(
+                    ex, "Creating branch '{0}' in repository '{1}' was not successful. Command '{2}'.", branch,
+                    repositoryDir.getAbsolutePath(), command.toString())
         }
 
         repositoryDir

@@ -1,23 +1,20 @@
 package org.arquillian.spacelift.gradle.git
 
-import java.io.File
-import java.util.Collection
-import java.util.logging.Logger
-
 import org.arquillian.spacelift.execution.ExecutionException
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
+
+import java.util.logging.Logger
 
 /**
  * Fetches branches from remote repository.
  * <p>
  * When {@link #remote(String)} and {@link #branch(String)} are not set, we fetch all remote branches (git fetch --all).
  * </p>
- * 
+ *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
  */
@@ -32,15 +29,15 @@ class GitFetchTool extends Tool<File, File> {
     private String local
 
     private File gitSsh
-    
+
     @Override
     protected Collection<String> aliases() {
         ["git_fetch"]
     }
 
     /**
-     * 
-     * @param remote, e.g. "origin"
+     *
+     * @param remote , e.g. "origin"
      * @return
      */
     GitFetchTool remote(String remote) {
@@ -51,7 +48,7 @@ class GitFetchTool extends Tool<File, File> {
     }
 
     /**
-     * 
+     *
      * @param branch branch from remote to fetch, e.g "myBranch"
      * @return
      */
@@ -64,7 +61,7 @@ class GitFetchTool extends Tool<File, File> {
 
     /**
      * When not set, name of local branch will be same as name of branch under fetching
-     * 
+     *
      * @param local name of branch which will be fetched from {@link #remote(String)} from branch {@link #branch(String)}
      * @return
      */
@@ -86,7 +83,7 @@ class GitFetchTool extends Tool<File, File> {
         }
         this
     }
-    
+
     @Override
     protected File process(File repositoryDir) throws Exception {
 
@@ -110,24 +107,19 @@ class GitFetchTool extends Tool<File, File> {
 
         logger.info(command.toString())
 
-        ProcessResult result = null
-
         try {
-            
+
             CommandTool fetch = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command)
-            
+
             if (gitSsh) {
                 fetch.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
             }
-            
-            result = fetch.execute().await()
+
+            fetch.execute().await()
         } catch (ExecutionException ex) {
-            if (result != null) {
-                throw new ExecutionException(
-                String.format("Fetching changes from repository '%s' was not successful. Command '%s', exit code: %s",
-                repositoryDir.getAbsolutePath(), command.toString(), result.exitValue()),
-                ex)
-            }
+            throw new ExecutionException(
+                    ex, "Fetching changes from repository '{0}' was not successful. Command '{1}'.",
+                    repositoryDir.getAbsolutePath(), command.toString())
         }
 
         repositoryDir

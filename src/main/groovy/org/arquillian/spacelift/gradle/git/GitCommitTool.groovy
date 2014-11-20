@@ -1,24 +1,19 @@
 package org.arquillian.spacelift.gradle.git
 
-import java.io.File
-import java.util.Collection
-import java.util.Date
-import java.util.logging.Logger
-
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
+import java.util.logging.Logger
+
 /**
  * Commits changes to repository.
- * 
+ *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
- * 
+ *
  */
 class GitCommitTool extends Tool<File, File> {
 
@@ -32,7 +27,7 @@ class GitCommitTool extends Tool<File, File> {
     }
 
     /**
-     * 
+     *
      * @param message commit message, by default '{@literal <unknown>}'. Null values and empty strings are not taken into consideration.
      * @return
      */
@@ -54,22 +49,18 @@ class GitCommitTool extends Tool<File, File> {
 
         logger.info(command.toString())
 
-        ProcessResult result = null
-
         try {
-            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
         } catch (ExecutionException ex) {
-            if (result != null) {
-                throw new ExecutionException(
-                String.format("Committing changes in repository '%s' was not successful. Command '%s', exit code: %s",
-                repositoryDir.getAbsolutePath(), command.toString(), result.exitValue()),
-                ex)
-            }
+            throw new ExecutionException(
+                    ex, "Committing changes in repository '{0}' was not successful. Command '{1}'.",
+                    repositoryDir.getAbsolutePath(), command.toString())
+
         }
 
         repositoryDir
     }
-    
+
     private boolean notNullAndNotEmpty(String value) {
         value && !value.isEmpty()
     }
