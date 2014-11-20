@@ -2,34 +2,80 @@ package org.arquillian.spacelift.gradle.android
 
 import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.process.ProcessInteraction
+import org.arquillian.spacelift.process.ProcessInteractionBuilder
 
 class AVDCreator extends Task<Object, Void> {
 
     private String target
     private String abi
+    private String name
+    private boolean force
 
-    public AVDCreator target(String target) {
-        this.target = target
+    def target(String target) {
+        if (target && target.length() != 0) {
+            this.target = target
+        }
         this
     }
 
-    public AVDCreator abi(String abi) {
-        this.abi = abi
+    def abi(String abi) {
+        if (abi && abi.length() != 0) {
+            this.abi = abi
+        }
+        this
+    }
+
+    def name(String name) {
+        if (name && name.length() != 0) {
+            this.name = name
+        }
+        this
+    }
+
+    def force() {
+        force = true
         this
     }
 
     @Override
     protected Void process(Object input) throws Exception {
-        def tool = GradleSpacelift.tools("android")
-                .parameters(["create" ,"avd", "-n", target.replaceAll("\\W", ""), "-t", target, "--force"])
-                .interaction(GradleSpacelift.ECHO_OUTPUT)
 
-        if(abi) {
-            tool.parameters("--abi", abi)
+        if (!target) {
+            throw new IllegalStateException("You have not set any target of Android AVD to create.")
+        }
+
+        if (!name) {
+            throw new IllegalStateException("You have not set the name of to be created AVD.")
+        }
+
+        ProcessInteraction interaction = new ProcessInteractionBuilder()
+                .outputPrefix("")
+                .when("Do you wish to create a custom hardware profile \\[no\\]")
+                .replyWith("no" + System.getProperty("line.separator"))
+                .when("(?s).*").printToOut()
+                .build()
+
+        def tool = GradleSpacelift.tools("android")
+                .parameters([
+                    "create",
+                    "avd",
+                    "-n",
+                    name,
+                    "-t",
+                    target,
+                ]).interaction(interaction)
+
+        if (force) {
+            tool.parameter("--force")
+        }
+
+        if (abi) {
+            tool.parameters(["--abi", abi])
         }
 
         tool.execute().await()
 
-        return null
+        null
     }
 }
