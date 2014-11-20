@@ -37,6 +37,12 @@ dependencies {
     testCompile 'junit:junit:4.11'
 }
 
+test {
+    testLogging {
+        exceptionFormat "full"
+    }
+}
+
 
 // publish plugin to Maven Repository
 publishing {

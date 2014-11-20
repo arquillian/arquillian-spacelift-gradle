@@ -1,21 +1,17 @@
 package org.arquillian.spacelift.gradle.git
 
-import java.io.File
-import java.util.Collection
-import java.util.logging.Logger
-
 import org.arquillian.spacelift.execution.ExecutionException
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.ProcessInteractionBuilder
-import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
+import java.util.logging.Logger
+
 /**
  * Removes files from repository.
- * 
+ *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
  */
@@ -47,7 +43,7 @@ class GitRemoveTool extends Tool<File, File> {
 
     /**
      * Turns {@plain -r} flag on.
-     * 
+     *
      * @return
      */
     GitRemoveTool recursive() {
@@ -57,7 +53,7 @@ class GitRemoveTool extends Tool<File, File> {
 
     /**
      * Turns {@plain -q} flag on.
-     * 
+     *
      * @return
      */
     GitRemoveTool quiet() {
@@ -66,7 +62,7 @@ class GitRemoveTool extends Tool<File, File> {
     }
 
     /**
-     * 
+     *
      * @param file file to remove, null values or nonexisting files are not taken into consideration
      * @return
      */
@@ -78,7 +74,7 @@ class GitRemoveTool extends Tool<File, File> {
     }
 
     /**
-     * 
+     *
      * @param files files to remove, null values or nonexisting files are not taken into consideration
      * @return
      */
@@ -106,40 +102,28 @@ class GitRemoveTool extends Tool<File, File> {
             commandBuilder.parameter("-q")
         }
 
-        for (final File file : toRemove) {
-
-            File fileToRemove = null
-
+        for (File file : toRemove) {
             if (!file.isAbsolute()) {
-                File f = new File(repositoryDir.getCanonicalPath(), file.getPath())
-                if (f.getCanonicalPath().startsWith(repositoryDir.getCanonicalPath())) {
-                    fileToRemove = f
-                }
-            } else {
-                if (file.getCanonicalPath().startsWith(repositoryDir.getCanonicalPath())) {
-                    fileToRemove = file
-                }
+                file = new File(repositoryDir, file.getPath())
             }
 
-            if (notNullAndExists(fileToRemove)) {
-                commandBuilder.parameter(fileToRemove.getCanonicalPath())
+            // The file has to exist and its path has to start with repository path meaning the file is in the repository
+            if (!notNullAndExists(file) || !file.getCanonicalPath().startsWith(repositoryDir.getCanonicalPath())) {
+                logger.warning("Skipping file $file because it is not in the repository.")
+                continue
             }
+
+            commandBuilder.parameter(file.getAbsolutePath())
         }
 
         Command command = commandBuilder.build()
 
         logger.info(command.toString())
 
-        ProcessResult result = null
-
         try {
-            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getCanonicalPath()).command(command).execute().await()
+            Tasks.prepare(CommandTool).workingDir(repositoryDir.getCanonicalPath()).command(command).execute().await()
         } catch (ExecutionException ex) {
-            if (result != null) {
-                throw new ExecutionException(
-                String.format("Command %s exitted with value %s.", command.toString(), result.exitValue()),
-                ex.getMessage())
-            }
+            throw new ExecutionException(ex, "Could not remove files with command {0}.", command.toString())
         }
 
         return repositoryDir

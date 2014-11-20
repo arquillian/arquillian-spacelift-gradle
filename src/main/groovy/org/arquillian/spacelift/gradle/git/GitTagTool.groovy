@@ -1,21 +1,18 @@
 package org.arquillian.spacelift.gradle.git
 
-import java.io.File
-import java.util.Collection
-import java.util.logging.Logger
-
 import org.arquillian.spacelift.execution.ExecutionException
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
+
+import java.util.logging.Logger
 
 /**
  * Tags repository with {@link #tag(String)}. You can tag particular commit with {@link #commit(String)}. Deletion of tag 
  * is done by {@link #delete}, forcing by {@link #force} flags. You can not use force and delete flags together.
- * 
+ *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
  */
@@ -47,12 +44,12 @@ class GitTagTool extends Tool<File, File> {
     }
 
     /**
-     * 
+     *
      * @param commit hash of commit you want to tag, null values and empty strings are not taken into consideration.
      * @return
      */
     GitTagTool commit(String commit) {
-        if (notNullAndExists(commit)) {
+        if (notNullAndNotEmpty(commit)) {
             this.commit = commit
         }
         this
@@ -84,24 +81,18 @@ class GitTagTool extends Tool<File, File> {
 
         Command command = commandBuilder.build()
 
-        ProcessResult result = null
-
         logger.info(command.toString())
 
         try {
-            result = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
         } catch (ExecutionException ex) {
-            if (result != null) {
-                throw new ExecutionException(
-                String.format("Command %s exitted with value %s.", command.toString(), result.exitValue()),
-                ex.getMessage())
-            }
+            throw new ExecutionException(ex, "Could not add tag {0} using command {1}", tag, command.toString())
         }
 
         repositoryDir
     }
-    
-    private boolean notNullAndExists(File value) {
-        value && value.exists()
+
+    private boolean notNullAndNotEmpty(String value) {
+        value && !value.isEmpty()
     }
 }

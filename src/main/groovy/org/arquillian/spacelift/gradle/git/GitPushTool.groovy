@@ -1,24 +1,20 @@
 package org.arquillian.spacelift.gradle.git
 
-import java.io.File
-import java.util.Collection
-import java.util.logging.Logger
-
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.Tool
 
+import java.util.logging.Logger
+
 /**
- * By default it pushes to "{@literal origin :.}". You can override this by {@link #remote(String) and {@link #branch(String)}.
+ * By default it pushes to "{@literal origin :.}". You can override this by {@link #remote(String) and {@link # branch ( String )}.
  * methods.
- * 
+ *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
- * 
+ *
  */
 class GitPushTool extends Tool<File, File> {
 
@@ -31,7 +27,7 @@ class GitPushTool extends Tool<File, File> {
     private boolean tags
 
     private File gitSsh
-    
+
     @Override
     protected Collection<String> aliases() {
         ["git_push"]
@@ -39,7 +35,7 @@ class GitPushTool extends Tool<File, File> {
 
     /**
      * By default set to "origin". Null values and empty strings are not taken into consideration.
-     * 
+     *
      * @param remote
      * @return
      */
@@ -52,7 +48,7 @@ class GitPushTool extends Tool<File, File> {
 
     /**
      * By default set to ":". Null values and empty strings are not taken into consideration.
-     * 
+     *
      * @param branch
      * @return
      */
@@ -65,8 +61,8 @@ class GitPushTool extends Tool<File, File> {
 
     /**
      * Pushes tags as well.
-     * 
-     * @return 
+     *
+     * @return
      */
     GitPushTool tags() {
         tags = true
@@ -84,7 +80,7 @@ class GitPushTool extends Tool<File, File> {
         }
         this
     }
-    
+
     @Override
     protected File process(File repositoryDir) throws Exception {
 
@@ -96,24 +92,19 @@ class GitPushTool extends Tool<File, File> {
 
         Command command = commandBuilder.parameter(remote).parameter(branch).build()
 
-        ProcessResult result = null
-
         logger.info(command.toString())
 
         try {
             CommandTool push = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command)
-            
+
             if (gitSsh) {
                 push.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
             }
-            
-            result = push.execute().await()
+
+            push.execute().await()
         } catch (ExecutionException ex) {
-            if (result != null) {
-                throw new ExecutionException(
-                String.format("Command %s exitted with value %s.", command.toString(), result.exitValue()),
-                ex.getMessage())
-            }
+            throw new ExecutionException(
+                    ex, "Could not push {0} to {1} using command {2}.", branch, remote, command.toString())
         }
 
         repositoryDir
