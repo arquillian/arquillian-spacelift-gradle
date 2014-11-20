@@ -299,7 +299,13 @@ class Installation implements ValueExtractor {
 
         int dot = dirName.lastIndexOf(".")
         if(dot!=-1) {
-            return dirName.substring(0, dot)
+            int tar = dirName.lastIndexOf(".tar")
+            if(tar != -1) {
+                return dirName.substring(0, tar)
+            }
+            else {
+                return dirName.substring(0, dot)
+            }
         }
 
         return dirName
