@@ -236,7 +236,7 @@ class Installation implements ValueExtractor {
                         break
                     case ~/.*tbz/:
                     case ~/.*tar\.bz2/:
-                        project.configure(Tasks.chain(getFsPath(),UntarTool).bzip2(true).toDir(project.spacelift, remap).workspace).execute().await()
+                        project.configure(Tasks.chain(getFsPath(),UntarTool).bzip2(true).toDir(project.spacelift.workspace), remap).execute().await()
                         break
                     default:
                         logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")

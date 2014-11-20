@@ -73,7 +73,6 @@ class GradleSpaceliftTool implements ValueExtractor {
     }
 
     def command(arg) {
-        println "Called command!! for ${name}"
         this.command = extractValueAsLazyClosure(arg).dehydrate()
         this.command.resolveStrategy = Closure.DELEGATE_FIRST
     }
