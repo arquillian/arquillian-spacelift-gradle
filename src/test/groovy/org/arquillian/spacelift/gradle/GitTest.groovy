@@ -51,17 +51,13 @@ class GitTest {
         File outsideOfRepositoryRelative = new File(repositoryCloneDir, "../" + UUID.randomUUID().toString())
         outsideOfRepositoryRelative.createNewFile()
 
-        try {
-            Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile1, dummyFile2, outsideOfRepository])
-                    .then(GitCommitTool).message("added some files")
-                    .then(GitPushTool).branch("master")
-                    .then(GitBranchTool.class).branch("dummyBranch")
-                    .then(GitCheckoutTool.class).checkout("dummyBranch")
-                    .execute().await()
-        } catch (ExecutionException e) {
-            Logger.getLogger(GitTest.class.name).log(Level.SEVERE, "Git test failed", e)
-            throw e
-        }
+        Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile1, dummyFile2, outsideOfRepository])
+                .then(GitCommitTool).message("added some files")
+                .then(GitPushTool).branch("master")
+                .then(GitBranchTool.class).branch("dummyBranch")
+                .then(GitCheckoutTool.class).checkout("dummyBranch")
+                .execute().await()
+
 
         File dummyFile3 = new File(repositoryCloneDir, "dummyFile3")
         File dummyFile4 = new File(repositoryCloneDir, "dummyFile4")
