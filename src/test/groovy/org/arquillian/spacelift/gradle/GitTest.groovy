@@ -8,6 +8,9 @@ import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
 
+import java.util.logging.Level
+import java.util.logging.Logger
+
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
 
@@ -56,7 +59,7 @@ class GitTest {
                     .then(GitCheckoutTool.class).checkout("dummyBranch")
                     .execute().await()
         } catch (ExecutionException e) {
-            e.printStackTrace()
+            Logger.getLogger(GitTest.class.name).log(Level.SEVERE, "Git test failed", e)
             throw e
         }
 
