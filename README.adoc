@@ -323,6 +323,8 @@ You can benefit from following tools and tasks, either from Spacelift itself or 
 * DomainXmlUpdater - allows to add keystore/truststore configuration to _domain.xml_
 * AndroidSdkUpdater - allows to fetch binaries for specific Android SDK target - you need to agree with Android SDK license first. Requires _android_ tool.
 * AndroidSdkOptForStats - allows to opt out for stats - you need to agree with Android SDK license first
+* AndroidEmulatorStarter - starts Android emulator
+* AndroidEmulatorStopper - stops Android emulator
 * AVDCreator - creates Android Virtual Devices
 * CordovaExecutor - executes Cordova commands
 * RHELVersion - determines version of RHEL system
