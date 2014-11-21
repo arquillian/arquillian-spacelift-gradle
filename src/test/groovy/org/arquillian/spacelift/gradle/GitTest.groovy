@@ -1,15 +1,12 @@
 package org.arquillian.spacelift.gradle
 
-import org.arquillian.spacelift.execution.ExecutionException
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.execution.impl.DefaultExecutionServiceFactory
 import org.arquillian.spacelift.gradle.git.*
+import org.arquillian.spacelift.process.impl.CommandTool
 import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
-
-import java.util.logging.Level
-import java.util.logging.Logger
 
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
@@ -37,6 +34,18 @@ class GitTest {
         File repositoryCloneDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
 
         Tasks.chain(repositoryInitDir, GitInitTool).then(GitCloneTool).destination(repositoryCloneDir).execute().await()
+
+        // We need to configure the user, otherwise it git will be failing with exit code 128
+        Tasks.prepare(CommandTool)
+                .workingDir(repositoryCloneDir.absolutePath)
+                .programName('git')
+                .parameters('config', 'user.email', 'spacelift@arquillian.org').execute().await()
+
+        Tasks.prepare(CommandTool)
+                .workingDir(repositoryCloneDir.absolutePath)
+                .programName('git')
+                .parameters('config', 'user.name', 'Arquillian Spacelift')
+                .execute().await()
 
         File dummyFile1 = new File(repositoryCloneDir, "dummyFile")
         File dummyFile2 = new File(repositoryCloneDir, "dummyFile2")
