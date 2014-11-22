@@ -237,15 +237,15 @@ class SpaceliftPlugin implements Plugin<Project> {
         
         project.tasks.getByName("clean").dependsOn(
             [
-                project.tasks.getByName("init"),
+                project.tasks.getByName("prepare-env"),
                 project.tasks.getByName("cleanInstallations"),
                 project.tasks.getByName("cleanRepository"),
                 project.tasks.getByName("cleanWorkspace")
             ])
 
-        project.tasks.getByName("cleanRepository").dependsOn(project.tasks.getByName("init"))
-        project.tasks.getByName("cleanInstallations").dependsOn(project.tasks.getByName("init"))
-        project.tasks.getByName("cleanWorkspace").dependsOn(project.tasks.getByName("init"))
+        project.tasks.getByName("cleanRepository").dependsOn(project.tasks.getByName("prepare-env"))
+        project.tasks.getByName("cleanInstallations").dependsOn(project.tasks.getByName("prepare-env"))
+        project.tasks.getByName("cleanWorkspace").dependsOn(project.tasks.getByName("prepare-env"))
         
         project.task('testreport') << {
             logger.lifecycle(":testreport:generating JUnit report for all tests in ${project.spacelift.workspace}")
