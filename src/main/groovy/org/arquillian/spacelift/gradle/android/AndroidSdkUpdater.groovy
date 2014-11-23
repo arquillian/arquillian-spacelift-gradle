@@ -62,13 +62,13 @@ class AndroidSdkUpdater extends Task<Object, Void>{
             "sdk",
             "--filter",
             //
-            // The version of build-tools is statically set to 21.0.2 - the latest one by 29/10/2014.
+            // The version of build-tools is statically set to 21.1.1 - the latest one by 23/11/2014.
             // Investigate, how to get the latest build-tools version programmatically.
             //
             // Backed by JIRA: https://issues.jboss.org/browse/MP-209
             //
             "platform-tools," +
-            "build-tools-21.0.2," +
+            "build-tools-21.1.1," +
             "extra-google-google_play_services," +
             "extra-android-support," +
             androidVersionSpecificPackages,
