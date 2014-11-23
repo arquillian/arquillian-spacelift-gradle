@@ -10,7 +10,7 @@ class Test implements ValueExtractor {
 
     final String testName
 
-    Closure execute
+    Closure execute = {}
 
     Closure dataProvider = { [null]}
 
