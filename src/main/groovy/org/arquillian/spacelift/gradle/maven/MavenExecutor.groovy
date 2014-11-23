@@ -141,13 +141,13 @@ class MavenExecutor extends Task<Object, Void>{
         this
     }
 
-    def androidHome(androidHome) {
-        this.env << [ANDROID_HOME:androidHome.toString()]
+    def env(key, value) {
+        this.env << [key:value]
         this
     }
 
-    def androidSdkHome(androidSdkHome) {
-        this.env << [ANDROID_SDK_HOME:androidSdkHome.toString()]
+    def env(envProperty) {
+        this.env << envProperty
         this
     }
 
