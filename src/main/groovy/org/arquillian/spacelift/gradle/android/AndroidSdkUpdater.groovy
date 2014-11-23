@@ -14,11 +14,28 @@ class AndroidSdkUpdater extends Task<Object, Void>{
 
     private String target
 
+    //
+    // The version of build-tools is statically set to 21.1.1 - the latest one by 23/11/2014.
+    // Investigate, how to get the latest build-tools version programmatically.
+    //
+    // Backed by JIRA: https://issues.jboss.org/browse/MP-209
+    //
+    private String buildToolsVersion = "21.1.1"
+    
     public AndroidSdkUpdater target(String target) {
-        this.target = target
+        if (target && !target.isEmpty()) {
+            this.target = target
+        }
         this
     }
 
+    public AndroidSdkUpdater buildTools(String buildToolsVersion) {
+        if (buildToolsVersion && !buildToolsVersion.isEmpty()) {
+            this.buildToolsVersion = buildToolsVersion
+        }
+        this
+    }
+    
     @Override
     protected Void process(Object ignored) throws Exception {
 
@@ -61,14 +78,8 @@ class AndroidSdkUpdater extends Task<Object, Void>{
             "update",
             "sdk",
             "--filter",
-            //
-            // The version of build-tools is statically set to 21.1.1 - the latest one by 23/11/2014.
-            // Investigate, how to get the latest build-tools version programmatically.
-            //
-            // Backed by JIRA: https://issues.jboss.org/browse/MP-209
-            //
             "platform-tools," +
-            "build-tools-21.1.1," +
+            "build-tools-" + buildToolsVersion + "," +
             "extra-google-google_play_services," +
             "extra-android-support," +
             androidVersionSpecificPackages,
