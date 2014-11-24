@@ -6,10 +6,12 @@ import java.util.concurrent.TimeUnit
 
 import org.arquillian.spacelift.tool.Tool
 
-class AndroidEmulatorStopper extends Tool<Object, Void> {
+class AndroidEmulatorStopper extends Tool<Object, Boolean> {
 
     private String device = "emulator-5554"
 
+    private int timeout = 10 // in seconds
+    
     @Override
     protected Collection<String> aliases() {
         ["android_emulator_stopper"]
@@ -22,12 +24,20 @@ class AndroidEmulatorStopper extends Tool<Object, Void> {
         this
     }
 
+    def timeout(int timeout) {
+        if (timeout > 0) {
+            this.timeout = timeout
+        }
+        this
+    }
+
+    def timeout(String timeout) {
+        this.timeout(timeout.toInteger())
+    }
+
     @Override
-    protected Void process(Object input) throws Exception {
-
-        getExecutionService().execute(sendEmulatorCommand(extractPortFromDevice(device), "kill")).awaitAtMost(10, TimeUnit.SECONDS)
-
-        null
+    protected Boolean process(Object input) throws Exception {
+        getExecutionService().execute(sendEmulatorCommand(extractPortFromDevice(device), "kill")).awaitAtMost(timeout, TimeUnit.SECONDS)
     }
 
     private Callable<Boolean> sendEmulatorCommand(final int port, final String command) {
