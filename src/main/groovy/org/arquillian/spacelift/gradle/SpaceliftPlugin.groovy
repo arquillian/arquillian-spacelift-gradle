@@ -222,7 +222,7 @@ class SpaceliftPlugin implements Plugin<Project> {
 
         project.task('cleanInstallations') << {
             project.selectedInstallations.each { installation
-                ant.delete(dir: installation.fileName, failonerror: false)
+                ant.delete(file: installation.fileName, failonerror: false)
                 ant.delete(dir: installation.home, failonerror: false)
             }
         }
