@@ -34,6 +34,16 @@ class CordovaExecutor extends Task<Object, Void> {
         this
     }
 
+    def env(key, value) {
+        this.env << [key:value]
+        this
+    }
+
+    def env(envProperty) {
+        this.env << envProperty
+        this
+    }
+
     @Override
     protected Void process(Object input) throws Exception {
         def sep = System.getProperty("path.separator")
