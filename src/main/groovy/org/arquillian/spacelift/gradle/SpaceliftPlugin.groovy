@@ -221,7 +221,10 @@ class SpaceliftPlugin implements Plugin<Project> {
         }
 
         project.task('cleanInstallations') << {
-            ant.delete(dir: project.spacelift.installationsDir, failonerror: false)
+            project.selectedInstallations.each { installation
+                ant.delete(dir: installation.fileName, failonerror: false)
+                ant.delete(dir: installation.home, failonerror: false)
+            }
         }
         
         project.task('cleanWorkspace') << {
