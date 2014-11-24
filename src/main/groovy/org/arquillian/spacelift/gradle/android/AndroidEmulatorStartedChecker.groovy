@@ -12,8 +12,6 @@ import org.arquillian.spacelift.tool.Tool
 
 class AndroidEmulatorStartedChecker extends Task<Object, ProcessResult> {
 
-    static final ExecutionCondition<Boolean> emulatorStartedCondition = new AndroidEmulatorStartedChecker.AndroidEmulatorStartedCondition()
-
     private String device = System.getenv("ANDROID_SERIAL") ?: "emulator-5554"
 
     def device(String device) {
@@ -38,25 +36,4 @@ class AndroidEmulatorStartedChecker extends Task<Object, ProcessResult> {
                 .execute().await()
     }
 
-    private static final class AndroidEmulatorStartedCondition implements ExecutionCondition<ProcessResult> {
-
-        @Override
-        boolean satisfiedBy(ProcessResult result) {
-
-            if (!result) {
-                return false
-            }
-
-            boolean found
-
-            // looking for boot animation stopping
-            result.output().each { line ->
-                if (line && line.contains("stopped")) {
-                    found = true
-                }
-            }
-
-            found
-        }
-    }
 }

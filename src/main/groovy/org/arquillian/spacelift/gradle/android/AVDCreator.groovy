@@ -50,8 +50,11 @@ class AVDCreator extends Task<Object, Void> {
         }
 
         ProcessInteraction interaction = new ProcessInteractionBuilder()
+                .outputPrefix("")
                 .when("Do you wish to create a custom hardware profile \\[no\\]")
-                .replyWith("no" + System.getProperty("line.separator")).build()
+                .replyWith("no" + System.getProperty("line.separator"))
+                .when("(?s).*").printToOut()
+                .build()
 
         def tool = GradleSpacelift.tools("android")
                 .parameters([

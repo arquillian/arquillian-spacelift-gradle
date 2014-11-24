@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 
 import org.arquillian.spacelift.execution.CountDownWatch
 import org.arquillian.spacelift.execution.Execution
+import org.arquillian.spacelift.execution.ExecutionCondition
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.gradle.GradleSpacelift
 import org.arquillian.spacelift.process.ProcessResult
@@ -13,6 +14,8 @@ import org.arquillian.spacelift.tool.Tool
 
 class AndroidEmulatorStarter extends Tool<Object, Execution<ProcessResult>> {
 
+    static final ExecutionCondition<Boolean> emulatorStartedCondition = new AndroidEmulatorStarter.AndroidEmulatorStartedCondition()
+    
     private String avd
 
     private String port = "5554"
@@ -74,8 +77,30 @@ class AndroidEmulatorStarter extends Tool<Object, Execution<ProcessResult>> {
 
         Tasks.prepare(AndroidEmulatorStartedChecker)
                 .device("emulator-" + port)
-                .execute().until(new CountDownWatch(timeout, TimeUnit.SECONDS), AndroidEmulatorStartedChecker.emulatorStartedCondition)
+                .execute().until(new CountDownWatch(timeout, TimeUnit.SECONDS), emulatorStartedCondition)
 
         Tasks.prepare(UnlockEmulatorTask).device("emulator-" + port).execute().await()
+    }
+
+    private static final class AndroidEmulatorStartedCondition implements ExecutionCondition<ProcessResult> {
+
+        @Override
+        boolean satisfiedBy(ProcessResult result) {
+
+            if (!result) {
+                return false
+            }
+
+            boolean found
+
+            // looking for boot animation stopping
+            result.output().each { line ->
+                if (line && line.contains("stopped")) {
+                    found = true
+                }
+            }
+
+            found
+        }
     }
 }
