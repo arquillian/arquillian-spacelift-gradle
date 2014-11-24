@@ -14,7 +14,7 @@ import org.arquillian.spacelift.tool.Tool
 
 class AndroidEmulatorStarter extends Tool<Object, Execution<ProcessResult>> {
 
-    static final ExecutionCondition<Boolean> emulatorStartedCondition = new AndroidEmulatorStarter.AndroidEmulatorStartedCondition()
+    static final ExecutionCondition<Boolean> EMULATOR_STARTED_CONDITION = new AndroidEmulatorStarter.AndroidEmulatorStartedCondition()
     
     private String avd
 
@@ -77,7 +77,7 @@ class AndroidEmulatorStarter extends Tool<Object, Execution<ProcessResult>> {
 
         Tasks.prepare(AndroidEmulatorStartedChecker)
                 .device("emulator-" + port)
-                .execute().until(new CountDownWatch(timeout, TimeUnit.SECONDS), emulatorStartedCondition)
+                .execute().until(new CountDownWatch(timeout, TimeUnit.SECONDS), EMULATOR_STARTED_CONDITION)
 
         Tasks.prepare(UnlockEmulatorTask).device("emulator-" + port).execute().await()
     }
