@@ -14,7 +14,7 @@ import org.arquillian.spacelift.tool.Tool
 
 class AndroidEmulatorStarter extends Tool<Object, Execution<ProcessResult>> {
 
-    static final ExecutionCondition<Boolean> EMULATOR_STARTED_CONDITION = new AndroidEmulatorStarter.AndroidEmulatorStartedCondition()
+    private static final ExecutionCondition<Boolean> EMULATOR_STARTED_CONDITION = new AndroidEmulatorStarter.AndroidEmulatorStartedCondition()
     
     private String avd
 
