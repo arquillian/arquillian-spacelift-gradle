@@ -35,7 +35,7 @@ class CordovaExecutor extends Task<Object, Void> {
     }
 
     def env(key, value) {
-        this.env << [key:value]
+        this.env << ["${key}":value]
         this
     }
 
