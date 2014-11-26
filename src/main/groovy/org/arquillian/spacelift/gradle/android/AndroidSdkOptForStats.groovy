@@ -1,19 +1,36 @@
 package org.arquillian.spacelift.gradle.android
 
-import org.arquillian.spacelift.execution.Task;
-import org.arquillian.spacelift.gradle.GradleSpacelift;
+import org.arquillian.spacelift.execution.Task
+import org.arquillian.spacelift.gradle.GradleSpacelift
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFactory
 
 class AndroidSdkOptForStats extends Task {
-    private static final Logger log = LoggerFactory.getLogger('AndroidSdk')
+
+    private static final Logger log = LoggerFactory.getLogger('AndroidSdkOptForStats')
+
+    private def androidSdkHomes = []
+
+    def AndroidSdkOptForStats addAndroidSdkHome(File androidSdkHome) {
+        if (androidSdkHome) {
+            addAndroidSdkHome(androidSdkHome.canonicalPath)
+        }
+        this
+    }
+
+    def AndroidSdkOptForStats addAndroidSdkHome(String androidSdkHome) {
+        if (androidSdkHome && !androidSdkHome.isEmpty()) {
+            this.androidSdkHomes.add(androidSdkHome)
+        }
+        this
+    }
 
     @Override
     protected Object process(Object input) throws Exception {
 
-        def androidSdkHomes = [
-            androidSdkHome().getAbsolutePath()
-        ]
+        if (!androidSdkHomes.contains(defaultAndroidSdkHome().canonicalPath)) {
+            androidSdkHomes.add(defaultAndroidSdkHome().canonicalPath)
+        }
 
         androidSdkHomes.each { androidSdkHome ->
             if(androidSdkHome) {
@@ -23,7 +40,7 @@ class AndroidSdkOptForStats extends Task {
                     dir.mkdirs()
                     // on purpose, we are destroying previous content of the file
                     new File(dir, "ddms.cfg").withWriter { writer ->
-                        writer.println("pingOptIn=false")
+                        writer.println("pingId=")
                     }
                 }
                 catch (IOException e) {
@@ -32,14 +49,13 @@ class AndroidSdkOptForStats extends Task {
             }
         }
 
-        return null
-
+        null
     }
 
     // ANDROID_SDK_HOME
     // in this directory where .android is created
-    File androidSdkHome() {
-        return GradleSpacelift.currentProject().spacelift.workspace
+    File defaultAndroidSdkHome() {
+        GradleSpacelift.currentProject().spacelift.workspace
     }
 
 }
