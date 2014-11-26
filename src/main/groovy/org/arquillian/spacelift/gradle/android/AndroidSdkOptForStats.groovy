@@ -13,7 +13,7 @@ class AndroidSdkOptForStats extends Task {
 
     def AndroidSdkOptForStats addAndroidSdkHome(File androidSdkHome) {
         if (androidSdkHome) {
-            addAndroidSdkHome(androidSdkHome.absolutePath)
+            addAndroidSdkHome(androidSdkHome.canonicalPath)
         }
         this
     }
@@ -28,8 +28,8 @@ class AndroidSdkOptForStats extends Task {
     @Override
     protected Object process(Object input) throws Exception {
 
-        if (!androidSdkHomes.contains(defaultAndroidSdkHome().absolutePath)) {
-            androidSdkHomes.add(defaultAndroidSdkHome().absolutePath)
+        if (!androidSdkHomes.contains(defaultAndroidSdkHome().canonicalPath)) {
+            androidSdkHomes.add(defaultAndroidSdkHome().canonicalPath)
         }
 
         androidSdkHomes.each { androidSdkHome ->
