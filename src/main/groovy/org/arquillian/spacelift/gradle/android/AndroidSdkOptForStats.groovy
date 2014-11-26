@@ -40,7 +40,7 @@ class AndroidSdkOptForStats extends Task {
                     dir.mkdirs()
                     // on purpose, we are destroying previous content of the file
                     new File(dir, "ddms.cfg").withWriter { writer ->
-                        writer.println("pingOptIn=false")
+                        writer.println("pingId=")
                     }
                 }
                 catch (IOException e) {
