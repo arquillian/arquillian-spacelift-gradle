@@ -3,20 +3,20 @@ package org.arquillian.spacelift.gradle
 import org.gradle.api.Project
 
 // this class represents a profile enumerating installations to be installed
-class Profile implements ValueExtractor{
+class Profile implements ValueExtractor {
 
     // this is required in order to use project container abstraction
     final String name
 
     // list of enabled installations
-    Closure enabledInstallations = { []}
+    Closure enabledInstallations = { [] }
 
     // list of tests to execute
-    Closure tests = { []}
+    Closure tests = { [] }
 
     // list of tests to exclude
-    Closure excludedTests = { []}
-    
+    Closure excludedTests = { [] }
+
     Project project
 
     Profile(String profileName, Project project) {
@@ -25,44 +25,46 @@ class Profile implements ValueExtractor{
     }
 
     def enabledInstallations(Object... args) {
-        this.enabledInstallations = extractValueAsLazyClosure(args).dehydrate()
+        this.enabledInstallations = extractValuesAsLazyClosure(args).dehydrate()
         this.enabledInstallations.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getEnabledInstallations() {
         def enabledInstallationsList = enabledInstallations.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        if(enabledInstallationsList==null) {
-            return []
-        }
-        return enabledInstallationsList.flatten()
+        return asFlatList(enabledInstallationsList)
     }
 
     def tests(Object... args) {
-        this.tests = extractValueAsLazyClosure(args).dehydrate()
+        this.tests = extractValuesAsLazyClosure(args).dehydrate()
         this.tests.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def excludedTests(Object... args) {
-        this.excludedTests = extractValueAsLazyClosure(args).dehydrate()
+        this.excludedTests = extractValuesAsLazyClosure(args).dehydrate()
         this.tests.resolveStrategy = Closure.DELEGATE_FIRST
     }
-    
+
     def getTests() {
         def enabledTestList = tests.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        if(enabledTestList==null) {
-            return []
-        }
-        return enabledTestList.flatten()
+        return asFlatList(enabledTestList)
     }
 
     def getExcludedTests() {
         def excludedTestList = excludedTests.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        if (excludedTestList == null) {
-            return []
-        }
-        return excludedTestList.flatten()
+        return asFlatList(excludedTestList)
     }
-    
+
+
+    static asFlatList(charSequenceOrCollection) {
+        if(charSequenceOrCollection == null) {
+            return []
+        } else if(charSequenceOrCollection instanceof CharSequence) {
+            return [ charSequenceOrCollection ]
+        } else {
+            return charSequenceOrCollection.flatten()
+        }
+    }
+
     @Override
     public String toString() {
 
@@ -80,7 +82,7 @@ class Profile implements ValueExtractor{
         getTests().each {
             sb.append(it).append(" ")
         }
-        
+
         sb.append("\tExcluded tests: ")
         getExcludedTests().each {
             sb.append(it).append(" ")

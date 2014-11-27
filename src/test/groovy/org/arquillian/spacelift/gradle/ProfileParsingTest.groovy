@@ -1,15 +1,13 @@
 package org.arquillian.spacelift.gradle
 
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.process.ProcessResult
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.arquillian.spacelift.gradle.openshift.CreateOpenshiftCartridge;
-import org.arquillian.spacelift.gradle.utils.KillJavas
-import org.junit.Ignore;
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.ExpectedException
 
-import static org.hamcrest.CoreMatchers.*
+import static org.hamcrest.CoreMatchers.is
+import static org.hamcrest.CoreMatchers.notNullValue
 import static org.junit.Assert.assertThat
 
 /**
@@ -20,128 +18,149 @@ import static org.junit.Assert.assertThat
 public class ProfileParsingTest {
 
     @Test
-    public void profilesWithoutTests() {
-        Project project = ProjectBuilder.builder().build()
+    void "single profile with single installation and no tests"() {
+        initWithProfile {
+            enabledInstallations "eap"
+        }
+    }
 
-        project.apply plugin: 'spacelift'
+    @Test
+    void "single profile with single installation as array and no tests"() {
+        initWithProfile {
+            enabledInstallations["eap"]
+        }
+    }
 
-        project.spacelift {
-            tools {  rhc { command "rhc"
-                }  }
-            profiles { foobar { enabledInstallations "eap"
-                } }
-            installations {  eap { }  }
+    @Test
+    void "single profile with multiple installations as args and no tests"() {
+        initWithProfile {
+            enabledInstallations 'eap', 'ews'
+        }
+    }
+
+    @Test
+    void "single profile with multiple installations as args and single test"() {
+        initWithProfile {
+            enabledInstallations 'eap', 'ews'
+            tests 'fooTest'
+        }
+    }
+
+    @Test
+    void "single profile with multiple installations as array and multiple tests as array"() {
+        def project = initWithProfile {
+            enabledInstallations(['eap', 'ews'])
+            tests(['fooTest', 'barTest'])
+        }
+
+        assertThat project.selectedProfile, is(notNullValue())
+        assertThat project.selectedProfile.name, is('foobar')
+        assertThat project.selectedInstallations.size(), is(2)
+        assertThat project.selectedTests.size(), is(2)
+    }
+
+    @Test
+    void "single profile with single installation and single test and single excluded test as closure"() {
+        initWithProfile {
+            enabledInstallations { 'eap' }
+            tests { 'fooTest' }
+            excludedTests { 'barTest' }
+        }
+    }
+
+    @Test
+    void "single profile with single installation and single test and single excluded test as array in closure"() {
+        initWithProfile {
+            enabledInstallations { ['eap'] }
+            tests { ['fooTest'] }
+            excludedTests { ['barTest'] }
+        }
+    }
+
+    @Test
+    void "single profile with single installation and single test and single excluded test as Java array in closure"() {
+        initWithProfile {
+            enabledInstallations {
+                String[] args = new String[1];
+                args[0] = 'eap'
+                return args
+            }
             tests {
+                String[] args = new String[1];
+                args[0] = 'fooTest'
+                return args
             }
-        }
-
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
-        project.spacelift.installations.each { installation ->
-            assertThat installation.home, is(notNullValue())
-            assertThat installation.home.exists(), is(true)
+            excludedTests {
+                String[] args = new String[1];
+                args[0] = 'barTest'
+                return args
+            }
         }
     }
 
     @Test
-    public void profilesInstallationsAsArray() {
-        Project project = ProjectBuilder.builder().build()
-
-        project.apply plugin: 'spacelift'
-
-        project.spacelift {
-            tools {  rhc { command "rhc" }  }
-            profiles { foobar { enabledInstallations ["eap"] } }
-            installations {  eap { }  }
-            tests {
-            }
-        }
-
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
-        project.spacelift.installations.each { installation ->
-            assertThat installation.home, is(notNullValue())
-            assertThat installation.home.exists(), is(true)
-        }
-    }
-
-    @Test
-    public void profilesInstallationsMultipleArgs() {
-        Project project = ProjectBuilder.builder().build()
-
-        project.apply plugin: 'spacelift'
-
-        project.spacelift {
-            tools {  rhc { command "rhc" }  }
-            profiles { foobar { enabledInstallations "eap","ews" } }
-            installations {
-                eap {}
-                ews {}
+    void "single profile with single installation and single test and single excluded test as ArrayList in closure"() {
+        initWithProfile {
+            enabledInstallations {
+                ArrayList<String> args = new ArrayList<>();
+                args.add('eap')
+                return args
             }
             tests {
+                ArrayList<String> args = new ArrayList<>();
+                args.add('fooTest')
+                return args
             }
-        }
-
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
-        project.spacelift.installations.each { installation ->
-            assertThat installation.home, is(notNullValue())
-            assertThat installation.home.exists(), is(true)
+            excludedTests {
+                ArrayList<String> args = new ArrayList<>();
+                args.add('barTest')
+                return args
+            }
         }
     }
 
     @Test
-    public void profilesInstallationsMultipleArgsTests() {
-        Project project = ProjectBuilder.builder().build()
-
-        project.apply plugin: 'spacelift'
-
-        project.spacelift {
-            tools {  rhc { command "rhc" }  }
-            profiles {
-                foobar {
-                    enabledInstallations "eap","ews"
-                    tests "fooTest"
-                }
+    void "single profile with single installation and single test and single excluded test as List in closure"() {
+        initWithProfile {
+            enabledInstallations {
+                Arrays.asList('eap')
             }
-            installations {
-                eap {}
-                ews {}
+            tests {
+                Arrays.asList('fooTest')
             }
-            tests { fooTest {} }
-        }
-
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
-        project.spacelift.installations.each { installation ->
-            assertThat installation.home, is(notNullValue())
-            assertThat installation.home.exists(), is(true)
+            excludedTests {
+                Arrays.asList('barTest')
+            }
         }
     }
 
     @Test
-    public void profilesInstallationsTestsArrays() {
+    void "single profile with multiple installations as array in closure and no tests"() {
+        initWithProfile {
+            enabledInstallations { ['eap', 'ews'] }
+        }
+    }
+
+    @Test
+    void "single profile with single installation as array in closure and single test as array in closure"() {
+        initWithProfile {
+            enabledInstallations { ['eap'] }
+            tests { ['fooTest'] }
+        }
+    }
+
+    Project initWithProfile(Closure profileDefinition) {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'spacelift'
 
         // enable foobar profile
         project.ext.set("foobar", "true")
-        
+
         project.spacelift {
-            tools {  rhc { command "rhc" }  }
+            tools { rhc { command "rhc" } }
             profiles {
-                foobar {
-                    enabledInstallations ([
-                        "eap",
-                        "ews"
-                    ])
-                    tests (["fooTest", "barTest"])
-                }
+                foobar profileDefinition
             }
             installations {
                 eap {}
@@ -156,10 +175,13 @@ public class ProfileParsingTest {
         // initialize current project tools - this is effectively init-tools task
         GradleSpacelift.currentProject(project)
 
-        project.getTasks()['init'].execute()
-        assertThat project.selectedProfile, is(notNullValue())
-        assertThat project.selectedProfile.name, is('foobar')
-        assertThat project.selectedInstallations.size(), is(2)
-        //assertThat project.selectedTests.size(), is(2)            
+        project.tasks['init'].execute()
+
+        project.spacelift.installations.each { installation ->
+            assertThat installation.home, is(notNullValue())
+            assertThat installation.home.exists(), is(true)
+        }
+
+        return project
     }
 }
