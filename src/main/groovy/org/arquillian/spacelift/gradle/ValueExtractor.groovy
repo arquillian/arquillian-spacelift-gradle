@@ -15,6 +15,7 @@ trait ValueExtractor {
     Closure extractValueAsLazyClosure(arg) {
 
         Closure retVal;
+
         if (arg instanceof Closure) {
             retVal = arg.dehydrate()
             retVal.resolveStrategy = Closure.DELEGATE_FIRST
@@ -30,6 +31,8 @@ trait ValueExtractor {
                 throw new IllegalStateException("Unknown system ${System.getProperty('os.name')}")
             }
             return retVal
+        } else if(arg == null) {
+            return arg
         }
 
         // return value wrapper as closure
