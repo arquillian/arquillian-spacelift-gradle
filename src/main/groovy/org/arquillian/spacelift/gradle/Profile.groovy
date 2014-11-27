@@ -25,7 +25,7 @@ class Profile implements ValueExtractor{
     }
 
     def enabledInstallations(Object... args) {
-        this.enabledInstallations = extractValueAsLazyClosure(args).dehydrate()
+        this.enabledInstallations = extractValuesAsLazyClosure(args).dehydrate()
         this.enabledInstallations.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
@@ -38,12 +38,12 @@ class Profile implements ValueExtractor{
     }
 
     def tests(Object... args) {
-        this.tests = extractValueAsLazyClosure(args).dehydrate()
+        this.tests = extractValuesAsLazyClosure(args).dehydrate()
         this.tests.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def excludedTests(Object... args) {
-        this.excludedTests = extractValueAsLazyClosure(args).dehydrate()
+        this.excludedTests = extractValuesAsLazyClosure(args).dehydrate()
         this.tests.resolveStrategy = Closure.DELEGATE_FIRST
     }
     
