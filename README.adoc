@@ -137,7 +137,6 @@ value::
 ** +mac+
 ** +solaris+
 +
-    If you are using _block_ syntax, you can additionally use inheritance of previously defined value.
  
 NOTE: If you are using a _map_, you need to use parenthesis around parameters
 
