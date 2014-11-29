@@ -7,7 +7,6 @@ import org.arquillian.spacelift.tool.basic.UnzipTool
 import org.gradle.api.Project
 import org.slf4j.Logger
 
-
 // this class represents anything installable
 // values for installation can either be a single value or if anything requires multiple values per product
 // you can use OS families:
@@ -15,10 +14,10 @@ import org.slf4j.Logger
 // * mac
 // * linux
 // * solaris
-class Installation implements ValueExtractor {
+class Installation implements ValueExtractor, Cloneable {
 
     // this is required in order to use project container abstraction
-    final String name
+    String name
 
     // version of the product installation belongs to
     Closure version = {}
@@ -63,6 +62,35 @@ class Installation implements ValueExtractor {
         this.project = project
         this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool)
     }
+
+    /**
+     * Cloning constructor. Preserves lazy nature of closures to be evaluated later on.
+     * @param other Installation to be cloned
+     */
+    Installation(Installation other) {
+        // use direct access to skip call of getter
+        this.version = other.@version.clone();
+        this.product = other.@product.clone()
+        this.fsPath = other.@fsPath.clone()
+        this.remoteUrl = other.@remoteUrl.clone()
+        this.fileName = other.@fileName.clone()
+        this.home = other.@home.clone()
+        this.autoExtract = other.@autoExtract.clone()
+        this.extractMapper = other.@extractMapper.clone()
+        this.forceReinstall = other.@forceReinstall.clone()
+        this.preconditions = other.@preconditions.clone()
+        this.postActions = other.@postActions.clone()
+        this.tools = other.@tools.clone()
+
+        // project is not cloned, just shallow copy
+        this.project = other.project
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        new Installation(this)
+    }
+
 
     def autoExtract(arg) {
         this.autoExtract = extractValueAsLazyClosure(arg).dehydrate()

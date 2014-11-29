@@ -1,5 +1,8 @@
 package org.arquillian.spacelift.gradle
 
+import static groovy.transform.AutoCloneStyle.*
+import groovy.transform.AutoClone
+
 import org.gradle.api.Project
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.util.Configurable
@@ -12,7 +15,7 @@ import org.gradle.util.Configurable
  *
  * @param <T>
  */
-class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Collection<T>, ValueExtractor {
+class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Collection<T>, ValueExtractor, Cloneable {
 
     Class<T> type
 
@@ -28,6 +31,27 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
         this.parent = parent
         this.objects = new LinkedHashSet<String, T>();
     }
+    
+    InheritanceAwareContainer(InheritanceAwareContainer<T> other) {
+        this.project = other.project
+        this.type = other.type
+        this.parent = other.parent
+        this.objects = new LinkedHashSet<T>(other.objects)
+    }
+    
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        new InheritanceAwareContainer<T>(this)
+    }
+
+    /**
+     * This methods allows us to reference other container elements directly 
+     * @param name name of other element in the container
+     * @return
+     */
+    def propertyMissing(String name) {
+        getAt(name)
+    }
 
     /**
      * This method dynamically creates an object of type <T>.
@@ -38,17 +62,40 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
      */
     def methodMissing(String name, args) {
 
+        Closure configureClosure
+        Map behavior = [:]
+
         // unwrap array in case there is single argument
         if(args instanceof Object[] && args.size()==1) {
-            args = args[0]
+            configureClosure = extractValueAsLazyClosure(args[0]).dehydrate()
+        }
+        // check whether there was inheritance used or any named parameters were passed
+        else if(args instanceof Object[] && args.size()==2) {
+            if(args[0] instanceof Map) {
+                behavior = args[0]
+            }
+            configureClosure = extractValueAsLazyClosure(args[1]).dehydrate()
+        }
+        else {
+            configureClosure = extractValueAsLazyClosure(args).dehydrate()
         }
 
-        def configureClosure = extractValueAsLazyClosure(args).dehydrate()
-        create(name, configureClosure)
+        create(name, behavior, configureClosure)
     }
 
-    T create(String name, Closure closure) {
-        def object = project.gradle.services.get(Instantiator).newInstance(type, name, project)
+    T create(String name, Map behavior, Closure closure) {
+        def object
+
+        // inherit from different object if set
+        if(behavior.inherits) {
+            object = getAt(behavior.inherits).clone();
+            object.name = name            
+        }
+        else {
+            object = type.newInstance(name, project)
+        }
+
+
         closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure = closure.rehydrate(new GradleSpaceliftDelegate(), parent, object)
 
@@ -68,7 +115,7 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public Iterator<T> iterator() {        
         objects.iterator();
     }
 
@@ -147,7 +194,7 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
 
     @Override
     public Object[] toArray() {
-        objects..toArray()
+        objects.toArray()
     }
 
     @SuppressWarnings("unchecked")

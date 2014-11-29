@@ -3,19 +3,20 @@ package org.arquillian.spacelift.gradle
 import org.gradle.api.Project
 
 // this class represents a profile enumerating installations to be installed
-class Profile implements ValueExtractor {
+
+class Profile implements ValueExtractor, Cloneable {
 
     // this is required in order to use project container abstraction
-    final String name
+    String name
 
     // list of enabled installations
-    Closure enabledInstallations = { [] }
+    Closure enabledInstallations = { []}
 
     // list of tests to execute
-    Closure tests = { [] }
+    Closure tests = { []}
 
     // list of tests to exclude
-    Closure excludedTests = { [] }
+    Closure excludedTests = { []}
 
     Project project
 
@@ -23,7 +24,27 @@ class Profile implements ValueExtractor {
         this.name = profileName
         this.project = project
     }
-    
+
+    /**
+     * Cloning constructor. Preserves lazy nature of closures to be evaluated later on.
+     * @param other Profile to be cloned
+     */
+    Profile(Profile other) {
+
+        // use direct access to skip call of getter
+        this.enabledInstallations = other.@enabledInstallations.clone()
+        this.tests = other.@tests.clone()
+        this.excludedTests = other.@excludedTests.clone()
+
+        // shallow copy of project
+        this.project = other.project
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        new Profile(this)
+    }
+
     def enabledInstallations(Object... args) {
         this.enabledInstallations = extractValuesAsLazyClosure(args).dehydrate()
         this.enabledInstallations.resolveStrategy = Closure.DELEGATE_FIRST
@@ -59,7 +80,7 @@ class Profile implements ValueExtractor {
         if(charSequenceOrCollection == null) {
             return []
         } else if(charSequenceOrCollection instanceof CharSequence) {
-            return [ charSequenceOrCollection ]
+            return [charSequenceOrCollection]
         } else {
             return charSequenceOrCollection.flatten()
         }

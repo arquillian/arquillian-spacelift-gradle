@@ -12,20 +12,38 @@ import org.gradle.api.Project
  * @author <a href="kpiwko@redhat.com">Karel Piwko</a>
  *
  */
-class GradleSpaceliftTool implements ValueExtractor {
+class GradleSpaceliftTool implements ValueExtractor, Cloneable {
     private static final Logger logger = Logger.getLogger("Spacelift")
 
     // required by gradle to be defined
     String name
 
     // prepared command tool
-    Closure command
+    Closure command = {}
 
     Project project
 
     GradleSpaceliftTool(String toolName, Project project) {
         this.name = toolName
         this.project = project
+    }
+
+    /**
+     * Cloning constructor. Preserves lazy nature of closures to be evaluated later on.
+     * @param other Tool to be cloned
+     */
+    GradleSpaceliftTool(GradleSpaceliftTool other) {
+
+        // use direct access to skip call of getter
+        this.command = other.@command.clone()
+
+        // shallow copy of project
+        this.project = other.project
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        new GradleSpaceliftTool(this)
     }
 
     void registerInSpacelift(ToolRegistry registry) {

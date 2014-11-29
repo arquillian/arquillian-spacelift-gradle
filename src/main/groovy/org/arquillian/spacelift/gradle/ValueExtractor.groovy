@@ -5,15 +5,14 @@ import org.apache.commons.lang3.SystemUtils
 
 trait ValueExtractor {
 
-    def osMapping = [
+    static def osMapping = [
             windows: { return SystemUtils.IS_OS_WINDOWS },
             mac    : { return SystemUtils.IS_OS_MAC_OSX },
             linux  : { return SystemUtils.IS_OS_LINUX },
             solaris: { return SystemUtils.IS_OS_SOLARIS || SystemUtils.IS_OS_SUN_OS },
     ]
 
-    Closure extractValueAsLazyClosure(arg) {
-
+    Closure extractValueAsLazyClosure(arg) {               
         Closure retVal;
 
         if (arg instanceof Closure) {
@@ -30,7 +29,9 @@ trait ValueExtractor {
             if (retVal == null) {
                 throw new IllegalStateException("Unknown system ${System.getProperty('os.name')}")
             }
-            return retVal
+            else {
+                return retVal
+            }
         } else if(arg == null) {
             return arg
         }

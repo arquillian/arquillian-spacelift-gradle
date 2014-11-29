@@ -70,7 +70,7 @@ public class InstallationParsingTest {
 
         assertThat new File(System.getProperty("java.io.tmpdir"), "preconditionTestFile.tmp").exists(), is(false)
     }
-
+    
     @Test
     public void extractMapperCutsdirTest() {
         Project testProject = ProjectBuilder.builder().build()

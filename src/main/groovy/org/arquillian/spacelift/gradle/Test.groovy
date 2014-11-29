@@ -3,16 +3,14 @@ package org.arquillian.spacelift.gradle
 import org.gradle.api.Project
 import org.slf4j.Logger
 
-class Test implements ValueExtractor {
+class Test implements ValueExtractor, Cloneable {
 
     // required by gradle to be defined
-    final String name
-
-    final String testName
+    String name
 
     Closure execute = {}
 
-    Closure dataProvider = { [null]}
+    Closure dataProvider = {[null]}
 
     Closure beforeSuite = {}
 
@@ -25,8 +23,31 @@ class Test implements ValueExtractor {
     Project project
 
     Test(String testName, Project project) {
-        this.name = this.testName = testName
+        this.name = testName
         this.project = project
+    }
+
+    /**
+     * Cloning constructor. Preserves lazy nature of closures to be evaluated later on.
+     * @param other Test to be cloned
+     */
+    Test(Test other) {
+
+        // use direct access to skip call of getter
+        this.execute = other.@execute.clone()
+        this.dataProvider = other.@dataProvider.clone()
+        this.beforeSuite = other.@beforeSuite.clone()
+        this.beforeTest = other.@beforeTest.clone()
+        this.afterSuite = other.@afterSuite.clone()
+        this.afterTest = other.@afterTest.clone()
+
+        // shallow copy of project
+        this.project = other.project
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        new Test(this)
     }
 
     def executeTest(Logger logger) {
@@ -74,7 +95,7 @@ class Test implements ValueExtractor {
         }
     }
 
-    def execute(arg) {                
+    def execute(arg) {
         this.execute = extractValueAsLazyClosure(arg).dehydrate()
         this.execute.resolveStrategy = Closure.DELEGATE_FIRST
     }

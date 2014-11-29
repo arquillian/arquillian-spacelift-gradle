@@ -93,23 +93,20 @@ spacelift {
     enableSnapshots value
 
     tools {
-        tool1 {
-        }
+        tool1 { }
     }
 
     profiles {
-        profile1 {
-        }
+        profile1 { }
+        profile2(inherits:'profile1') { }
     }
 
     installations {
-        installation1 {
-        }
+        installation1 { }
     }
 
     tests {
-        test1 {
-        }
+        test1 { }
     }
 
     
@@ -139,12 +136,13 @@ value::
 ** +windows+
 ** +mac+
 ** +solaris+
-
++
+    If you are using _block_ syntax, you can additionally use inheritance of previously defined value.
  
-NOTE: If you are using _map_, you need to use parenthesis around parameter
+NOTE: If you are using a _map_, you need to use parenthesis around parameters
 
 tools::
-    Tools allow you to define external commands that should be available on local system. Syntax is following:
+    Tools allow you to define external commands that should be available on local system. Tools can be inherited from previously defined tools.
 +
 [source,groovy]
 ----
@@ -163,7 +161,7 @@ command::
 profiles::
     Profiles consist of installations to be installed and tests to be executed. You can use -P__profileName__ to trigger
     specific profile, otherwise default profile is triggered. _default_ profile is expected to be present. Note, you need
-    define profileName quoted in case of _default_.
+    define profileName quoted in case of _default_. Profiles can be inherited from previous created profiles.
 +
 [source,groovy]
 ----
@@ -182,7 +180,7 @@ NOTE: You can also use +*+ to enable all defined installations and or tests for 
 
 installations::
     Installations provides a way how to bring additional tools to you test environment. Installation is automatically downloaded
-    or fetched from local cache and extracted, based on current OS.
+    or fetched from local cache and extracted, based on current OS. Installations can be inherited from previously defined installations.
 +
 [source,groovy]
 ----
@@ -204,6 +202,10 @@ installationName {
     }
     postActions {
     }
+}
+otherInstallation(inherits:'installationName') {
+    // reuses all values from 'installationName', redefines home
+    home newValue
 }
 ----
 +
@@ -232,7 +234,7 @@ extractMapper {
 
 tests::
     Tests define a block of commands to be executed in *test* Gradle task. If you provide +dataProvider+ block, test
-    execution (including before and after test phases) will iterate over data provided.
+    execution (including before and after test phases) will iterate over data provided. Tests can inherit from previously defined tests
 
 [source,groovy]
 ----
@@ -291,7 +293,8 @@ ext {
 }
 ----
 
-This plugin additionally allows following goodies for property definitions:
+You can use this block to store global objects needed during execution.
+The plugin additionally allows following goodies for property definitions:
 
 Default values::
     If a property starts with +default+, it is used if user won't override it from command line. Example: +defaultAndroidVersion=19+ will 
@@ -342,5 +345,3 @@ Follow this process to release new version:
 == Releasing SNAPSHOT version to local Maven Repository
 
 In order to build and publish SNAPSHOT plugin, use +gradle build publishToMavenLocal+.
-
-
