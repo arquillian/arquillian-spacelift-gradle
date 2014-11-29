@@ -31,6 +31,14 @@ class SpaceliftExtension {
     // snapshots JBoss repository
     boolean enableSnapshots
 
+    // internal DSL
+    InheritanceAwareContainer<Profile> profiles
+    InheritanceAwareContainer<GradleSpaceliftTool> tools
+    InheritanceAwareContainer<Installation> installations
+    InheritanceAwareContainer<Test> tests
+
+    Project project
+
     SpaceliftExtension(Project project) {
         this.workspace = project.rootDir
         this.installationsDir = new File(workspace, "installations")
@@ -40,7 +48,49 @@ class SpaceliftExtension {
         this.truststoreFile = new File(project.rootDir, "patches/certs/aerogear.truststore")
         this.enableStaging = false
         this.enableSnapshots = false
+        this.project = project
+        this.profiles = new InheritanceAwareContainer(project, this, Profile)
+        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool)
+        this.installations = new InheritanceAwareContainer(project, this, Installation)
+        this.tests = new InheritanceAwareContainer(project, this, Test)
     }
+
+    def profiles(Closure closure) {
+        profiles.configure(closure)
+        this
+    }
+
+    List<Profile> getProfiles() {
+        profiles.asList()
+    }
+
+    def tools(Closure closure) {
+        tools.configure(closure)
+        this
+    }
+
+    InheritanceAwareContainer<GradleSpaceliftTool> getTools() {
+        tools
+    }
+
+    def installations(Closure closure) {
+        installations.configure(closure)
+        this
+    }
+
+    InheritanceAwareContainer<Installation> getInstallations() {
+        installations
+    }
+
+    def tests(Closure closure) {
+        tests.configure(closure)
+        this
+    }
+
+    InheritanceAwareContainer<Test> getTests() {
+        tests
+    }
+
 
     def setWorkspace(workspace) {
         // update also dependant repositories when workspace is updated

@@ -25,26 +25,6 @@ class SpaceliftPlugin implements Plugin<Project> {
         
         project.extensions.create("spacelift", SpaceliftExtension, project)
 
-        // add tools definitions
-        project.spacelift.extensions.tools = project.container(GradleSpaceliftTool) { toolAlias ->
-            project.gradle.services.get(Instantiator).newInstance(GradleSpaceliftTool, toolAlias, project)
-        }
-
-        // add profile definitions
-        project.spacelift.extensions.profiles = project.container(Profile) { profileName ->
-            project.gradle.services.get(Instantiator).newInstance(Profile, profileName, project)
-        }
-
-        // add installation definitions
-        project.spacelift.extensions.installations = project.container(Installation) { productName ->
-            def installation = project.gradle.services.get(Instantiator).newInstance(Installation, productName, project)
-        }
-
-        // add test definitions
-        project.spacelift.extensions.tests = project.container(Test) { testName ->
-            project.gradle.services.get(Instantiator).newInstance(Test, testName, project)
-        }        
-
         // set current project and initialize tools
         // parses default profile, installations and tests
         // this task can use following properties specified on command line

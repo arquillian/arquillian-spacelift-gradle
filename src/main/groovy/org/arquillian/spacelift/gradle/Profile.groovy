@@ -23,7 +23,7 @@ class Profile implements ValueExtractor {
         this.name = profileName
         this.project = project
     }
-
+    
     def enabledInstallations(Object... args) {
         this.enabledInstallations = extractValuesAsLazyClosure(args).dehydrate()
         this.enabledInstallations.resolveStrategy = Closure.DELEGATE_FIRST
