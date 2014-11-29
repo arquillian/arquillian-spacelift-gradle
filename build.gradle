@@ -25,7 +25,7 @@ buildscript {
 
 dependencies {
     compile gradleApi()
-    compile localGroovy()
+    compile 'org.codehaus.groovy:groovy-all:2.3.6'
 
     // commons lang is used to do platform checks
     compile 'org.apache.commons:commons-lang3:3.1'
@@ -34,6 +34,17 @@ dependencies {
     compile 'org.arquillian.spacelift:arquillian-spacelift:1.0.0.Alpha3'
     compile 'org.jboss.aerogear.test:spacelift-jboss-manager:0.4.0'
 
+    // FIXME manually include ShrinkWrap Resolver Depchain as pom typed import does not play well with Gradle and Eclipse
+    compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api:2.1.1'
+    compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi:2.1.1'
+    compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api-maven:2.1.1'
+    compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi-maven:2.1.1'
+    compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:2.1.1'
+    compile('org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:2.1.1') {
+        // FIXME Sisu Plexus depends on Guava 10 while Gradle API requires Guava 11
+        exclude group: "com.google.guava", module: "guava"
+    }
+    
     testCompile 'junit:junit:4.11'
 }
 
@@ -41,6 +52,11 @@ test {
     testLogging {
         exceptionFormat "full"
     }
+}
+
+configurations {
+    // exclude pom typed import of ShrinkWrap Resolver Depchain
+    compile.exclude(module: "shrinkwrap-resolver-depchain")
 }
 
 
@@ -126,6 +142,3 @@ task sourcesJar(type: Jar, dependsOn: compileGroovy) {
 task wrapper(type: Wrapper) {
     gradleVersion = '2.2'
 }
-
-
-
