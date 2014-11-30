@@ -10,7 +10,7 @@ import org.gradle.testfixtures.ProjectBuilder
 class TestExclusionTest {
 
     @Test
-    public void excludeTest() {
+    void "excluded tests triggers"() {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'spacelift'
@@ -23,15 +23,9 @@ class TestExclusionTest {
                 }
             }
             tests {
-                bar {
-                    execute { println "Executing bar test" }
-                }
-                baz {
-                    execute { println "Executing baz test" }
-                }
-                foo {
-                    execute { println "Executing foo test" }
-                }
+                bar { execute { println "Executing bar test" } }
+                baz { execute { println "Executing baz test" } }
+                foo { execute { println "Executing foo test" } }
             }
             tools {
             }

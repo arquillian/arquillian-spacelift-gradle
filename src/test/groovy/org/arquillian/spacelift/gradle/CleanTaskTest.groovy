@@ -10,7 +10,7 @@ import org.gradle.testfixtures.ProjectBuilder
 
 import java.io.File
 
-@Ignore("This test depends on installation which is not always guaranteed to exist.")
+
 class CleanTaskTest {
 
     @Test
@@ -18,44 +18,31 @@ class CleanTaskTest {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'spacelift'
-
-        project.repositories { mavenCentral() }
-
         project.spacelift {
-
-            workspace = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
-            installationsDir = new File(workspace, "installations")
-
-            tests {
-            }
-            tools {
-            }
-            profiles {
-                'default' {
-                    enabledInstallations 'someInstallation'
-                }
-            }
+            profiles { 'default' { enabledInstallations 'someInstallation' } }
             installations {
                 someInstallation {
+                    product 'test'
+                    version '1'
                     remoteUrl "https://github.com/smiklosovic/test/archive/master.zip"
+                    home "foobar"
+                    extractMapper { toDir(home).cutdirs() }
                 }
             }
         }
 
-        GradleSpacelift.currentProject(project)
-
+        // direct task execution does not support dependencies
         project.getTasks()['init'].execute()
-        project.getTasks()['prepare-env'].execute()
-        
+        project.getTasks()['assemble'].execute()
+
         assertThat project.spacelift.workspace.exists(), is(true)
         assertThat project.spacelift.installationsDir.exists(), is(true)
 
-        project.getTasks()['cleanInstallations'].execute()
+        project.getTasks()['clean:installations'].execute()
         assertThat project.spacelift.workspace.exists(), is(true)
-        assertThat project.spacelift.installationsDir.exists(), is(false)
-        
-        project.getTasks()['cleanWorkspace'].execute()
+        assertThat project.spacelift.installations['someInstallation'].home.exists(), is(false)
+
+        project.getTasks()['clean:workspace'].execute()
         assertThat project.spacelift.workspace.exists(), is(false)
     }
-
 }

@@ -53,14 +53,14 @@ testreport::
     in _build.gradle_ file
 show-configuration::
     Shows global configuration and available profiles
-clean::
-    Executes _cleanInstallations_, _cleanRepository_ and _cleanWorkspace_ tasks in this order.
-cleanInstallations::
-    Deletes directory where you cache installations
-cleanRepository::
-    Deletes _.repository_ directory in your workspace
-cleanWorkspace::
-    Deletes workspace directory
+clean/clean:workspace::
+    Wipes Spacelift workspace directory
+clean:installations::
+    Wipes cached installation and extracted installation artifacts for currently activated installations
+clean:repository::
+    Wipes Maven repository used by Spacelift
+clean:all::
+    Executes all the +clean+ tasks
 
 === Manual profile definitions
 
