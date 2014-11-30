@@ -44,10 +44,10 @@ dependencies {
 
 This plugin provides following tasks:
 
-prepare-env::
+assemble::
     Installs all installations defined by profile
-test::
-    Executes tests defined in profile. Depends on +prepare-env+
+check/test::
+    Executes tests defined in profile. Depends on +assemble+. Both +check+ and +test+ are the same.
 testreport::
     Gathers all test results in JUnit format from workspace and creates a combined report. Requires additional configuration
     in _build.gradle_ file

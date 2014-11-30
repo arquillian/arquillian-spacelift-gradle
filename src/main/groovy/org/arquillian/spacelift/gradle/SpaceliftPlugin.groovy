@@ -155,7 +155,7 @@ class SpaceliftPlugin implements Plugin<Project> {
         // this task prepares test environment by
         // 1. Identifying activated profile
         // 2. Installing all installations
-        project.task('prepare-env') << {
+        project.task('assemble') << {
 
             logger.lifecycle(":prepare-env:profile-${project.selectedProfile.name}")
 
@@ -193,12 +193,15 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
         }
 
-        project.tasks.getByName("prepare-env").dependsOn(project.tasks.getByName("init"))
+        project.tasks.getByName("assemble").dependsOn(project.tasks.getByName("init"))
 
-        project.tasks.getByName("test").dependsOn(project.tasks.getByName("prepare-env"))
+        project.tasks.getByName("test").dependsOn(project.tasks.getByName("assemble"))
 
-        // test task alias, you can use tests instead of executeTests
-        project.task('executeTests') << {
+        // test task alias, you can use tests instead of test
+        project.task('check') << {
+        }
+        
+        project.task('prepare-env') << {            
         }
 
         project.task('testreport') << {
@@ -221,7 +224,8 @@ class SpaceliftPlugin implements Plugin<Project> {
             logger.lifecycle(":testreport:test report available in file://${project.spacelift.workspace}/test-reports/html/junit-noframes.html")
         }
 
-        project.tasks.getByName("executeTests").dependsOn(project.tasks.getByName("test"))
+        project.tasks.getByName("check").dependsOn(project.tasks.getByName("test"))
+        project.tasks.getByName("prepare-env").dependsOn(project.tasks.getByName("assemble"))
     }
 
     private void setDefaultDataProviders(Project project) {
