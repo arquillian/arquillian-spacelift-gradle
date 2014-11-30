@@ -39,6 +39,9 @@ class SpaceliftPlugin implements Plugin<Project> {
             group "Spacelift"
             task << {
                 logger.lifecycle(":init:defaultValues")
+                // we are calling default data provider once again in case ext {} block is defined after plugin is applied
+                // ext values will not be correctly initialized
+                setDefaultDataProviders(project);
 
                 // find default profile and propagate enabled installations and tests
                 // check for -Pprofile=profileName and then for Mavenism -PprofileName
