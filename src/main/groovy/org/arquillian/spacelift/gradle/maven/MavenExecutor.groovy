@@ -1,15 +1,11 @@
 package org.arquillian.spacelift.gradle.maven
 
-import java.text.MessageFormat
-
 import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.process.Command
-import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.gradle.GradleSpacelift
-import org.arquillian.spacelift.gradle.utils.EnvironmentUtils
+import org.arquillian.spacelift.process.ProcessResult
 import org.slf4j.LoggerFactory
 
-class MavenExecutor extends Task<Object, Void>{
+class MavenExecutor extends Task<Object, ProcessResult>{
 
     def static final log = LoggerFactory.getLogger('MavenExecutor')
 
@@ -44,7 +40,7 @@ class MavenExecutor extends Task<Object, Void>{
     }
 
     @Override
-    protected Void process(Object input) throws Exception {
+    protected ProcessResult process(Object input) throws Exception {
 
         def command = GradleSpacelift.tools('mvn')
 
@@ -81,9 +77,7 @@ class MavenExecutor extends Task<Object, Void>{
             command.workingDir(workingDir)
         }
 
-        command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
-
-        return null;
+        return command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
     }
 
     def pom(projectPom) {
@@ -98,6 +92,11 @@ class MavenExecutor extends Task<Object, Void>{
 
     def withoutBatchMode() {
         this.batchMode = false
+        this
+    }
+
+    def debug() {
+        this.debug = true
         this
     }
 
@@ -142,7 +141,7 @@ class MavenExecutor extends Task<Object, Void>{
     }
 
     def env(key, value) {
-        this.env << ["${key}":value]
+        this.env.put(key, value)
         this
     }
 
@@ -162,7 +161,7 @@ class MavenExecutor extends Task<Object, Void>{
         this.properties << "arq.group.jboss.container.domain-controller.configuration.jbossHome=${jbossHome}"
         this
     }
-    
+
     def surefireSuffix(suffix) {
         this.properties << "surefire.reportNameSuffix=${suffix}"
         this

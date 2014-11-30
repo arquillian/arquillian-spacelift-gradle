@@ -7,10 +7,11 @@ import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessInteractionBuilder
+import org.arquillian.spacelift.process.ProcessResult;
 import org.arquillian.spacelift.gradle.GradleSpacelift;
 import org.arquillian.spacelift.gradle.utils.EnvironmentUtils
 
-class AntExecutor extends Task<Object, Void>{
+class AntExecutor extends Task<Object, ProcessResult>{
 
     def projectDir
 
@@ -39,7 +40,7 @@ class AntExecutor extends Task<Object, Void>{
     }
 
     @Override
-    protected Void process(Object input) throws Exception {
+    protected ProcessResult process(Object input) throws Exception {
 
         def command = GradleSpacelift.tools('ant')
 
@@ -55,8 +56,6 @@ class AntExecutor extends Task<Object, Void>{
 
         command.parameters(targets)
 
-        command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
-
-        return null;
+        return command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
     }
 }

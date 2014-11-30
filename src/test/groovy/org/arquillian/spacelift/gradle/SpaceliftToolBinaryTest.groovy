@@ -18,7 +18,7 @@ class SpaceliftToolBinaryTest {
     @Test
     public void addEnvironmentPropertyToTool() {
 
-        Assume.assumeThat(System.getenv("ANT_HOME"), is(notNullValue()))
+        Assume.assumeThat System.getenv("ANT_HOME"), is(notNullValue())
 
         Project project = ProjectBuilder.builder().build()
 
@@ -58,8 +58,8 @@ class SpaceliftToolBinaryTest {
 
         project.spacelift {
             tools {
-                ant { command = { Tasks.prepare(CommandTool).command(new CommandBuilder("ant")) }}
-                mvn { command = { Tasks.prepare(CommandTool).command(new CommandBuilder("mvn")) }}
+                ant { command { Tasks.prepare(CommandTool).command(new CommandBuilder("ant")) }}
+                mvn { command { Tasks.prepare(CommandTool).command(new CommandBuilder("mvn")) }}
             }
             profiles {
             }
@@ -92,8 +92,7 @@ class SpaceliftToolBinaryTest {
         project.apply plugin: 'spacelift'
 
         project.spacelift {
-            tools { ant { command "ant"
-                } }
+            tools { ant { command "ant" } }
             profiles {
             }
             installations {
