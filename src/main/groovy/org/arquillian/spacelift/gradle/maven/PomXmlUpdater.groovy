@@ -14,7 +14,7 @@ class PomXmlUpdater extends Task<Object, Void> {
         def project = GradleSpacelift.currentProject()
         this.xmlFiles = project.fileTree("${dir}") {
             include "**/pom.xml"
-            exclude "${project.spacelift.localRepository}/**", "**/target/**"
+            exclude "${project.spacelift.localRepository}/**", "${project.spacelift.workspace}", "${project.spacelift.installationsDir}", "**/target/**"
         }
         this
     }
