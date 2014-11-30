@@ -204,6 +204,36 @@ class SpaceliftPlugin implements Plugin<Project> {
         project.task('prepare-env') << {            
         }
 
+        project.task('cleanInstallations') << {
+            project.selectedInstallations.each { installation
+                ant.delete(file: installation.fileName, failonerror: false)
+                ant.delete(dir: installation.home, failonerror: false)
+            }
+        }
+        
+        project.task('cleanWorkspace') << {
+            ant.delete(dir: project.spacelift.workspace, failonerror: false)
+        }
+
+        project.task('cleanRepository') << {
+            ant.delete(dir: new File(project.spacelift.workspace, ".repository"), failonerror: false)
+        }
+                
+        project.task('clean') << {
+        }
+        
+        project.tasks.getByName("clean").dependsOn(
+            [
+                project.tasks.getByName("init"),
+                project.tasks.getByName("cleanInstallations"),
+                project.tasks.getByName("cleanRepository"),
+                project.tasks.getByName("cleanWorkspace")
+            ])
+
+        project.tasks.getByName("cleanRepository").dependsOn(project.tasks.getByName("init"))
+        project.tasks.getByName("cleanInstallations").dependsOn(project.tasks.getByName("init"))
+        project.tasks.getByName("cleanWorkspace").dependsOn(project.tasks.getByName("init"))
+        
         project.task('testreport') << {
             logger.lifecycle(":testreport:generating JUnit report for all tests in ${project.spacelift.workspace}")
 
