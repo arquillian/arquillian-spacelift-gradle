@@ -106,7 +106,7 @@ spacelift {
 
     profiles {
         profile1 { }
-        profile2(inherits:'profile1') { }
+        profile2(inherits:profile1) { }
     }
 
     installations {
@@ -210,8 +210,8 @@ installationName {
     postActions {
     }
 }
-otherInstallation(inherits:'installationName') {
-    // reuses all values from 'installationName', redefines home
+otherInstallation(inherits:installationName) {
+    // reuses all values from installationName and then redefines home directory
     home newValue
 }
 ----
