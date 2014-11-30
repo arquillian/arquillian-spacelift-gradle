@@ -28,11 +28,7 @@ public class KillJavasTest {
             }
         }
 
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
         // kill servers
         Tasks.prepare(KillJavas).execute().await()
-
     }
 }

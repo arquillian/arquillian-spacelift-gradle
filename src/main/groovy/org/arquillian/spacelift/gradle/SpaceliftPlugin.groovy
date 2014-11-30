@@ -17,12 +17,16 @@ class SpaceliftPlugin implements Plugin<Project> {
 
     // this plugin prepares Arquillian Spacelift environment
     void apply(Project project) {
-        
+
         // initialize Spacelift task factory
         Tasks.setDefaultExecutionServiceFactory(new DefaultExecutionServiceFactory())
+
+        // set current project reference
+        GradleSpacelift.currentProject(project)
+
         // set default values if not specified from command line
         setDefaultDataProviders(project);
-        
+
         project.extensions.create("spacelift", SpaceliftExtension, project)
 
         // set current project and initialize tools
@@ -37,9 +41,6 @@ class SpaceliftPlugin implements Plugin<Project> {
         // * project.selectedTests
         project.task('init') << {
             logger.lifecycle(":init:defaultValues")
-            // set default values if not specified from command line in case plugin is applied prior ext {} block
-            setDefaultDataProviders(project);
-            GradleSpacelift.currentProject(project)
 
             // find default profile and propagate enabled installations and tests
             // check for -Pprofile=profileName and then for Mavenism -PprofileName
@@ -112,7 +113,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             else {
                 testNames = profile.tests
             }
-            
+
             def excludedTestNames = []
             if (project.hasProperty('excludedTests')) {
                 excludedTestNames = project.excludedTests.split(',').findAll { return !it.isEmpty() }
@@ -123,7 +124,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             else {
                 excludedTestNames = profile.excludedTests
             }
-            
+
             def testsToExecute = testNames - excludedTestNames
 
             def tests = testsToExecute.inject(new ArrayList()) { list, testName ->

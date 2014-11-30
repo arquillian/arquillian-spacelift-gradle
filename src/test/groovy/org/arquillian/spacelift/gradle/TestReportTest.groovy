@@ -37,8 +37,6 @@ class TestReportTest {
 			}
 		}
 		
-		GradleSpacelift.currentProject(project)
-		
 		// execute testreport task
 		project.getTasks()['testreport'].execute()
 		

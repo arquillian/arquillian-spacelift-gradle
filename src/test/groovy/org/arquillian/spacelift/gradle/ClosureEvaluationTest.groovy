@@ -67,8 +67,6 @@ class ClosureEvaluationTest {
             }
         }
 
-        GradleSpacelift.currentProject(testProject)
-
         testProject.spacelift.installations.each { installation ->
             installation.install(project.logger)
         }
@@ -110,8 +108,6 @@ class ClosureEvaluationTest {
                 }
             }
         }
-
-        GradleSpacelift.currentProject(testProject)
 
         testProject.spacelift.installations.each { installation ->
             installation.install(project.logger)

@@ -150,8 +150,6 @@ class TestExecutionLifecycleTest {
 
         project.ext.exception = exception
 
-        GradleSpacelift.currentProject(project)
-
         project.spacelift.tests.each { test ->
             test.executeTest(project.logger)
         }

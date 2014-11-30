@@ -42,9 +42,6 @@ class SpaceliftToolBinaryTest {
             }
         }
 
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
         // find ant tool
         def antTool = GradleSpacelift.tools("ant")
         assertThat antTool, is(notNullValue())
@@ -71,9 +68,6 @@ class SpaceliftToolBinaryTest {
             tests {
             }
         }
-
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
 
         // find ant tool
         def antTool = GradleSpacelift.tools("ant")
@@ -108,9 +102,6 @@ class SpaceliftToolBinaryTest {
             }
         }
 
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
         // find ant tool
         def antTool = GradleSpacelift.tools("ant")
         assertThat antTool, is(notNullValue())
@@ -138,9 +129,6 @@ class SpaceliftToolBinaryTest {
             tests {
             }
         }
-
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
 
         // find ant tool
         def antTool = GradleSpacelift.tools("ant")
@@ -176,9 +164,6 @@ class SpaceliftToolBinaryTest {
             tests {
             }
         }
-
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
 
         // find ant tool
         def antTool = GradleSpacelift.tools("ant")
@@ -218,9 +203,6 @@ class SpaceliftToolBinaryTest {
             }
         }
 
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
         // find android tool
         def antTool = GradleSpacelift.tools("android")
         assertThat antTool, is(notNullValue())
@@ -256,9 +238,6 @@ class SpaceliftToolBinaryTest {
             tests {
             }
         }
-
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
 
         // find android tool
         def antTool = GradleSpacelift.tools("android")

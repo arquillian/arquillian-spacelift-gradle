@@ -29,9 +29,6 @@ public class InstallationParsingTest {
             }
         }
 
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
         project.spacelift.installations.each { installation ->
             assertThat installation.home, is(notNullValue())
             assertThat installation.home.exists(), is(true)
@@ -61,8 +58,6 @@ public class InstallationParsingTest {
                 }
             }
         }
-
-        GradleSpacelift.currentProject(project)
 
         project.spacelift.installations.each { installation ->
             installation.install(project.logger)
@@ -102,8 +97,6 @@ public class InstallationParsingTest {
                 }
             }
         }
-
-        GradleSpacelift.currentProject(testProject)
 
         testProject.spacelift.installations.each { installation ->
             installation.install(project.logger)

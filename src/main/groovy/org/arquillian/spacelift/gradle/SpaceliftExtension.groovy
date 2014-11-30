@@ -60,12 +60,18 @@ class SpaceliftExtension {
         this
     }
 
-    List<Profile> getProfiles() {
-        profiles.asList()
+    InheritanceAwareContainer<Profile> getProfiles() {
+        profiles
     }
 
     def tools(Closure closure) {
         tools.configure(closure)
+
+        // register existing tools
+        tools.each { tool ->
+            tool.registerInSpacelift(GradleSpacelift.toolRegistry())
+        }
+
         this
     }
 

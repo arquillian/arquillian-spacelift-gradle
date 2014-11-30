@@ -31,26 +31,17 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
         this.parent = parent
         this.objects = new LinkedHashSet<String, T>();
     }
-    
+
     InheritanceAwareContainer(InheritanceAwareContainer<T> other) {
         this.project = other.project
         this.type = other.type
         this.parent = other.parent
         this.objects = new LinkedHashSet<T>(other.objects)
     }
-    
+
     @Override
     public Object clone() throws CloneNotSupportedException {
         new InheritanceAwareContainer<T>(this)
-    }
-
-    /**
-     * This methods allows us to reference other container elements directly 
-     * @param name name of other element in the container
-     * @return
-     */
-    def propertyMissing(String name) {
-        getAt(name)
     }
 
     /**
@@ -88,15 +79,16 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
 
         // inherit from different object if set
         if(behavior.inherits) {
-            object = getAt(behavior.inherits).clone();
-            object.name = name            
+            object = resolveParent(behavior.inherits).clone()
+            object.name = name
         }
+        // create brand new instance
         else {
             object = type.newInstance(name, project)
         }
 
 
-        closure.resolveStrategy = Closure.DELEGATE_FIRST
+        closure.resolveStrategy = Closure.OWNER_FIRST
         closure = closure.rehydrate(new GradleSpaceliftDelegate(), parent, object)
 
         // configure and store object
@@ -110,12 +102,12 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
     @Override
     public T configure(Closure configuration) {
         Closure config = extractValueAsLazyClosure(configuration).dehydrate()
-        config.resolveStrategy = Closure.DELEGATE_FIRST
+        config.resolveStrategy = Closure.OWNER_FIRST
         config.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
     }
 
     @Override
-    public Iterator<T> iterator() {        
+    public Iterator<T> iterator() {
         objects.iterator();
     }
 
@@ -201,6 +193,23 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
     @Override
     public <X> X[] toArray(X[] a) {
         objects.toArray(a)
+    }
+
+    /**
+     * Resolves reference by either string. If it gets direct reference, checks whether type is compatible
+     * @param reference reference to be resolved
+     * @return
+     */
+    private T resolveParent(def reference) {
+        if(reference instanceof CharSequence) {
+            getAt(reference.toString())
+        }
+        else if(type.isInstance(reference)) {
+            (T) reference
+        }
+        else {
+            throw new MissingPropertyException("Unable to reference ${type.getSimpleName()} by ${reference}")
+        }
     }
 
 }

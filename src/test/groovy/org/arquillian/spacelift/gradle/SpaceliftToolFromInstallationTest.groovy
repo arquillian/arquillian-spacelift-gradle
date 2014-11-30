@@ -80,9 +80,6 @@ public class SpaceliftToolFromInstallationTest {
             }
         }
 
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
         project.spacelift.installations.each { installation ->  installation.install(project.logger) }
 
         // find android tool

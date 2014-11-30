@@ -30,10 +30,6 @@ class GradleSpacelift {
         Tasks.setDefaultExecutionServiceFactory(new DefaultExecutionServiceFactory())
         ProjectHolder.project = project;
         ProjectHolder.tools = new ToolRegistryImpl()
-        // register all default tools here
-        project.spacelift.tools.each { tool ->
-            tool.registerInSpacelift(ProjectHolder.tools)
-        }
         GradleSpaceliftDelegate.init()
     }
 

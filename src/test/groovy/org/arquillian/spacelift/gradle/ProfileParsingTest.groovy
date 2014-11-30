@@ -172,9 +172,6 @@ public class ProfileParsingTest {
             }
         }
 
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
         project.tasks['init'].execute()
 
         project.spacelift.installations.each { installation ->

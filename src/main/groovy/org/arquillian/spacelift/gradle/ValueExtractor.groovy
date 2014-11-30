@@ -17,7 +17,7 @@ trait ValueExtractor {
 
         if (arg instanceof Closure) {
             retVal = arg.dehydrate()
-            retVal.resolveStrategy = Closure.DELEGATE_FIRST
+            retVal.resolveStrategy = Closure.OWNER_FIRST
             return retVal
         } else if (arg instanceof Map) {
             osMapping.each { platform, condition ->

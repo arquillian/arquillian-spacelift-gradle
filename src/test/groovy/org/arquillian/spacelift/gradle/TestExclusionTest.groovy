@@ -39,8 +39,6 @@ class TestExclusionTest {
             }
         }
 
-        GradleSpacelift.currentProject(project)
-
         project.getTasks()['init'].execute()
         assertThat project.selectedProfile, is(notNullValue())
         assertThat project.selectedProfile.name, is('default')

@@ -1,11 +1,12 @@
 package org.arquillian.spacelift.gradle
 
-import org.apache.log4j.Logger
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.tool.ToolRegistry
 import org.gradle.api.Project
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * A tool that can be dynamically registered in Spacelift in Gradle build
@@ -13,7 +14,7 @@ import org.gradle.api.Project
  *
  */
 class GradleSpaceliftTool implements ValueExtractor, Cloneable {
-    private static final Logger logger = Logger.getLogger("Spacelift")
+    private static final Logger log = LoggerFactory.getLogger(GradleSpaceliftDelegate)
 
     // required by gradle to be defined
     String name
@@ -87,7 +88,7 @@ class GradleSpaceliftTool implements ValueExtractor, Cloneable {
         // register tool using dynamically constructed class
         registry.register(clazz)
 
-        logger.info("Tool ${name} was registered")
+        log.info("Tool ${name} was registered")
     }
 
     def command(arg) {

@@ -61,9 +61,6 @@ class DefaultValuesParsingTest {
             }
         }
         
-        // initialize current project tools - this is effectively init-tools task
-        GradleSpacelift.currentProject(project)
-
         // find rhc tool
         def rhcTool = GradleSpacelift.tools("rhc")
         assertThat rhcTool, is(notNullValue())
