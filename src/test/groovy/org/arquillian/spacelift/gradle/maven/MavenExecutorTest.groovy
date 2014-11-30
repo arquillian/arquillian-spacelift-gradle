@@ -1,9 +1,10 @@
-package org.arquillian.spacelift.gradle
+package org.arquillian.spacelift.gradle.maven
 
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
 
 import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.gradle.GradleSpacelift;
 import org.arquillian.spacelift.gradle.maven.MavenExecutor
 import org.arquillian.spacelift.gradle.utils.EnvironmentUtils
 import org.arquillian.spacelift.process.CommandBuilder

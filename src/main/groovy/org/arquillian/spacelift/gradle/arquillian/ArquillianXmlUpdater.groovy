@@ -5,35 +5,66 @@ import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.gradle.GradleSpacelift
 import org.arquillian.spacelift.gradle.xml.XmlFileLoader
 import org.arquillian.spacelift.gradle.xml.XmlUpdater
+import org.gradle.api.Project
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class ArquillianXmlUpdater extends Task<Object, Void>{
-    private static final Logger log = LoggerFactory.getLogger('ArquillianXml')
+    private static final Logger log = LoggerFactory.getLogger(ArquillianXmlUpdater)
 
-    def arquillianXmlFiles = []
+    Set<File> arquillianXmlFiles = new LinkedHashSet<File>()
 
     def containers = []
 
     def extensions = []
 
-    ArquillianXmlUpdater dir(File dir) {
+    private Project project
+
+    ArquillianXmlUpdater() {
+        this.project = GradleSpacelift.currentProject()
+    }
+
+    /**
+     * Calls dir(Map) with default includes and excludes patterns
+     */
+    ArquillianXmlUpdater dir(Object directory) {
+        dir(dir:directory)
+    }
+
+    /**
+     * Allows to further define includes and excludes pattern for the directory.
+     * 
+     * Map accepts following arguments:
+     * dir - directory to be scanned, can be File or String 
+     * includes - array of includes in Ant format
+     * excludes - array of excludes in Ant format
+     */
+    ArquillianXmlUpdater dir(Map args) {
+
+        def dir = args.get('dir')
+        def includes = args.get('includes', [
+            "**/arquillian.xml",
+            "**/arquillian-domain.xml"
+        ])
+        def excludes = args.get('excludes', [
+            "${project.spacelift.localRepository}/**",
+            "**/target/**"
+        ])
+
         // skip if directory is invalid or non existing
-        if(dir==null || !dir.exists()) {
+        if(dir==null) {
             return this
         }
 
-        def project = GradleSpacelift.currentProject()
-
         // get all arquillian.xml files in directory
         project.fileTree("${dir}") {
-            include "**/arquillian.xml", "**/arquillian-domain.xml"
-            exclude "${project.spacelift.localRepository}/**", "**/target/**"
+            include includes
+            exclude excludes
         }.each { file ->
-            this.arquillianXmlFiles.add(file)
+            arquillianXmlFiles << file
+            log.debug("Adding ${file} to update batch, total ${arquillianXmlFiles.size()}")
         }
 
-        log.debug("There are ${arquillianXmlFiles.size()} arquillian.xml files to be modified in ${dir}")
         this
     }
 

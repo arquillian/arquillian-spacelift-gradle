@@ -5,17 +5,60 @@ import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.gradle.GradleSpacelift
 import org.arquillian.spacelift.gradle.xml.XmlFileLoader
 import org.arquillian.spacelift.gradle.xml.XmlUpdater
+import org.gradle.api.Project
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class PomXmlUpdater extends Task<Object, Void> {
+    private static final Logger log = LoggerFactory.getLogger(PomXmlUpdater)
 
-    def xmlFiles = []
+    Set<File> xmlFiles = new LinkedHashSet<File>()
 
-    PomXmlUpdater dir(dir) {
-        def project = GradleSpacelift.currentProject()
-        this.xmlFiles = project.fileTree("${dir}") {
-            include "**/pom.xml"
-            exclude "${project.spacelift.localRepository}/**", "**/target/**"
+    private Project project
+
+    PomXmlUpdater() {
+        this.project = GradleSpacelift.currentProject()
+    }
+
+    /**
+     * Calls dir() with default includes and excludes patterns
+     */
+    PomXmlUpdater dir(Object directory) {
+        dir(dir:directory)
+    }
+
+    /**
+     * Allows to further define includes and excludes pattern for the directory.
+     *
+     * Map accepts following arguments:
+     * dir - directory to be scanned, can be File or String
+     * includes - array of includes in Ant format
+     * excludes - array of excludes in Ant format
+     */
+    PomXmlUpdater dir(Map args) {
+        def dir = args.get('dir')
+        def includes = args.get('includes', [
+            "**/pom.xml"
+        ])
+        def excludes = args.get('excludes', [
+            "${project.spacelift.localRepository}/**",
+            "**/target/**"
+        ])
+
+        // skip if directory is invalid or non existing
+        if(dir==null) {
+            return this
         }
+
+        // get all arquillian.xml files in directory
+        project.fileTree("${dir}") {
+            include includes
+            exclude excludes
+        }.each { file ->
+            xmlFiles << file
+            log.debug("Adding ${file} to update batch, total ${xmlFiles.size()}")
+        }
+
         this
     }
 

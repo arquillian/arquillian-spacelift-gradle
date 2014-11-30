@@ -1,4 +1,4 @@
-package org.arquillian.spacelift.gradle
+package org.arquillian.spacelift.gradle.maven
 
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
