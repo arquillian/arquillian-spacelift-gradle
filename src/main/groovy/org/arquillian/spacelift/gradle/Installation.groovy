@@ -94,7 +94,6 @@ class Installation implements ValueExtractor, Cloneable {
 
     def autoExtract(arg) {
         this.autoExtract = extractValueAsLazyClosure(arg).dehydrate()
-        this.autoExtract.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getAutoExtract() {
@@ -107,7 +106,6 @@ class Installation implements ValueExtractor, Cloneable {
 
     def forceReinstall(arg) {
         this.forceReinstall = extractValueAsLazyClosure(arg).dehydrate()
-        this.forceReinstall.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getForceReinstall() {
@@ -120,7 +118,6 @@ class Installation implements ValueExtractor, Cloneable {
 
     def fsPath(arg) {
         this.fsPath = extractValueAsLazyClosure(arg).dehydrate()
-        this.fsPath.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getFsPath() {
@@ -133,7 +130,6 @@ class Installation implements ValueExtractor, Cloneable {
 
     def remoteUrl(arg) {
         this.remoteUrl = extractValueAsLazyClosure(arg).dehydrate()
-        this.remoteUrl.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getRemoteUrl() {
@@ -146,7 +142,6 @@ class Installation implements ValueExtractor, Cloneable {
 
     def home(arg) {
         this.home = extractValueAsLazyClosure(arg).dehydrate()
-        this.home.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getHome() {
@@ -166,7 +161,6 @@ class Installation implements ValueExtractor, Cloneable {
 
     def fileName(arg) {
         this.fileName = extractValueAsLazyClosure(arg).dehydrate()
-        this.fileName.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getFileName() {
@@ -184,7 +178,6 @@ class Installation implements ValueExtractor, Cloneable {
 
     def product(arg) {
         this.product = extractValueAsLazyClosure(arg).dehydrate()
-        this.product.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getProduct() {
@@ -198,7 +191,6 @@ class Installation implements ValueExtractor, Cloneable {
 
     def version(arg) {
         this.version = extractValueAsLazyClosure(arg).dehydrate()
-        this.version.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getVersion() {
@@ -292,18 +284,15 @@ class Installation implements ValueExtractor, Cloneable {
     // we keep extraction mapper to be a part of ant extract command
     def extractMapper(Closure closure) {
         this.extractMapper = extractValueAsLazyClosure(closure).dehydrate()
-        this.extractMapper.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     // we keep post actions to be executed after installation is done
     def postActions(Closure closure) {
         this.postActions = extractValueAsLazyClosure(closure).dehydrate()
-        this.postActions.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def preconditions(Closure closure) {
         this.preconditions = extractValueAsLazyClosure(closure).dehydrate()
-        this.preconditions.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def tools(Closure closure) {

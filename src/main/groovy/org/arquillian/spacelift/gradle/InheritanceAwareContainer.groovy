@@ -88,7 +88,6 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
         }
 
 
-        closure.resolveStrategy = Closure.OWNER_FIRST
         closure = closure.rehydrate(new GradleSpaceliftDelegate(), parent, object)
 
         // configure and store object
@@ -102,7 +101,6 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
     @Override
     public T configure(Closure configuration) {
         Closure config = extractValueAsLazyClosure(configuration).dehydrate()
-        config.resolveStrategy = Closure.OWNER_FIRST
         config.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
     }
 

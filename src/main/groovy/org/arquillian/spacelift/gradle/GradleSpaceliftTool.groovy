@@ -93,7 +93,6 @@ class GradleSpaceliftTool implements ValueExtractor, Cloneable {
 
     def command(arg) {
         this.command = extractValueAsLazyClosure(arg).dehydrate()
-        this.command.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getCommand() {

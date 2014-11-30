@@ -47,7 +47,6 @@ class Profile implements ValueExtractor, Cloneable {
 
     def enabledInstallations(Object... args) {
         this.enabledInstallations = extractValuesAsLazyClosure(args).dehydrate()
-        this.enabledInstallations.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getEnabledInstallations() {
@@ -57,12 +56,10 @@ class Profile implements ValueExtractor, Cloneable {
 
     def tests(Object... args) {
         this.tests = extractValuesAsLazyClosure(args).dehydrate()
-        this.tests.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def excludedTests(Object... args) {
         this.excludedTests = extractValuesAsLazyClosure(args).dehydrate()
-        this.tests.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def getTests() {

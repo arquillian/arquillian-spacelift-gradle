@@ -97,31 +97,25 @@ class Test implements ValueExtractor, Cloneable {
 
     def execute(arg) {
         this.execute = extractValueAsLazyClosure(arg).dehydrate()
-        this.execute.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def dataProvider(arg) {
         this.dataProvider = extractValueAsLazyClosure(arg).dehydrate()
-        this.dataProvider.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def beforeSuite(arg) {
         this.beforeSuite = extractValueAsLazyClosure(arg).dehydrate()
-        this.beforeSuite.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def beforeTest(arg) {
         this.beforeTest = extractValueAsLazyClosure(arg).dehydrate()
-        this.beforeTest.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def afterSuite(arg) {
         this.afterSuite = extractValueAsLazyClosure(arg).dehydrate()
-        this.afterSuite.resolveStrategy = Closure.DELEGATE_FIRST
     }
 
     def afterTest(arg) {
         this.afterTest = extractValueAsLazyClosure(arg).dehydrate()
-        this.afterTest.resolveStrategy = Closure.DELEGATE_FIRST
     }
 }
