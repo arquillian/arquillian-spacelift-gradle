@@ -234,9 +234,13 @@ class SpaceliftPlugin implements Plugin<Project> {
             group "Spacelift"
             task << {
                 project.selectedInstallations.each { installation ->
-                    logger.lifecycle(":clean:installation-${installation.name} artifacts will be wiped")
+                    logger.lifecycle(":clean:installation-${installation.name} artifacts (cache and home) will be wiped")
+                    // delete installation cache
                     ant.delete(file: installation.fileName, failonerror: false)
-                    ant.delete(dir: installation.home, failonerror: false)
+                    // delete installation only if it is not workspace
+                    if(installation.home.canonicalPath!=project.spacelift.workspace.canonicalPath) {
+                        ant.delete(dir: installation.home, failonerror: false)
+                    }
                 }
             }
         }
@@ -252,15 +256,10 @@ class SpaceliftPlugin implements Plugin<Project> {
 
         // task aliases and aggregators
 
-        project.getTasks().create(name:"clean", dependsOn:["cleanInstallations"]) {
-            description "Cleans selected Spacelift installations"
-            group "Spacelift"
-        }
-
         project.getTasks().create(name:"cleanAll", dependsOn:[
-            "cleanWorkspace",
+            "cleanRepository",
             "cleanInstallations",
-            "cleanRepository"
+            "cleanWorkspace",
         ]) {
             description "Cleans Spacelift workspace, selected installations and Maven repository cache"
             group "Spacelift"

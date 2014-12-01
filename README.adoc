@@ -41,8 +41,8 @@ dependencies {
 ----
 
 
-clean/cleanInstallations::
-    Wipes cached installation and extracted installation artifacts for currently activated installations
+cleanInstallations::
+    Wipes cached installations and extracted installation artifacts for currently activated installations
 cleanWorkspace::
     Wipes Spacelift workspace directory
 cleanRepository::
