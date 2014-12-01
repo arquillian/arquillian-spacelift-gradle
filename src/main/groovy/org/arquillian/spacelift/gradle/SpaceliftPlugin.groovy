@@ -8,12 +8,8 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.internal.reflect.Instantiator
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class SpaceliftPlugin implements Plugin<Project> {
-
-    static final Logger log = LoggerFactory.getLogger('SpaceliftPlugin')
 
     // this plugin prepares Arquillian Spacelift environment
     void apply(Project project) {
@@ -25,7 +21,8 @@ class SpaceliftPlugin implements Plugin<Project> {
         GradleSpacelift.currentProject(project)
 
         // set default values if not specified from command line
-        setDefaultDataProviders(project);
+        setDefaultDataProviders(project, project.logger);
+
 
         project.extensions.create("spacelift", SpaceliftExtension, project)
 
@@ -41,7 +38,7 @@ class SpaceliftPlugin implements Plugin<Project> {
                 logger.lifecycle(":init:defaultValues")
                 // we are calling default data provider once again in case ext {} block is defined after plugin is applied
                 // ext values will not be correctly initialized
-                setDefaultDataProviders(project);
+                setDefaultDataProviders(project, logger);
 
                 // find default profile and propagate enabled installations and tests
                 // check for -Pprofile=profileName and then for Mavenism -PprofileName
@@ -144,13 +141,13 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
         }
 
-        project.getTasks().create(name:"show:configuration") { task ->
-            description "Show available profiles for Spacelift execution"
+        project.getTasks().create(name:"describe") { task ->
+            description "Show more information about this Spacelift project"
             group "Spacelift"
             task << {
-                println "WORKSPACE:          ${project.spacelift.workspace}"
-                println "HUDSON_STATIC_ENV:  ${project.spacelift.installationsDir}"
-                println "AVAILABLE PROFILES: "
+                println "Spacelift Workspace:          ${project.spacelift.workspace}"
+                println "Spacelift Installations Cache Dir:  ${project.spacelift.installationsDir}"
+                println "Spacelift Profiles: "
 
                 project.spacelift.profiles.each { println it }
             }
@@ -160,7 +157,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             description "Fetches and installs environment required for test execution"
             group "Spacelift"
             task << {
-                logger.lifecycle(":prepare-env:profile-${project.selectedProfile.name}")
+                logger.lifecycle(":assemble:profile-${project.selectedProfile.name}")
 
                 if(project.spacelift.killServers) {
                     Tasks.prepare(KillJavas).execute().await()
@@ -171,13 +168,13 @@ class SpaceliftPlugin implements Plugin<Project> {
 
                 if(project.spacelift.enableStaging) {
                     // here it is named logger, because it is a part of Plugin<Project> implementation
-                    logger.lifecycle(":prepare-env:enableJBossStagingRepository")
+                    logger.lifecycle(":assemble:enableJBossStagingRepository")
                     Tasks.prepare(SettingsXmlUpdater).repository("jboss-staging-repository-group", new URI("https://repository.jboss.org/nexus/content/groups/staging"), true).execute().await()
 
                 }
 
                 if(project.spacelift.enableSnapshots) {
-                    logger.lifecycle(":prepare-env:enableJBossSnapshotsRepository")
+                    logger.lifecycle(":assemble:enableJBossSnapshotsRepository")
                     Tasks.prepare(SettingsXmlUpdater).repository("jboss-snapshots-repository", new URI("https://repository.jboss.org/nexus/content/repositories/snapshots"), true).execute().await()
                 }
 
@@ -223,7 +220,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
         }
 
-        project.getTasks().create(name:"clean:workspace", dependsOn:["init"]) { task ->
+        project.getTasks().create(name:"cleanWorkspace", dependsOn:["init"]) { task ->
             description "Cleans Spacelift workspace"
             group "Spacelift"
             task << {
@@ -232,7 +229,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
         }
 
-        project.getTasks().create(name:"clean:installations", dependsOn:["init"]) { task ->
+        project.getTasks().create(name:"cleanInstallations", dependsOn:["init"]) { task ->
             description "Cleans selected Spacelift installations"
             group "Spacelift"
             task << {
@@ -244,7 +241,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
         }
 
-        project.getTasks().create(name:"clean:repository", dependsOn:["init"]) { task ->
+        project.getTasks().create(name:"cleanRepository", dependsOn:["init"]) { task ->
             description "Cleans Spacelift Maven repository"
             group "Spacelift"
             task << {
@@ -255,15 +252,15 @@ class SpaceliftPlugin implements Plugin<Project> {
 
         // task aliases and aggregators
 
-        project.getTasks().create(name:"clean", dependsOn:["clean:workspace"]) {
-            description "Cleans Spacelift workspace"
+        project.getTasks().create(name:"clean", dependsOn:["cleanInstallations"]) {
+            description "Cleans selected Spacelift installations"
             group "Spacelift"
         }
 
-        project.getTasks().create(name:"clean:all", dependsOn:[
-            "clean:workspace",
-            "clean:installations",
-            "clean:repository"
+        project.getTasks().create(name:"cleanAll", dependsOn:[
+            "cleanWorkspace",
+            "cleanInstallations",
+            "cleanRepository"
         ]) {
             description "Cleans Spacelift workspace, selected installations and Maven repository cache"
             group "Spacelift"
@@ -280,7 +277,7 @@ class SpaceliftPlugin implements Plugin<Project> {
         }
     }
 
-    private void setDefaultDataProviders(Project project) {
+    private void setDefaultDataProviders(Project project, Object logger) {
         // parse both properties defined deprecated way and project.ext way. find the ones starting with default
         def defaultValues = project.getProperties()
                 .findAll {key, value -> return (key.startsWith("default") && !key.startsWith("defaultTask") && key!="default") } << project.ext.properties
@@ -300,12 +297,14 @@ class SpaceliftPlugin implements Plugin<Project> {
                 }
 
                 project.ext.set(overrideKey, newValue)
-                log.info("Set ${overrideKey} from command line property -P${overrideKey}=${newValue}")
+                // FIXME inject Gradle logger here if possible
+                logger.lifecycle(":init:default Overriding ${overrideKey} via command line property -P${overrideKey}=${newValue}")
             }
             else {
                 //project.setProperty(overrideKey, value)
                 project.ext.set(overrideKey, value)
-                log.info("Set ${overrideKey} from default value ${key}=${value}")
+                // FIXME inject Gradle logger here if possible
+                logger.lifecycle(":init:default Setting ${overrideKey} from default value ${key}=${value}")
             }
         }
     }

@@ -40,48 +40,15 @@ dependencies {
 }
 ----
 
-== Gradle Tasks
 
-This plugin provides following tasks:
-
-assemble::
-    Installs all installations defined by profile
-check/test::
-    Executes tests defined in profile. Depends on +assemble+. Both +check+ and +test+ are the same.
-testreport::
-    Gathers all test results in JUnit format from workspace and creates a combined report. Requires additional configuration
-    in _build.gradle_ file
-show-configuration::
-    Shows global configuration and available profiles
-clean/clean:workspace::
-    Wipes Spacelift workspace directory
-clean:installations::
+clean/cleanInstallations::
     Wipes cached installation and extracted installation artifacts for currently activated installations
-clean:repository::
+cleanWorkspace::
+    Wipes Spacelift workspace directory
+cleanRepository::
     Wipes Maven repository used by Spacelift
-clean:all::
+cleanAll::
     Executes all the +clean+ tasks
-
-=== Manual profile definitions
-
-In cases you want to execute only a subset of installations or tests, you can combine activated profile with manual
-override of installations and or tests.
-
-For instance, following call installs all installations from *default* profile but executes only *myTestName* test.
-
-[code,bash]
-----
-gradle -Pprofile=default -Ptests=myTestName test
-----
-
-Whereas this call completely ignores profile and installs *myTestNameRequirement* and then executes *myTestName*:
-
-[code,bash]
-----
-gradle -Pinstallations=myTestNameRequirement -Ptests=myTestName test
-----
-
-NOTE: If you want to skip tests or installations altogether, use following syntax +gradle -Pinstallations= test+
 
 == DSL
 
@@ -287,6 +254,27 @@ If you need to reference profile, installations or tests from Gradle script, the
 * +project.selectedTests+
 
 All represented by appropriate object.
+
+=== Manual profile definitions
+
+In cases you want to execute only a subset of installations or tests of given profile, you can combine activated profile with manual
+override of installations and or tests.
+
+For instance, following call installs all installations from *default* profile but executes only *myTestName* test.
+
+[code,bash]
+----
+gradle -Pdefault -Ptests=myTestName test
+----
+
+Whereas this call completely ignores profile and installs *myTestNameRequirement* and then executes *myTestName*:
+
+[code,bash]
+----
+gradle -Pinstallations=myTestNameRequirement -Ptests=myTestName test
+----
+
+NOTE: If you want to skip tests or installations altogether, use following syntax +gradle -Pinstallations= test+
 
 
 == Default values

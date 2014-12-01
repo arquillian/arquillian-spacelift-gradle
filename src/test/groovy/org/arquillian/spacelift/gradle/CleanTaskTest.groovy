@@ -38,11 +38,11 @@ class CleanTaskTest {
         assertThat project.spacelift.workspace.exists(), is(true)
         assertThat project.spacelift.installationsDir.exists(), is(true)
 
-        project.getTasks()['clean:installations'].execute()
+        project.getTasks()['cleanInstallations'].execute()
         assertThat project.spacelift.workspace.exists(), is(true)
         assertThat project.spacelift.installations['someInstallation'].home.exists(), is(false)
 
-        project.getTasks()['clean:workspace'].execute()
+        project.getTasks()['cleanWorkspace'].execute()
         assertThat project.spacelift.workspace.exists(), is(false)
     }
 }
