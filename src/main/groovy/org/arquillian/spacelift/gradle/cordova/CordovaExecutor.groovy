@@ -2,16 +2,16 @@ package org.arquillian.spacelift.gradle.cordova
 
 import org.arquillian.spacelift.execution.Task
 import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.ProcessResult;
-import org.arquillian.spacelift.process.impl.CommandTool
 import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.process.CommandBuilder
+import org.arquillian.spacelift.process.ProcessResult
+import org.arquillian.spacelift.process.impl.CommandTool
 
 class CordovaExecutor extends Task<Object, ProcessResult> {
 
     def parameters
     def dir
-    def env = [:]
+    Map<String,String> env = [:]
     def sdkHome
 
     def setParameters(parameters) {
@@ -36,12 +36,14 @@ class CordovaExecutor extends Task<Object, ProcessResult> {
     }
 
     def env(key, value) {
-        this.env.put(key, value)
+        this.env.put(key.toString(), value.toString())
         this
     }
 
     def env(envProperty) {
-        this.env << envProperty
+        for(def entry:envProperty) {
+            this.env.put(entry.key.toString(), entry.value.toString())
+        }
         this
     }
 
@@ -50,7 +52,7 @@ class CordovaExecutor extends Task<Object, ProcessResult> {
         def sep = System.getProperty("path.separator")
 
         // FIXME this should rely on Spacelift registry to get Cordova tool
-        
+
         return Tasks.prepare(CommandTool)
                 .command(new CommandBuilder("cordova").parameters(parameters.split(" ")))
                 .workingDir(dir)

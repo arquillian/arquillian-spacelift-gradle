@@ -18,10 +18,52 @@ import org.junit.Test
 class MavenExecutorTest {
 
     @Test
-    void "propagate env property"() {
+    void "propagate env property by key and value"() {
 
         Assume.assumeThat EnvironmentUtils.runsOnLinux(), is(true)
+        def maven = instantiateSimpleProjectWithMavenExecutor()
 
+
+        ProcessResult result = maven.env("HEY_SPACELIFT", "'This is plugin!'").goal("help:system").execute().await()
+        assertThat result.output().find { line -> line.contains("HEY_SPACELIFT")}, is(notNullValue())
+    }
+    
+    @Test
+    void "propagate env property by pair"() {
+
+        Assume.assumeThat EnvironmentUtils.runsOnLinux(), is(true)
+        def maven = instantiateSimpleProjectWithMavenExecutor()
+
+
+        ProcessResult result = maven.env([HEY_SPACELIFT: "'This is plugin!'"]).goal("help:system").execute().await()
+        assertThat result.output().find { line -> line.contains("HEY_SPACELIFT")}, is(notNullValue())
+    }
+    
+    @Test
+    void "propagete env property with GString value"() {
+        Assume.assumeThat EnvironmentUtils.runsOnLinux(), is(true)
+        def maven = instantiateSimpleProjectWithMavenExecutor()
+
+        def hello = "HelloWorld!"
+
+        ProcessResult result = maven.env([HEY_SPACELIFT: "${hello}"]).goal("help:system").execute().await()
+        assertThat result.output().find { line -> line.contains("HEY_SPACELIFT")}, is(notNullValue())
+    }
+    
+    @Test
+    void "propagete env property with GString key and value"() {
+        Assume.assumeThat EnvironmentUtils.runsOnLinux(), is(true)
+        def maven = instantiateSimpleProjectWithMavenExecutor()
+
+        def hellokey= "HEY_SPACELIFT"
+        def hello = "HelloWorld!"
+
+        ProcessResult result = maven.env(["${hellokey}": "${hello}"]).goal("help:system").execute().await()
+        assertThat result.output().find { line -> line.contains("HEY_SPACELIFT")}, is(notNullValue())
+    }
+    
+
+    private MavenExecutor instantiateSimpleProjectWithMavenExecutor() {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'spacelift'
@@ -42,8 +84,7 @@ class MavenExecutorTest {
         // find and execute maven executor
         def maven = Tasks.prepare(MavenExecutor)
         assertThat maven, is(notNullValue())
-
-        ProcessResult result = maven.env("HEY_SPACELIFT", "'This is plugin!'").goal("help:system").execute().await()
-        assertThat result.output().find { line -> line.contains("HEY_SPACELIFT")}, is(notNullValue())
+        
+        maven
     }
 }

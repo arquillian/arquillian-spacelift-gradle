@@ -27,7 +27,7 @@ class MavenExecutor extends Task<Object, ProcessResult>{
 
     def properties = []
 
-    def env = [:]
+    Map<String, String> env = [:]
 
     private def command = []
 
@@ -141,12 +141,14 @@ class MavenExecutor extends Task<Object, ProcessResult>{
     }
 
     def env(key, value) {
-        this.env.put(key, value)
+        this.env.put(key.toString(), value.toString())
         this
     }
 
     def env(envProperty) {
-        this.env << envProperty
+        for(def entry:envProperty) {
+            this.env.put(entry.key.toString(), entry.value.toString())
+        }
         this
     }
 
