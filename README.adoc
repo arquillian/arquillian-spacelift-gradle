@@ -234,6 +234,31 @@ testName {
 }
 ----
 
+== Referencing DSL elements in Gradle
+
+In case you need, you can reference them directly in the code by its name. For instance, to reference home of installation named _selenium_ in your tests, you can use following syntax
+
+[source,groovy]
+----
+installations {
+    selenium {
+        home "the-home"
+    }
+}
+tests {
+    testName {
+        execute {
+            assertThat selenium.home, is(notNullValue())
+        }
+    }
+}
+----
+
+Direct reference can be used for any installation, test, tool or profile. References are resolved in this order, in case there are two objects with different type and same name, further
+possible references are ignored and a warning is logged. It means it is safer to use unique names per all types.
+
+NOTE: In case you need reference DSL object indirectly, for instance you have two objects with the same name or it is shaded by local variable, you can use indirect syntax in form +project.spacelift.installations['installationName']+. Same call existins for tools, profiles and tests. 
+
 == Execution parameters
 
 It is possible to modify what tests will be run and what installations will be installed. Apart from profile option, you can use:
