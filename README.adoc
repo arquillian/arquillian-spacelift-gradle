@@ -40,7 +40,18 @@ dependencies {
 }
 ----
 
+== Spacelift Tasks
 
+This plugin provides following tasks. You can get same info by running +./gradlew tasks+:
+
+assemble::
+    Installs all installations defined by profile
+check/test::
+    Executes tests defined in profile. Depends on +assemble+.
+testreport::
+    Gathers all test results in JUnit format from workspace and creates a combined report. Requires additional configuration in _build.gradle_ file
+describe::
+    Shows global configuration and available profiles
 cleanInstallations::
     Wipes cached installations and extracted installation artifacts for currently activated installations
 cleanWorkspace::
