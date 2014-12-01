@@ -68,18 +68,28 @@ class GradleSpaceliftDelegate {
             throw new IllegalStateException("Current project is not a Spacelift Project")
         }
 
-        def object
+        def object, objectType
         for(def container : ([
-            spacelift.profiles,
+            // order here defines order of reference in case reference to the same object is found, laters are ignored
             spacelift.installations,
+            spacelift.tests,
             spacelift.tools,
-            spacelift.tests
-        ])) {
-            object = resolve(container, name)
-            if(object) {
+            spacelift.profiles,
+        ]
+        )) {
+            def resolved = resolve(container, name)
+            if(object==null && resolved != null) {
                 log.debug("Resolved ${container.type.getSimpleName()} named ${name}")
-                return object
+                object = resolved
+                objectType = container.type
             }
+            else if(object!=null && resolved != null) {
+                log.warn("Detected ambiguous reference ${name}, using ${objectType.getSimpleName()}, ignoring ${container.type.getSimpleName()}")
+            }
+        }
+        
+        if(object!=null) {
+            return object
         }
 
         // pass resolution to parent
