@@ -20,11 +20,11 @@ class UpdateJBossDatasource {
     }
 
     def withScript(File script) {
-        withScript(script.getAbsolutePath())
+        withScript(script.getCanonicalPath())
     }
 
     def withJBossHome(File jbossHome) {
-        withJBossHome(jbossHome.getAbsoluteFile())
+        withJBossHome(jbossHome.getCanonicalPath())
     }
 
     def withJBossHome(String jbossHome) {
