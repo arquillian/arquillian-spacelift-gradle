@@ -15,7 +15,7 @@ import static org.junit.Assert.assertThat
 class DefaultValuesParsingTest {
 
     @Test
-    public void parseDefaultValues() {
+    void "default value array"() {
 
         Project project = ProjectBuilder.builder().build()
 
@@ -30,7 +30,7 @@ class DefaultValuesParsingTest {
     }
 
     @Test
-    public void parseDefaultValue() {
+    void "default value scalar"() {
 
         Project project = ProjectBuilder.builder().build()
 
@@ -45,7 +45,7 @@ class DefaultValuesParsingTest {
     }
 
     @Test
-    public void useDefaultValuesInDSL() {
+    void "default value used in DSL"() {
 
         Project project = ProjectBuilder.builder().build()
 
@@ -70,7 +70,23 @@ class DefaultValuesParsingTest {
     }
 
     @Test
-    public void overrideDefaultValues() {
+    void "default value array override with single value"() {
+
+        Project project = ProjectBuilder.builder().build()
+
+        project.ext.set("defaultAndroidTargets", ["19", "18", "google-17"])
+        project.ext.androidTargets = "18"
+
+        project.apply plugin: 'spacelift'
+
+        // find android targets from default value
+        def androidTargets = project.androidTargets
+        assertThat androidTargets, is(notNullValue())
+        assertThat androidTargets[0], is("18")
+    }
+    
+    @Test
+    void "default value array override"() {
 
         Project project = ProjectBuilder.builder().build()
 
@@ -84,4 +100,37 @@ class DefaultValuesParsingTest {
         assertThat androidTargets, is(notNullValue())
         assertThat androidTargets[0], is("18")
     }
+    
+    @Test
+    void "default value scalar override"() {
+
+        Project project = ProjectBuilder.builder().build()
+
+        project.ext.set("defaultAndroidTarget", "19")
+        project.ext.androidTarget = "18"
+
+        project.apply plugin: 'spacelift'
+
+        // find android targets from default value
+        def androidTarget = project.androidTarget
+        assertThat androidTarget, is(notNullValue())
+        assertThat androidTarget, is("18")
+    }
+    
+    @Test
+    void "default value scalar override with commas"() {
+
+        Project project = ProjectBuilder.builder().build()
+
+        project.ext.set("defaultAndroidTarget", "19")
+        project.ext.androidTarget = "18, 19"
+
+        project.apply plugin: 'spacelift'
+
+        // find android targets from default value
+        def androidTarget = project.androidTarget
+        assertThat androidTarget, is(notNullValue())
+        assertThat androidTarget, is("18, 19")
+    }
+    
 }

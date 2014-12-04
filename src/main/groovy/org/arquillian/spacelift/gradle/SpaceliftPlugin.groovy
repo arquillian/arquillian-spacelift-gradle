@@ -286,24 +286,22 @@ class SpaceliftPlugin implements Plugin<Project> {
             def overrideKey = key.substring("default".length(), key.length())
             overrideKey = overrideKey[0].toLowerCase() + overrideKey.substring(1)
             if(project.hasProperty(overrideKey)) {
-                // get and parse new value to always return a collection
+                // get and parse command line defined value
                 def newValue = project.property(overrideKey)
-                newValue = (newValue instanceof Object[] || newValue instanceof Collection) ? newValue : newValue.toString().split(",")
-
-                // unwrap value from array if only single value is provided
-                if(newValue instanceof String[] && newValue.size()==1) {
-                    newValue = newValue[0];
+                
+                // if we have current as array, we want to model command line override as array as well
+                if(value instanceof Object[] || value instanceof Collection) {
+                    newValue = newValue.toString().split(",")
                 }
 
+                // new set default value
                 project.ext.set(overrideKey, newValue)
-                // FIXME inject Gradle logger here if possible
-                logger.lifecycle(":init:default Overriding ${overrideKey} via command line property -P${overrideKey}=${newValue}")
+                logger.lifecycle(":init:default ${overrideKey} was set to ${newValue} from command line")
             }
             else {
                 //project.setProperty(overrideKey, value)
                 project.ext.set(overrideKey, value)
-                // FIXME inject Gradle logger here if possible
-                logger.lifecycle(":init:default Setting ${overrideKey} from default value ${key}=${value}")
+                logger.lifecycle(":init:default ${overrideKey} was set to ${value} from defaults")
             }
         }
     }
