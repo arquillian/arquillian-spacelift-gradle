@@ -8,6 +8,7 @@ import org.gradle.api.Project
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// FIXME this is temporary delegate object that should be removed
 class GradleSpaceliftDelegate {
     private static final Logger log = LoggerFactory.getLogger(GradleSpaceliftDelegate)
 

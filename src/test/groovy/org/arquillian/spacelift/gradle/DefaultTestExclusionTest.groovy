@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 
-class TestExclusionTest {
+class DefaultTestExclusionTest {
 
     @Test
     void "excluded tests triggers"() {

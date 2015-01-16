@@ -8,7 +8,7 @@ import org.junit.rules.ExpectedException
 
 import static org.junit.Assert.fail
 
-class TestExecutionLifecycleTest {
+class DefaultTestExecutionLifecycleTest {
 
     @Rule
     public ExpectedException exception = ExpectedException.none();

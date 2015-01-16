@@ -167,7 +167,7 @@ class ClosureEvaluationTest {
                 version "1"
                 postActions {
                     assertThat fooReferenced.version, is(notNullValue())
-                    assertEquals(Installation.class, fooReferenced.class)
+                    assertEquals(DefaultInstallation.class, fooReferenced.class)
                 }
             }
         })

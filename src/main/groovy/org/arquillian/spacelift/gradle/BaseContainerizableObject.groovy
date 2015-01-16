@@ -36,7 +36,7 @@ abstract class BaseContainerizableObject<TYPE extends BaseContainerizableObject<
      * @return
      */
     def methodMissing(String name, args) {
-        List<String> availableDSL = DSLUtil.availableClosurePropertyNames(this);
-        throw new GroovyRuntimeException("${this.class.simpleName} named ${this.name}, unable to call method ${name}(Object...objects), have you meant one of: ${availableDSL.join('(Object...objects), ')}?", );
+        List<String> availableDSL = DSLUtil.availableClosurePropertyNames(this).collect { "${it}(Object...objects)"} ;
+        throw new GroovyRuntimeException("${this.class.simpleName} named ${this.name}, unable to call method ${name}(Object...objects), have you meant one of: ${availableDSL.join(', ')}?");
     }
 }

@@ -34,8 +34,8 @@ class SpaceliftExtension {
     // internal DSL
     InheritanceAwareContainer<Profile, Profile> profiles
     InheritanceAwareContainer<GradleSpaceliftTool, GradleSpaceliftTool> tools
-    InheritanceAwareContainer<Installation, Installation> installations
-    InheritanceAwareContainer<Test, Test> tests
+    InheritanceAwareContainer<Installation, DefaultInstallation> installations
+    InheritanceAwareContainer<Test, DefaultTest> tests
 
     Project project
 
@@ -51,8 +51,8 @@ class SpaceliftExtension {
         this.project = project
         this.profiles = new InheritanceAwareContainer(project, this, Profile, Profile)
         this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool, GradleSpaceliftTool)
-        this.installations = new InheritanceAwareContainer(project, this, Installation, Installation)
-        this.tests = new InheritanceAwareContainer(project, this, Test, Test)
+        this.installations = new InheritanceAwareContainer(project, this, Installation, DefaultInstallation)
+        this.tests = new InheritanceAwareContainer(project, this, Test, DefaultTest)
     }
 
     def profiles(Closure closure) {

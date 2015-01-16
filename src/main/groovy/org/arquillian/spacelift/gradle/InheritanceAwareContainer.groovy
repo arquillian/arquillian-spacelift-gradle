@@ -8,16 +8,15 @@ import org.gradle.api.Project
 import org.gradle.util.Configurable
 
 /**
- * This is a way how to convert DSL into tool, installation, profile or test, with support of
- * inheritance
+ * Object container that allows additional behavoirs to be used for DSL definition.
+ *
+ * Mainly, this container supports inheritance of existing DSL elements
  *
  * @author kpiwko
  *
  * @param <T>
  */
 class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAULT_TYPE extends TYPE> implements Iterable<TYPE>, Configurable<TYPE>, Collection<TYPE>, Cloneable {
-
-    private static final ConcurrentHashMap<Class<?>, Class<?>> typeMetaClasses = new ConcurrentHashMap<Class<?>, Class<?>>()
 
     Class<TYPE> type
 
@@ -87,23 +86,19 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
         // @Deprecated inherits - inherits to be deprecated and replaced with from
         Object from = behavior.get('from', behavior.get('inherits', defaultType))
 
-        if(from instanceof Class) {
+        if(from instanceof Class && type.isAssignableFrom(from)) {
             object = from.newInstance(name, project)
-            // this was the first initialization for type, generate closure setter methods
-            //if(typeMetaClasses.putIfAbsent(from, from) == null) {
-            DSLUtil.generateClosurePropertyMethods(object)
-            //}
         }
         else {
             object = resolveParent(from).clone(name)
-            DSLUtil.generateClosurePropertyMethods(object)
         }
 
+        DSLUtil.generateClosurePropertyMethods(object)
         closure = closure.rehydrate(new GradleSpaceliftDelegate(), parent, object)
 
         // configure and store object
         object = project.configure(object, closure)
-        // store configured object
+        // store configured object in the container
         objects << object
 
         return object
@@ -126,21 +121,15 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
      * @return
      */
     public TYPE getAt(String name) {
-        try {
-            for(TYPE o: objects) {
-                if(o.name == name) {
-                    return o
-                }
+        TYPE element = null;
+        List<String> names = new ArrayList<String>();
+        for(TYPE o: objects) {
+            names.add(o.name)
+            if(o.name == name) {
+                return o
             }
         }
-        catch(MissingMethodException e) {
-            throw new MissingPropertyException("Unable to get ${type.getSimpleName()} of name ${name}, does it have getName() method?")
-        }
-        catch(MissingPropertyException e) {
-            throw new MissingPropertyException("Unable to get ${type.getSimpleName()} of name ${name}, does it have name property?")
-        }
-
-        throw new MissingPropertyException("Unable to get ${type.getSimpleName()} of name ${name}")
+        throw new MissingPropertyException("Unable to get ${type.getSimpleName()} ${name}, have you meant one of ${names.join(', ')}?")
     }
 
     @Override
@@ -213,11 +202,14 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
         if(reference instanceof CharSequence) {
             getAt(reference.toString())
         }
-        else if(type.isInstance(reference)) {
+        else if(reference!=null && type.isAssignableFrom(reference.class)) {
             (TYPE) reference
         }
+        else if(reference!=null && !type.isAssignableFrom(reference.class)) {
+            throw new MissingPropertyException("Reference ${reference} is not compatible with type ${type.getSimpleName()}")
+        }
         else {
-            throw new MissingPropertyException("Unable to reference ${type.getSimpleName()} by ${reference}")
+            throw new MissingPropertyException("Reference ${reference} of type${type.getSimpleName()} was not found.")
         }
     }
 }
