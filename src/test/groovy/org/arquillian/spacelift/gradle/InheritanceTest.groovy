@@ -110,12 +110,14 @@ class InheritanceTest {
 
         project.spacelift {
             tests {
+
+                def counter = 0
+                def value = { if(counter==0) { counter++; return "foo"} else return "bar"}
+
                 firstTest {
                     dataProvider { ["foo"]}
-                    execute { foo ->
-                        println foo
-                        assertThat foo, is(project.verifier["${project.verifier.invoked}"])
-                        project.verifier.invoked += 1
+                    execute { data ->
+                        assertThat data, is(value())
                     }
                 }
                 secondTest(inherits:"firstTest") { dataProvider { ["bar"] } }
@@ -133,24 +135,23 @@ class InheritanceTest {
 
         project.apply plugin: 'spacelift'
 
-        project.ext.verifier = [:]
-        project.verifier['invoked']=0
-        project.verifier['0']='foo'
-        project.verifier['1']='bar'
-
         project.spacelift {
+
+            def counter = 0
+            def value = { if(counter==0) { counter++; return "foo"} else return "bar"}
+
             tests {
                 firstTest {
                     dataProvider { ["foo"]}
-                    execute { foo ->
-                        println foo
-                        assertThat foo, is(project.verifier["${project.verifier.invoked}"])
-                        project.verifier.invoked += 1
+                    execute { data ->
+                        assertThat data, is(value())
                     }
                 }
-                secondTest(inherits:firstTest) { dataProvider { ["bar"] } }
+                secondTest(inherits:firstTest) { dataProvider { ["bar"] }; beforeTest { data -> println data}}
             }
         }
+
+        println "Total tests ${project.spacelift.tests.size()}"
 
         project.spacelift.tests.each { test ->
             test.executeTest(project.logger)
@@ -223,7 +224,7 @@ class InheritanceTest {
 
         // enable second profile
         project.ext.set("profile2", "true")
-        
+
         exception.expect(MissingPropertyException)
         exception.expectMessage("tool1")
 

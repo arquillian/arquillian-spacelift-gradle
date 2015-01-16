@@ -87,7 +87,7 @@ class GradleSpaceliftDelegate {
                 log.warn("Detected ambiguous reference ${name}, using ${objectType.getSimpleName()}, ignoring ${container.type.getSimpleName()}")
             }
         }
-        
+
         if(object!=null) {
             return object
         }
@@ -96,7 +96,7 @@ class GradleSpaceliftDelegate {
         throw new MissingPropertyException("Unable to resolve property named ${name} in Spacelift DSL")
     }
 
-    private <T> T resolve(InheritanceAwareContainer<T> container, String name) {
+    private <TYPE extends ContainerizableObject<TYPE>, DEFAULT_TYPE extends TYPE> TYPE resolve(InheritanceAwareContainer<TYPE, DEFAULT_TYPE> container, String name) {
         try {
             return container.getAt(name)
         }

@@ -4,10 +4,7 @@ import org.gradle.api.Project
 
 // this class represents a profile enumerating installations to be installed
 
-class Profile implements ValueExtractor, Cloneable {
-
-    // this is required in order to use project container abstraction
-    String name
+class Profile extends BaseContainerizableObject<Profile> implements ContainerizableObject<Profile> {
 
     // list of enabled installations
     Closure enabledInstallations = { []}
@@ -16,50 +13,33 @@ class Profile implements ValueExtractor, Cloneable {
     Closure tests = { []}
 
     // list of tests to exclude
-    Closure excludedTests = { []}
-
-    Project project
+    Closure excludedTests = { [] }
 
     Profile(String profileName, Project project) {
-        this.name = profileName
-        this.project = project
+        super(profileName, project)
     }
 
     /**
      * Cloning constructor. Preserves lazy nature of closures to be evaluated later on.
      * @param other Profile to be cloned
      */
-    Profile(Profile other) {
+    Profile(String profileName, Profile other) {
+        super(profileName, other)
 
         // use direct access to skip call of getter
         this.enabledInstallations = other.@enabledInstallations.clone()
         this.tests = other.@tests.clone()
         this.excludedTests = other.@excludedTests.clone()
-
-        // shallow copy of project
-        this.project = other.project
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        new Profile(this)
-    }
-
-    def enabledInstallations(Object... args) {
-        this.enabledInstallations = extractValuesAsLazyClosure(args).dehydrate()
+    public Profile clone(String name) {
+        return new Profile(name, this)
     }
 
     def getEnabledInstallations() {
         def enabledInstallationsList = enabledInstallations.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         return asFlatList(enabledInstallationsList)
-    }
-
-    def tests(Object... args) {
-        this.tests = extractValuesAsLazyClosure(args).dehydrate()
-    }
-
-    def excludedTests(Object... args) {
-        this.excludedTests = extractValuesAsLazyClosure(args).dehydrate()
     }
 
     def getTests() {

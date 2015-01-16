@@ -14,10 +14,7 @@ import org.slf4j.Logger
 // * mac
 // * linux
 // * solaris
-class Installation implements ValueExtractor, Cloneable {
-
-    // this is required in order to use project container abstraction
-    String name
+class Installation extends BaseContainerizableObject<Installation> implements ContainerizableObject<Installation> {
 
     // version of the product installation belongs to
     Closure version = {}
@@ -27,6 +24,8 @@ class Installation implements ValueExtractor, Cloneable {
 
     // these two variables allow to directly specify fs path or remote url of the installation bits
     Closure fsPath = {}
+
+    // url to download from
     Closure remoteUrl = {}
 
     // zip file name
@@ -51,25 +50,22 @@ class Installation implements ValueExtractor, Cloneable {
     Closure preconditions = { true }
 
     // tools provided by this installation
-    InheritanceAwareContainer<GradleSpaceliftTool> tools
-
-    // access to project defined variables
-    Project project
+    InheritanceAwareContainer<GradleSpaceliftTool, GradleSpaceliftTool> tools
 
     Installation(String productName, Project project) {
-        this.name = productName
+        super(productName, project)
         this.product = { productName }
-        this.project = project
-        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool)
+        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool, GradleSpaceliftTool)
     }
 
     /**
      * Cloning constructor. Preserves lazy nature of closures to be evaluated later on.
      * @param other Installation to be cloned
      */
-    Installation(Installation other) {
+    Installation(String installationName, Installation other) {
+        super(installationName, other)
         // use direct access to skip call of getter
-        this.version = other.@version.clone();
+        this.version = other.@version.clone()
         this.product = other.@product.clone()
         this.fsPath = other.@fsPath.clone()
         this.remoteUrl = other.@remoteUrl.clone()
@@ -81,19 +77,16 @@ class Installation implements ValueExtractor, Cloneable {
         this.preconditions = other.@preconditions.clone()
         this.postActions = other.@postActions.clone()
         this.tools = other.@tools.clone()
-
-        // project is not cloned, just shallow copy
-        this.project = other.project
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        new Installation(this)
+    public Installation clone(String name) {
+        new Installation(name, this)
     }
 
-
-    def autoExtract(arg) {
-        this.autoExtract = extractValueAsLazyClosure(arg).dehydrate()
+    def tools(Closure closure) {
+        tools.configure(closure)
+        this
     }
 
     def getAutoExtract() {
@@ -104,20 +97,12 @@ class Installation implements ValueExtractor, Cloneable {
         return Boolean.parseBoolean(shouldExtract.toString())
     }
 
-    def forceReinstall(arg) {
-        this.forceReinstall = extractValueAsLazyClosure(arg).dehydrate()
-    }
-
     def getForceReinstall() {
         def shouldReinstall = forceReinstall.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         if(shouldReinstall==null) {
             return false
         }
         return Boolean.parseBoolean(shouldReinstall.toString())
-    }
-
-    def fsPath(arg) {
-        this.fsPath = extractValueAsLazyClosure(arg).dehydrate()
     }
 
     def getFsPath() {
@@ -128,20 +113,12 @@ class Installation implements ValueExtractor, Cloneable {
         return new File(filePath.toString());
     }
 
-    def remoteUrl(arg) {
-        this.remoteUrl = extractValueAsLazyClosure(arg).dehydrate()
-    }
-
     def getRemoteUrl() {
         def remoteUrlString = remoteUrl.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         if(remoteUrlString==null) {
             return null;
         }
         return new URL(remoteUrlString.toString())
-    }
-
-    def home(arg) {
-        this.home = extractValueAsLazyClosure(arg).dehydrate()
     }
 
     def getHome() {
@@ -159,10 +136,6 @@ class Installation implements ValueExtractor, Cloneable {
         new File(project.spacelift.workspace, homeDir)
     }
 
-    def fileName(arg) {
-        this.fileName = extractValueAsLazyClosure(arg).dehydrate()
-    }
-
     def getFileName() {
         def fileNameString = fileName.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         if(fileNameString==null) {
@@ -176,10 +149,6 @@ class Installation implements ValueExtractor, Cloneable {
         return fileNameString.toString()
     }
 
-    def product(arg) {
-        this.product = extractValueAsLazyClosure(arg).dehydrate()
-    }
-
     def getProduct() {
         def productName = product.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         if(productName==null) {
@@ -187,10 +156,6 @@ class Installation implements ValueExtractor, Cloneable {
         }
 
         return productName.toString()
-    }
-
-    def version(arg) {
-        this.version = extractValueAsLazyClosure(arg).dehydrate()
     }
 
     def getVersion() {
@@ -279,25 +244,6 @@ class Installation implements ValueExtractor, Cloneable {
         }
         // execute post actions
         postActions.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-    }
-
-    // we keep extraction mapper to be a part of ant extract command
-    def extractMapper(Closure closure) {
-        this.extractMapper = extractValueAsLazyClosure(closure).dehydrate()
-    }
-
-    // we keep post actions to be executed after installation is done
-    def postActions(Closure closure) {
-        this.postActions = extractValueAsLazyClosure(closure).dehydrate()
-    }
-
-    def preconditions(Closure closure) {
-        this.preconditions = extractValueAsLazyClosure(closure).dehydrate()
-    }
-
-    def tools(Closure closure) {
-        tools.configure(closure)
-        this
     }
 
     private String guessFileNameFromUrl(URL url) {

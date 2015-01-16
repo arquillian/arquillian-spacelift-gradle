@@ -13,38 +13,29 @@ import org.slf4j.LoggerFactory
  * @author <a href="kpiwko@redhat.com">Karel Piwko</a>
  *
  */
-class GradleSpaceliftTool implements ValueExtractor, Cloneable {
+class GradleSpaceliftTool extends BaseContainerizableObject<GradleSpaceliftTool> implements ContainerizableObject<GradleSpaceliftTool> {
     private static final Logger log = LoggerFactory.getLogger(GradleSpaceliftDelegate)
-
-    // required by gradle to be defined
-    String name
 
     // prepared command tool
     Closure command = {}
 
-    Project project
-
     GradleSpaceliftTool(String toolName, Project project) {
-        this.name = toolName
-        this.project = project
+        super(toolName, project)
     }
 
     /**
      * Cloning constructor. Preserves lazy nature of closures to be evaluated later on.
      * @param other Tool to be cloned
      */
-    GradleSpaceliftTool(GradleSpaceliftTool other) {
-
+    GradleSpaceliftTool(String name, GradleSpaceliftTool other) {
+        supert(name, other)
         // use direct access to skip call of getter
         this.command = other.@command.clone()
-
-        // shallow copy of project
-        this.project = other.project
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        new GradleSpaceliftTool(this)
+    public GradleSpaceliftTool clone(String name) {
+        return new GradleSpaceliftTool(name, this)
     }
 
     void registerInSpacelift(ToolRegistry registry) {
@@ -89,10 +80,6 @@ class GradleSpaceliftTool implements ValueExtractor, Cloneable {
         registry.register(clazz)
 
         log.info("Tool ${name} was registered")
-    }
-
-    def command(arg) {
-        this.command = extractValueAsLazyClosure(arg).dehydrate()
     }
 
     def getCommand() {

@@ -1,12 +1,13 @@
 package org.arquillian.spacelift.gradle
 
+import groovy.lang.Closure;
+
+import java.util.Map;
+
 import org.gradle.api.Project
 import org.slf4j.Logger
 
-class Test implements ValueExtractor, Cloneable {
-
-    // required by gradle to be defined
-    String name
+class Test extends BaseContainerizableObject<Test> implements ContainerizableObject<Test> {
 
     Closure execute = {}
 
@@ -20,19 +21,16 @@ class Test implements ValueExtractor, Cloneable {
 
     Closure afterTest = {}
 
-    Project project
-
     Test(String testName, Project project) {
-        this.name = testName
-        this.project = project
+        super(testName, project)
     }
 
     /**
      * Cloning constructor. Preserves lazy nature of closures to be evaluated later on.
      * @param other Test to be cloned
      */
-    Test(Test other) {
-
+    Test(String testName, Test other) {
+        super(testName, other)
         // use direct access to skip call of getter
         this.execute = other.@execute.clone()
         this.dataProvider = other.@dataProvider.clone()
@@ -40,15 +38,13 @@ class Test implements ValueExtractor, Cloneable {
         this.beforeTest = other.@beforeTest.clone()
         this.afterSuite = other.@afterSuite.clone()
         this.afterTest = other.@afterTest.clone()
-
-        // shallow copy of project
-        this.project = other.project
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        new Test(this)
+    public Test clone(String name) {
+        return new Test(name, this);
     }
+
 
     def executeTest(Logger logger) {
 
@@ -93,29 +89,5 @@ class Test implements ValueExtractor, Cloneable {
             logger.info(":test:${name} after suite execution")
             afterSuite.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         }
-    }
-
-    def execute(arg) {
-        this.execute = extractValueAsLazyClosure(arg).dehydrate()
-    }
-
-    def dataProvider(arg) {
-        this.dataProvider = extractValueAsLazyClosure(arg).dehydrate()
-    }
-
-    def beforeSuite(arg) {
-        this.beforeSuite = extractValueAsLazyClosure(arg).dehydrate()
-    }
-
-    def beforeTest(arg) {
-        this.beforeTest = extractValueAsLazyClosure(arg).dehydrate()
-    }
-
-    def afterSuite(arg) {
-        this.afterSuite = extractValueAsLazyClosure(arg).dehydrate()
-    }
-
-    def afterTest(arg) {
-        this.afterTest = extractValueAsLazyClosure(arg).dehydrate()
     }
 }

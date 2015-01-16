@@ -1,52 +1,57 @@
 package org.arquillian.spacelift.gradle
 
-import static groovy.transform.AutoCloneStyle.*
-import groovy.transform.AutoClone
 
+import java.util.concurrent.ConcurrentHashMap
+
+import org.apache.commons.lang3.SystemUtils
 import org.gradle.api.Project
-import org.gradle.internal.reflect.Instantiator
 import org.gradle.util.Configurable
 
 /**
- * This is a way how to convert DSL into tool, installation, profile or test, with support of 
+ * This is a way how to convert DSL into tool, installation, profile or test, with support of
  * inheritance
- * 
+ *
  * @author kpiwko
  *
  * @param <T>
  */
-class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Collection<T>, ValueExtractor, Cloneable {
+class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAULT_TYPE extends TYPE> implements Iterable<TYPE>, Configurable<TYPE>, Collection<TYPE>, Cloneable {
 
-    Class<T> type
+    private static final ConcurrentHashMap<Class<?>, Class<?>> typeMetaClasses = new ConcurrentHashMap<Class<?>, Class<?>>()
 
-    Set<T> objects
+    Class<TYPE> type
+
+    Class<DEFAULT_TYPE> defaultType
+
+    Set<TYPE> objects
 
     Project project
 
     Object parent
 
-    InheritanceAwareContainer(Project project, Object parent, Class<T> type) {
+    InheritanceAwareContainer(Project project, Object parent, Class<TYPE> type, Class<DEFAULT_TYPE> defaultType) {
         this.project = project
         this.type = type
+        this.defaultType = defaultType
         this.parent = parent
-        this.objects = new LinkedHashSet<String, T>();
+        this.objects = new LinkedHashSet<String, TYPE>()
     }
 
-    InheritanceAwareContainer(InheritanceAwareContainer<T> other) {
+    InheritanceAwareContainer(InheritanceAwareContainer<TYPE, DEFAULT_TYPE> other) {
         this.project = other.project
         this.type = other.type
         this.parent = other.parent
-        this.objects = new LinkedHashSet<T>(other.objects)
+        this.objects = new LinkedHashSet<TYPE>(other.objects)
     }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        new InheritanceAwareContainer<T>(this)
+        new InheritanceAwareContainer<TYPE, DEFAULT_TYPE>(this)
     }
 
     /**
      * This method dynamically creates an object of type <T>.
-     * Object must define a constructor of type (name, project) 
+     * Object must define a constructor of type (name, project)
      * @param name name of object to be created
      * @param args
      * @return
@@ -58,35 +63,41 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
 
         // unwrap array in case there is single argument
         if(args instanceof Object[] && args.size()==1) {
-            configureClosure = extractValueAsLazyClosure(args[0]).dehydrate()
+            configureClosure = DSLUtil.lazyValue(args[0]).dehydrate()
         }
         // check whether there was inheritance used or any named parameters were passed
         else if(args instanceof Object[] && args.size()==2) {
             if(args[0] instanceof Map) {
                 behavior = args[0]
             }
-            configureClosure = extractValueAsLazyClosure(args[1]).dehydrate()
+            configureClosure = DSLUtil.lazyValue(args[1]).dehydrate()
         }
         else {
-            configureClosure = extractValueAsLazyClosure(args).dehydrate()
+            configureClosure = DSLUtil.lazyValue(args).dehydrate()
         }
 
         create(name, behavior, configureClosure)
     }
 
-    T create(String name, Map behavior, Closure closure) {
-        def object
+    TYPE create(String name, Map behavior, Closure closure) {
 
-        // inherit from different object if set
-        if(behavior.inherits) {
-            object = resolveParent(behavior.inherits).clone()
-            object.name = name
+        ContainerizableObject<?> object
+
+        // if from behavior is not specified, default to default type for container
+        // @Deprecated inherits - inherits to be deprecated and replaced with from
+        Object from = behavior.get('from', behavior.get('inherits', defaultType))
+
+        if(from instanceof Class) {
+            object = from.newInstance(name, project)
+            // this was the first initialization for type, generate closure setter methods
+            //if(typeMetaClasses.putIfAbsent(from, from) == null) {
+            DSLUtil.generateClosurePropertyMethods(object)
+            //}
         }
-        // create brand new instance
         else {
-            object = type.newInstance(name, project)
+            object = resolveParent(from).clone(name)
+            DSLUtil.generateClosurePropertyMethods(object)
         }
-
 
         closure = closure.rehydrate(new GradleSpaceliftDelegate(), parent, object)
 
@@ -95,17 +106,17 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
         // store configured object
         objects << object
 
-        object
+        return object
     }
 
     @Override
-    public T configure(Closure configuration) {
-        Closure config = extractValueAsLazyClosure(configuration).dehydrate()
+    public TYPE configure(Closure configuration) {
+        Closure config = DSLUtil.lazyValue(configuration).dehydrate()
         config.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public Iterator<TYPE> iterator() {
         objects.iterator();
     }
 
@@ -114,9 +125,9 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
      * @param name
      * @return
      */
-    public T getAt(String name) {
+    public TYPE getAt(String name) {
         try {
-            for(T o: objects) {
+            for(TYPE o: objects) {
                 if(o.name == name) {
                     return o
                 }
@@ -133,12 +144,12 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
     }
 
     @Override
-    public boolean add(T object) {
+    public boolean add(TYPE object) {
         objects.add(object)
     }
 
     @Override
-    public boolean addAll(Collection<? extends T> others) {
+    public boolean addAll(Collection<? extends TYPE> others) {
         objects.addAll(others)
     }
 
@@ -189,7 +200,7 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
 
     @SuppressWarnings("unchecked")
     @Override
-    public <X> X[] toArray(X[] a) {
+    public <T> T[] toArray(T[] a) {
         objects.toArray(a)
     }
 
@@ -198,16 +209,15 @@ class InheritanceAwareContainer<T> implements Iterable<T>, Configurable<T>, Coll
      * @param reference reference to be resolved
      * @return
      */
-    private T resolveParent(def reference) {
+    private TYPE resolveParent(def reference) {
         if(reference instanceof CharSequence) {
             getAt(reference.toString())
         }
         else if(type.isInstance(reference)) {
-            (T) reference
+            (TYPE) reference
         }
         else {
             throw new MissingPropertyException("Unable to reference ${type.getSimpleName()} by ${reference}")
         }
     }
-
 }

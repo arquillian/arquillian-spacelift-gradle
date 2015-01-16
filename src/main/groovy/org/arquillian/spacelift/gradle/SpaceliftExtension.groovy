@@ -32,10 +32,10 @@ class SpaceliftExtension {
     boolean enableSnapshots
 
     // internal DSL
-    InheritanceAwareContainer<Profile> profiles
-    InheritanceAwareContainer<GradleSpaceliftTool> tools
-    InheritanceAwareContainer<Installation> installations
-    InheritanceAwareContainer<Test> tests
+    InheritanceAwareContainer<Profile, Profile> profiles
+    InheritanceAwareContainer<GradleSpaceliftTool, GradleSpaceliftTool> tools
+    InheritanceAwareContainer<Installation, Installation> installations
+    InheritanceAwareContainer<Test, Test> tests
 
     Project project
 
@@ -49,10 +49,10 @@ class SpaceliftExtension {
         this.enableStaging = false
         this.enableSnapshots = false
         this.project = project
-        this.profiles = new InheritanceAwareContainer(project, this, Profile)
-        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool)
-        this.installations = new InheritanceAwareContainer(project, this, Installation)
-        this.tests = new InheritanceAwareContainer(project, this, Test)
+        this.profiles = new InheritanceAwareContainer(project, this, Profile, Profile)
+        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool, GradleSpaceliftTool)
+        this.installations = new InheritanceAwareContainer(project, this, Installation, Installation)
+        this.tests = new InheritanceAwareContainer(project, this, Test, Test)
     }
 
     def profiles(Closure closure) {
@@ -60,7 +60,7 @@ class SpaceliftExtension {
         this
     }
 
-    InheritanceAwareContainer<Profile> getProfiles() {
+    InheritanceAwareContainer<Profile, Profile> getProfiles() {
         profiles
     }
 
@@ -75,7 +75,7 @@ class SpaceliftExtension {
         this
     }
 
-    InheritanceAwareContainer<GradleSpaceliftTool> getTools() {
+    InheritanceAwareContainer<GradleSpaceliftTool, GradleSpaceliftTool> getTools() {
         tools
     }
 
@@ -84,7 +84,7 @@ class SpaceliftExtension {
         this
     }
 
-    InheritanceAwareContainer<Installation> getInstallations() {
+    InheritanceAwareContainer<Installation, Installation> getInstallations() {
         installations
     }
 
@@ -93,7 +93,7 @@ class SpaceliftExtension {
         this
     }
 
-    InheritanceAwareContainer<Test> getTests() {
+    InheritanceAwareContainer<Test, Test> getTests() {
         tests
     }
 

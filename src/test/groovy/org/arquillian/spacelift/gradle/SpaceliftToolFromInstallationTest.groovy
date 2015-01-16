@@ -44,7 +44,7 @@ public class SpaceliftToolFromInstallationTest {
                         mac:"android-sdk-macosx"
                     ])
                     // tools provided by installation
-                    tools {                        
+                    tools {
                         android {
                             command ([
                                 linux: ["${home}/tools/android"],
