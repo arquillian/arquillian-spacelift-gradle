@@ -43,6 +43,7 @@ class DSLUtil {
         }
     }
 
+    // FIXME this method is not very robust
     public static Closure lazyValue(Object... args) {
         Closure retVal;
         Object arg;

@@ -13,7 +13,7 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
     Closure tests = { []}
 
     // list of tests to exclude
-    Closure excludedTests = { [] }
+    Closure excludedTests = { []}
 
     Profile(String profileName, Project project) {
         super(profileName, project)
@@ -50,6 +50,15 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
     def getExcludedTests() {
         def excludedTestList = excludedTests.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
         return asFlatList(excludedTestList)
+    }
+
+    /**
+     * Allows us to reference profiles and test without quoting
+     * @param name installation or test name
+     * @return string value of the property
+     */
+    def propertyMissing(String name) {
+        name
     }
 
 

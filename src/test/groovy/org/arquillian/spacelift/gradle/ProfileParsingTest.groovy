@@ -47,6 +47,14 @@ public class ProfileParsingTest {
     }
 
     @Test
+    void "single profile with multiple installations and tests unquoted"() {
+        initWithProfile {
+            enabledInstallations eap, ews
+            tests fooTest
+        }
+    }
+
+    @Test
     void "single profile with multiple installations as array and multiple tests as array"() {
         def project = initWithProfile {
             enabledInstallations(['eap', 'ews'])

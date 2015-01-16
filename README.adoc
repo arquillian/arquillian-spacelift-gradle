@@ -26,7 +26,7 @@ buildscript {
     }
 }
 
-// these elements are needed only if you are willing to use _testreport_ task
+// following elements are needed only if you are willing to use _testreport_ task
 repositories {
     mavenCentral()
 }
@@ -51,7 +51,7 @@ check/test::
 testreport::
     Gathers all test results in JUnit format from workspace and creates a combined report. Requires additional configuration in _build.gradle_ file
 describe::
-    Shows global configuration and available profiles
+    Shows global configuration and available profiles and more
 cleanInstallations::
     Wipes cached installations and extracted installation artifacts for currently activated installations
 cleanWorkspace::
@@ -84,11 +84,13 @@ spacelift {
 
     profiles {
         profile1 { }
-        profile2(inherits:profile1) { }
+        profile2(from:profile1) { }
     }
 
     installations {
         installation1 { }
+        installation2(from:MyOwnInstallationType) { }
+        installation3(from:installation2) { } 
     }
 
     tests {
@@ -151,9 +153,9 @@ profiles::
 [source,groovy]
 ----
 profileName {
-    enabledInstallations 'installation1', 'installation2'
-    tests 'test1', 'test3', 'test27'
-    excludedTests 'test3'
+    enabledInstallations installation1, installation2
+    tests test1, test3, test27
+    excludedTests test3
 }
 ----
 +
@@ -165,7 +167,9 @@ NOTE: You can also use +*+ to enable all defined installations and or tests for 
 
 installations::
     Installations provides a way how to bring additional tools to you test environment. Installation is automatically downloaded
-    or fetched from local cache and extracted, based on current OS. Installations can be inherited from previously defined installations.
+    or fetched from local cache and extracted, based on current OS. Installations can be inherited from previously defined installations or you can 
+    define your own installation DSL by implementing +Installation+ and point installation to its class.
+    Following description holds for _DefaultInstallation_:
 +
 [source,groovy]
 ----
@@ -188,13 +192,17 @@ installationName {
     postActions {
     }
 }
-otherInstallation(inherits:installationName) {
+otherInstallation(from:installationName) {
     // reuses all values from installationName and then redefines home directory
     home newValue
 }
+myInstallation(from:MyInstallationClass) {
+    // uses your own DSL, myBlock has to be a Closure typed property of MyInstallationClass
+    myBlock { }
+}
 ----
 +
-Following properties are used::
+Following DSL blocks are available::
 
 * product - name of product, used for storing installation in _installationsDir_
 * version - version of product, used for storing installation in _installationsDir_
@@ -203,6 +211,7 @@ Following properties are used::
 * home - name of dir in _workspace_ where installation is extracted. Can be map, same keys as for _tool_
 * autoExtract - by default +true+, consider installation an archive and extract it to _workspace_ directory
 * forceReinstall - by default +false+, ignores installation download and extract if already available in _installationDir_ or extracted in _workspace_
+* preconditions - this closure is optional and when specified, it has to return boolean value. If it returns false, installation is skipped, if true, installation is executed.
 * extractMapper - optional calls on https://github.com/arquillian/arquillian-spacelift/blob/master/spacelift-impl/src/main/java/org/arquillian/spacelift/tool/basic/UncompressTool.java[UncompressTool] performed prior extraction happens. For instance, this removes first directory from extracted path and extracts archive to directory defined by +home+
 +
 [source]
@@ -215,12 +224,12 @@ extractMapper {
 +
 * tools - allows to define tool(s) that will be available after installation is done, same syntax as _tools_ block_
 * postActions - defines actions to be performed after installation is extracted
-* preconditions - this closure is optional and when specified, it has to return boolean value. If it returns false, installation is skipped, if true, installation is executed.
 
 tests::
     Tests define a block of commands to be executed in *test* Gradle task. If you provide +dataProvider+ block, test
-    execution (including before and after test phases) will iterate over data provided. Tests can inherit from previously defined tests
-
+    execution (including before and after test phases) will iterate over data provided. Tests can inherit from previously defined tests or use your own DSL, same as +Installation+.
+    Following description holds for _DefaultTest_:
++
 [source,groovy]
 ----
 testName {
@@ -268,7 +277,7 @@ tests {
 Direct reference can be used for any installation, test, tool or profile. References are resolved in this order, in case there are two objects with different type and same name, further
 possible references are ignored and a warning is logged. It means it is safer to use unique names per all types.
 
-NOTE: In case you need reference DSL object indirectly, for instance you have two objects with the same name or it is shaded by local variable, you can use indirect syntax in form +project.spacelift.installations['installationName']+. Same call existins for tools, profiles and tests. 
+NOTE: In case you need reference DSL object indirectly, for instance you have two objects with the same name or it is shaded by local variable, you can use indirect syntax in form +project.spacelift.installations['installationName']+. Same call exists for tools, profiles and tests. 
 
 == Execution parameters
 

@@ -199,8 +199,13 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
      * @return
      */
     private TYPE resolveParent(def reference) {
+
         if(reference instanceof CharSequence) {
             getAt(reference.toString())
+        }
+        // FIXME need to unwrap and later on figure out why we got an array here
+        else if(reference instanceof Iterable && reference.size()==1 && reference[0] instanceof CharSequence) {
+            getAt(reference[0].toString())
         }
         else if(reference!=null && type.isAssignableFrom(reference.class)) {
             (TYPE) reference
