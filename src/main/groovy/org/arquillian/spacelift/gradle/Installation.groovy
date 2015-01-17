@@ -25,7 +25,17 @@ interface Installation extends ContainerizableObject<Installation> {
      */
     String getVersion()
 
+    /**
+     * Returns directory where installation is installed
+     * @return
+     */
     File getHome()
+
+    /**
+     * Checks whether the installation was already installed
+     * @return @{code true} if installation is already installed, @{code false} otherwise
+     */
+    boolean isInstalled()
 
     /**
      * Installs installation into Spacelift workspace

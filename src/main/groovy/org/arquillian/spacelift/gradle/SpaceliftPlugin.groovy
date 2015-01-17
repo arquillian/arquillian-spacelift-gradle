@@ -178,9 +178,14 @@ class SpaceliftPlugin implements Plugin<Project> {
                     Tasks.prepare(SettingsXmlUpdater).repository("jboss-snapshots-repository", new URI("https://repository.jboss.org/nexus/content/repositories/snapshots"), true).execute().await()
                 }
 
-                project.selectedInstallations.each { installation ->
-                    logger.lifecycle(":install:${installation.name} will be installed")
-                    installation.install(logger)
+                project.selectedInstallations.each { Installation installation ->
+                    if(installation.isInstalled()) {
+                        logger.lifecycle(":install:${installation.name} was already installed, skipping")
+                    }
+                    else {
+                        logger.lifecycle(":install:${installation.name} will be installed")
+                        installation.install(logger)
+                    }
                 }
             }
         }
@@ -288,7 +293,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             if(project.hasProperty(overrideKey)) {
                 // get and parse command line defined value
                 def newValue = project.property(overrideKey)
-                
+
                 // if we have current as array, we want to model command line override as array as well
                 if(value instanceof Object[] || value instanceof Collection) {
                     newValue = newValue.toString().split(",")

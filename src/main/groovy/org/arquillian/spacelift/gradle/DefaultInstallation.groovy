@@ -33,7 +33,9 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     // application of Ant mapper during extraction
     Closure extractMapper = {}
 
-    Closure forceReinstall = { false }
+    Closure isInstalled = {
+        return getHome().exists()
+    }
 
     // actions to be invoked after installation is done
     Closure postActions = {}
@@ -66,7 +68,6 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         this.home = other.@home.clone()
         this.autoExtract = other.@autoExtract.clone()
         this.extractMapper = other.@extractMapper.clone()
-        this.forceReinstall = other.@forceReinstall.clone()
         this.preconditions = other.@preconditions.clone()
         this.postActions = other.@postActions.clone()
         this.tools = other.@tools.clone()
@@ -113,9 +114,9 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         return productName.toString()
     }
 
-    def tools(Closure closure) {
-        tools.configure(closure)
-        this
+    @Override
+    public boolean isInstalled() {
+        return isInstalled.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
     }
 
     def getFileName() {
@@ -137,14 +138,6 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
             return true
         }
         return Boolean.parseBoolean(shouldExtract.toString())
-    }
-
-    def getForceReinstall() {
-        def shouldReinstall = forceReinstall.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        if(shouldReinstall==null) {
-            return false
-        }
-        return Boolean.parseBoolean(shouldReinstall.toString())
     }
 
     def getFsPath() {
@@ -174,8 +167,8 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         }
 
         File targetFile = getFsPath()
-        if(getForceReinstall() == false && targetFile.exists()) {
-            logger.info(":install:${name} Grabbing ${getFileName()} from file system")
+        if(targetFile.exists()) {
+            logger.info(":install:${name} Grabbing ${getFileName()} from file system cache")
         }
         else if(getRemoteUrl()!=null){
             // ensure parent directory exists
@@ -188,45 +181,42 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
         // extract file if set to and at the same time file is defined
         if(getAutoExtract() && getFileName() != "") {
-            if(getForceReinstall() == false && getHome().exists()) {
-                logger.info(":install:${name} Reusing existing installation at ${getHome()}")
+            if(getHome().exists()) {
+                logger.info(":install:${name} Deleting previous installation at ${getHome()}")
+                project.ant.delete(dir: getHome())
             }
-            else {
 
-                if(getForceReinstall() == true && getHome().exists()) {
-                    logger.info(":install:${name} Deleting previous installation at ${getHome()}")
-                    project.ant.delete(dir: getHome())
-                }
+            def remap = extractMapper.rehydrate(new GradleSpaceliftDelegate(), this, this)
 
-                def remap = extractMapper.rehydrate(new GradleSpaceliftDelegate(), this, this)
+            logger.info(":install:${name} Extracting installation from ${getFileName()}")
 
-                logger.info(":install:${name} Extracting installation from ${getFileName()}")
-
-                // based on installation type, we might want to unzip/untar/something else
-                switch(getFileName()) {
-                    case ~/.*jar/:
-                        project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(new File(project.spacelift.workspace, getFileName())), remap)
-                        .execute().await()
-                        break
-                    case ~/.*zip/:
-                        project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(project.spacelift.workspace), remap).execute().await()
-                        break
-                    case ~/.*tgz/:
-                    case ~/.*tar\.gz/:
-                        project.configure(Tasks.chain(getFsPath(),UntarTool).toDir(project.spacelift.workspace), remap).execute().await()
-                        break
-                    case ~/.*tbz/:
-                    case ~/.*tar\.bz2/:
-                        project.configure(Tasks.chain(getFsPath(),UntarTool).bzip2(true).toDir(project.spacelift.workspace), remap).execute().await()
-                        break
-                    default:
-                        logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
-                }
+            // based on installation type, we might want to unzip/untar/something else
+            switch(getFileName()) {
+                case ~/.*jar/:
+                    project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(new File(project.spacelift.workspace, getFileName())), remap)
+                    .execute().await()
+                    break
+                case ~/.*zip/:
+                    project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(project.spacelift.workspace), remap).execute().await()
+                    break
+                case ~/.*tgz/:
+                case ~/.*tar\.gz/:
+                    project.configure(Tasks.chain(getFsPath(),UntarTool).toDir(project.spacelift.workspace), remap).execute().await()
+                    break
+                case ~/.*tbz/:
+                case ~/.*tar\.bz2/:
+                    project.configure(Tasks.chain(getFsPath(),UntarTool).bzip2(true).toDir(project.spacelift.workspace), remap).execute().await()
+                    break
+                default:
+                    logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
             }
         }
         else {
             if(new File(getHome(), getFileName()).exists()) {
-                logger.info(":install:${name} Reusing existing installation ${new File(getHome(),getFileName())}")
+                logger.info(":install:${name} Deleting previous installation at ${new File(getHome(), getFileName())}")
+                project.ant.delete(file: new File(getHome(), getFileName()))
+
+                logger.info(":install:${name} Reusing existing installation ${new File(getHome(), getFileName())}")
             }
             else {
                 logger.info(":install:${name} Copying installation to ${project.spacelift.workspace}")

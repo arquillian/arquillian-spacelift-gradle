@@ -82,6 +82,7 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
         }
 
         DSLUtil.generateClosurePropertyMethods(object)
+        DSLUtil.generateContainerMethods(object)
         closure = closure.rehydrate(new GradleSpaceliftDelegate(), parent, object)
 
         // configure and store object

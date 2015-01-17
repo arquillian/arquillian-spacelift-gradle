@@ -36,6 +36,11 @@ class MyOwnInstallationDefinition extends BaseContainerizableObject<MyOwnInstall
     }
 
     @Override
+    public boolean isInstalled() {
+        return false;
+    }
+
+    @Override
     public void install(Logger logger) {
         File location = new File(getHome(), "${product}-${version}")
         Tasks.prepare(DownloadTool).from("https://github.com/arquillian/arquillian-selenium-bom/archive/master.zip").timeout(60000).to(location).execute().await()

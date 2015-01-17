@@ -14,24 +14,42 @@ class DSLUtil {
         solaris: { return SystemUtils.IS_OS_SOLARIS || SystemUtils.IS_OS_SUN_OS },
     ]
 
-    static List<Field> availableClosureProperties(Object object) {
-
+    static List<Field> availableContainerFields(Object object) {
         // using fields here on purpose, MetaProperty will use getter if available, changing type
-        object.class.declaredFields.findAll { Field field ->
+        return object.class.declaredFields.findAll { Field field ->
+            // find all properties that are of type Closure
+            InheritanceAwareContainer.class.isAssignableFrom(field.type)
+        }
+    }
+
+    static List<Field> availableClosureProperties(Object object) {
+        // using fields here on purpose, MetaProperty will use getter if available, changing type
+        return object.class.declaredFields.findAll { Field field ->
             // find all properties that are of type Closure
             Closure.class.isAssignableFrom(field.type)
         }
     }
 
     static List<Field> undefinedClosurePropertyMethods(Object object) {
-        availableClosureProperties(object).findAll { Field field ->
+        return availableClosureProperties(object).findAll { Field field ->
             // find all properties that don't have DSL setter defined
             !object.metaClass.respondsTo(object, field.name, Object[].class)
         }
     }
 
+    static List<Field> undefinedContainerMethods(Object object) {
+        return availableContainerFields(object).findAll { Field field ->
+            // find all properties that don't have DSL setter defined
+            !object.metaClass.respondsTo(object, field.name, Closure.class)
+        }
+    }
+
     static List<String> availableClosurePropertyNames(Object object) {
-        availableClosureProperties(object).collect { Field field -> field.name }
+        return availableClosureProperties(object).collect { Field field -> field.name }
+    }
+
+    static List<String> availableContainerNames(Object object) {
+        return availableContainerFields(object).collect { Field field -> field.name }
     }
 
     static void generateClosurePropertyMethods(Object object) {
@@ -39,11 +57,23 @@ class DSLUtil {
             object.metaClass."${field.name}" = { Object... lazyClosure ->
                 //println "Calling ${field.name}(Object...) at ${delegate.class.simpleName} ${delegate.name}"
                 delegate.@"${field.name}" = lazyValue(lazyClosure).dehydrate()
+                return delegate
             }
         }
     }
 
-    public static Closure lazyValue(Object... args) throws IllegalArgumentException {
+    static void generateContainerMethods(Object object) {
+        undefinedContainerMethods(object).each { Field field ->
+            println "Generating ${field.name}(Closure) at ${delegate.class.simpleName} ${delegate.name}"
+            object.metaClass."${field.name}" = { Closure configureClosure ->
+                println "Calling ${field.name}(Closure) at ${delegate.class.simpleName} ${delegate.name}"
+                delegate.@"${field.name}".configure(configureClosure)
+                return delegate
+            }
+        }
+    }
+
+    static Closure lazyValue(Object... args) throws IllegalArgumentException {
 
         // if nothing is defined, return empty closure, e.g. closure that returns null
         if(args==null || args.length==0) {
@@ -102,7 +132,7 @@ class DSLUtil {
         throw new IllegalArgumentException("Unsupported parameters passed to method (" + args.collect { it.class?.simpleName}.join(', ') +")")
     }
 
-    public static Map getBehaviors(Object...args) {
+    static Map getBehaviors(Object...args) {
         Map defaultBehaviors = [:]
         if(args!= null && args.length>1 && args[0] instanceof Map) {
             // now we know there is a map, what we don't know is whether this is behavior or not
