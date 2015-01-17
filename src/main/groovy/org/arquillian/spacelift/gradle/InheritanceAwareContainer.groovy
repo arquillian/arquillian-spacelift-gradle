@@ -56,25 +56,8 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
      * @return
      */
     def methodMissing(String name, args) {
-
-        Closure configureClosure
-        Map behavior = [:]
-
-        // unwrap array in case there is single argument
-        if(args instanceof Object[] && args.size()==1) {
-            configureClosure = DSLUtil.lazyValue(args[0]).dehydrate()
-        }
-        // check whether there was inheritance used or any named parameters were passed
-        else if(args instanceof Object[] && args.size()==2) {
-            if(args[0] instanceof Map) {
-                behavior = args[0]
-            }
-            configureClosure = DSLUtil.lazyValue(args[1]).dehydrate()
-        }
-        else {
-            configureClosure = DSLUtil.lazyValue(args).dehydrate()
-        }
-
+        Map behavior = DSLUtil.getBehaviors(args)
+        Closure configureClosure = DSLUtil.lazyValue(args).dehydrate()
         create(name, behavior, configureClosure)
     }
 
@@ -85,6 +68,11 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
         // if from behavior is not specified, default to default type for container
         // @Deprecated inherits - inherits to be deprecated and replaced with from
         Object from = behavior.get('from', behavior.get('inherits', defaultType))
+
+        // FIXME we need to unwrap reference, but it is not clear why this happens
+        if(from instanceof List && from.size()==1) {
+            from = from[0]
+        }
 
         if(from instanceof Class && type.isAssignableFrom(from)) {
             object = from.newInstance(name, project)
@@ -202,10 +190,6 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
 
         if(reference instanceof CharSequence) {
             getAt(reference.toString())
-        }
-        // FIXME need to unwrap and later on figure out why we got an array here
-        else if(reference instanceof Iterable && reference.size()==1 && reference[0] instanceof CharSequence) {
-            getAt(reference[0].toString())
         }
         else if(reference!=null && type.isAssignableFrom(reference.class)) {
             (TYPE) reference

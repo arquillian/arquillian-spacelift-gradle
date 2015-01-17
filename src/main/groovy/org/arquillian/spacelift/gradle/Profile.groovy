@@ -58,7 +58,7 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
      * @return string value of the property
      */
     def propertyMissing(String name) {
-        name
+        return name
     }
 
 

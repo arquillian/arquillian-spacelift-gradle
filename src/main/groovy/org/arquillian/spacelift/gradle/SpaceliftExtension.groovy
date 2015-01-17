@@ -84,7 +84,7 @@ class SpaceliftExtension {
         this
     }
 
-    InheritanceAwareContainer<Installation, Installation> getInstallations() {
+    InheritanceAwareContainer<Installation, DefaultInstallation> getInstallations() {
         installations
     }
 
@@ -93,7 +93,7 @@ class SpaceliftExtension {
         this
     }
 
-    InheritanceAwareContainer<Test, Test> getTests() {
+    InheritanceAwareContainer<Test, DefaultTest> getTests() {
         tests
     }
 
