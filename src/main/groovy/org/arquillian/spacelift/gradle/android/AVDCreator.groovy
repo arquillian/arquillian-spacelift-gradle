@@ -12,28 +12,28 @@ class AVDCreator extends Task<Object, Void> {
     private String name
     private boolean force
 
-    def target(String target) {
+    AVDCreator target(String target) {
         if (target && target.length() != 0) {
             this.target = target
         }
         this
     }
 
-    def abi(String abi) {
+    AVDCreator abi(String abi) {
         if (abi && abi.length() != 0) {
             this.abi = abi
         }
         this
     }
 
-    def name(String name) {
+    AVDCreator name(String name) {
         if (name && name.length() != 0) {
             this.name = name
         }
         this
     }
 
-    def force() {
+    AVDCreator force() {
         force = true
         this
     }
@@ -75,7 +75,6 @@ class AVDCreator extends Task<Object, Void> {
         }
 
         tool.execute().await()
-
-        null
+        return null
     }
 }

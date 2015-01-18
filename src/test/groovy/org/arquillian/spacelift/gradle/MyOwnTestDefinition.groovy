@@ -23,7 +23,7 @@ class MyOwnTestDefinition extends BaseContainerizableObject<MyOwnTestDefinition>
 
     @Override
     public void executeTest(Logger logger) {
-        Object value = myDSL.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        Object value = DSLUtil.resolve(myDSL, this)
         assert value != null
     }
 }

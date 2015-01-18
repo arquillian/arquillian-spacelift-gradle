@@ -1,5 +1,6 @@
 package org.arquillian.spacelift.gradle
 
+import org.arquillian.spacelift.gradle.GradleSpacelift.ProjectHolder;
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
@@ -19,39 +20,45 @@ public class ProfileParsingTest {
 
     @Test
     void "single profile with single installation and no tests"() {
-        initWithProfile {
-            enabledInstallations "eap"
-        }
+        Project project = initWithProfile { enabledInstallations "eap" }
+
+        assertThat project.selectedInstallations.size(), is(1)
     }
 
     @Test
     void "single profile with single installation as array and no tests"() {
-        initWithProfile {
-            enabledInstallations["eap"]
-        }
+        Project project = initWithProfile { enabledInstallations(["eap"]) }
+
+        assertThat project.selectedInstallations.size(), is(1)
     }
 
     @Test
     void "single profile with multiple installations as args and no tests"() {
-        initWithProfile {
-            enabledInstallations 'eap', 'ews'
-        }
+        Project project = initWithProfile { enabledInstallations 'eap', 'ews' }
+
+        assertThat project.selectedInstallations.size(), is(2)
     }
 
     @Test
     void "single profile with multiple installations as args and single test"() {
-        initWithProfile {
+        Project project = initWithProfile {
             enabledInstallations 'eap', 'ews'
             tests 'fooTest'
         }
+
+        assertThat project.selectedInstallations.size(), is(2)
+        assertThat project.selectedTests.size(), is(1)
     }
 
     @Test
     void "single profile with multiple installations and tests unquoted"() {
-        initWithProfile {
+        Project project = initWithProfile {
             enabledInstallations eap, ews
             tests fooTest
         }
+
+        assertThat project.selectedInstallations.size(), is(2)
+        assertThat project.selectedTests.size(), is(1)
     }
 
     @Test
@@ -61,27 +68,28 @@ public class ProfileParsingTest {
             tests(['fooTest', 'barTest'])
         }
 
-        assertThat project.selectedProfile, is(notNullValue())
-        assertThat project.selectedProfile.name, is('foobar')
         assertThat project.selectedInstallations.size(), is(2)
         assertThat project.selectedTests.size(), is(2)
     }
 
     @Test
     void "single profile with single installation and single test and single excluded test as closure"() {
-        initWithProfile {
+        Project project = initWithProfile {
             enabledInstallations { 'eap' }
             tests { 'fooTest' }
             excludedTests { 'barTest' }
         }
+
+        assertThat project.selectedInstallations.size(), is(1)
+        assertThat project.selectedTests.size(), is(1)
     }
 
     @Test
     void "single profile with single installation and single test and single excluded test as array in closure"() {
         initWithProfile {
-            enabledInstallations { ['eap'] }
-            tests { ['fooTest'] }
-            excludedTests { ['barTest'] }
+            enabledInstallations { ['eap']}
+            tests { ['fooTest']}
+            excludedTests { ['barTest']}
         }
     }
 
@@ -130,30 +138,24 @@ public class ProfileParsingTest {
     @Test
     void "single profile with single installation and single test and single excluded test as List in closure"() {
         initWithProfile {
-            enabledInstallations {
-                Arrays.asList('eap')
-            }
-            tests {
-                Arrays.asList('fooTest')
-            }
-            excludedTests {
-                Arrays.asList('barTest')
-            }
+            enabledInstallations { Arrays.asList('eap') }
+            tests { Arrays.asList('fooTest') }
+            excludedTests { Arrays.asList('barTest') }
         }
     }
 
     @Test
     void "single profile with multiple installations as array in closure and no tests"() {
         initWithProfile {
-            enabledInstallations { ['eap', 'ews'] }
+            enabledInstallations { ['eap', 'ews']}
         }
     }
 
     @Test
     void "single profile with single installation as array in closure and single test as array in closure"() {
         initWithProfile {
-            enabledInstallations { ['eap'] }
-            tests { ['fooTest'] }
+            enabledInstallations { ['eap']}
+            tests { ['fooTest']}
         }
     }
 
@@ -167,9 +169,7 @@ public class ProfileParsingTest {
 
         project.spacelift {
             tools { rhc { command "rhc" } }
-            profiles {
-                foobar profileDefinition
-            }
+            profiles { foobar profileDefinition }
             installations {
                 eap {}
                 ews {}
@@ -186,6 +186,9 @@ public class ProfileParsingTest {
             assertThat installation.home, is(notNullValue())
             assertThat installation.home.exists(), is(true)
         }
+
+        assertThat project.selectedProfile, is(notNullValue())
+        assertThat project.selectedProfile.name, is('foobar')
 
         return project
     }

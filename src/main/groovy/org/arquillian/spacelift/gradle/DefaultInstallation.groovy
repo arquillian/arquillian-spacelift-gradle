@@ -1,6 +1,7 @@
 package org.arquillian.spacelift.gradle
 
 import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.tool.ToolRegistry;
 import org.arquillian.spacelift.tool.basic.DownloadTool
 import org.arquillian.spacelift.tool.basic.UntarTool
 import org.arquillian.spacelift.tool.basic.UnzipTool
@@ -66,6 +67,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         this.remoteUrl = other.@remoteUrl.clone()
         this.fileName = other.@fileName.clone()
         this.home = other.@home.clone()
+        this.isInstalled = other.@isInstalled.clone()
         this.autoExtract = other.@autoExtract.clone()
         this.extractMapper = other.@extractMapper.clone()
         this.preconditions = other.@preconditions.clone()
@@ -80,7 +82,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
     @Override
     File getHome() {
-        def homeDir = home.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        String homeDir = DSLUtil.resolve(String.class, home, this)
         if(homeDir==null) {
             URL url = getRemoteUrl()
             if(url!=null) {
@@ -96,70 +98,42 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
     @Override
     String getVersion() {
-        def versionString = version.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        String versionString = DSLUtil.resolve(String.class, version, this)
         if(versionString==null) {
             return ""
         }
 
-        return versionString.toString();
+        return versionString
     }
 
     @Override
     String getProduct() {
-        def productName = product.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        String productName = DSLUtil.resolve(String.class, product, this)
         if(productName==null) {
             return ""
         }
 
-        return productName.toString()
+        return productName
     }
 
     @Override
     public boolean isInstalled() {
-        return isInstalled.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        return DSLUtil.resolve(Boolean.class, isInstalled, this)
     }
 
-    def getFileName() {
-        def fileNameString = fileName.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        if(fileNameString==null) {
-            URL url = getRemoteUrl()
-            if(url!=null) {
-                return guessFileNameFromUrl(url)
-            }
-            return ""
+    @Override
+    public void registerTools(ToolRegistry registry) {
+        // register installed tools
+        tools.each { tool ->
+            tool.registerInSpacelift(registry)
         }
-
-        return fileNameString.toString()
-    }
-
-    def getAutoExtract() {
-        def shouldExtract = autoExtract.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        if(shouldExtract==null) {
-            return true
-        }
-        return Boolean.parseBoolean(shouldExtract.toString())
-    }
-
-    def getFsPath() {
-        def filePath = fsPath.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        if(filePath==null) {
-            filePath = "${project.spacelift.installationsDir}/${getProduct()}/${getVersion()}/${getFileName()}"
-        }
-        return new File(filePath.toString());
-    }
-
-    def getRemoteUrl() {
-        def remoteUrlString = remoteUrl.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        if(remoteUrlString==null) {
-            return null;
-        }
-        return new URL(remoteUrlString.toString())
     }
 
     // get installation and perform steps defined in closure after it is extracted
+    @Override
     void install(Logger logger) {
 
-        if (!preconditions.rehydrate(new GradleSpaceliftDelegate(), this, this).call()) {
+        if (!DSLUtil.resolve(Boolean.class, preconditions, this)) {
             // if closure returns false, we did not meet preconditions
             // so we return from installation process
             logger.info(":install:${name} Skipping, did not meet preconditions.")
@@ -224,12 +198,44 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
             }
         }
 
-        // register installed tools
-        tools.each { tool ->
-            tool.registerInSpacelift(GradleSpacelift.toolRegistry())
-        }
+        // register tools
+        registerTools(GradleSpacelift.toolRegistry())
+
         // execute post actions
-        postActions.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        DSLUtil.resolve(postActions, this)
+    }
+
+    String getFileName() {
+        String fileNameString = DSLUtil.resolve(String.class, fileName, this)
+        if(fileNameString==null) {
+            URL url = getRemoteUrl()
+            if(url!=null) {
+                return guessFileNameFromUrl(url)
+            }
+            return ""
+        }
+
+        return fileNameString.toString()
+    }
+
+    boolean getAutoExtract() {
+        return DSLUtil.resolve(Boolean.class, autoExtract, this)
+    }
+
+    File getFsPath() {
+        String filePath = DSLUtil.resolve(String.class, fsPath, this)
+        if(filePath==null) {
+            filePath = "${project.spacelift.installationsDir}/${getProduct()}/${getVersion()}/${getFileName()}"
+        }
+        return new File(filePath.toString());
+    }
+
+    URL getRemoteUrl() {
+        String remoteUrlString = DSLUtil.resolve(String.class, remoteUrl, this)
+        if(remoteUrlString==null) {
+            return null;
+        }
+        return new URL(remoteUrlString)
     }
 
     private String guessFileNameFromUrl(URL url) {

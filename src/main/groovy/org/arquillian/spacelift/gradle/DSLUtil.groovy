@@ -11,7 +11,9 @@ class DSLUtil {
         windows: { return SystemUtils.IS_OS_WINDOWS },
         mac    : { return SystemUtils.IS_OS_MAC_OSX },
         linux  : { return SystemUtils.IS_OS_LINUX },
-        solaris: { return SystemUtils.IS_OS_SOLARIS || SystemUtils.IS_OS_SUN_OS },
+        solaris: {
+            return SystemUtils.IS_OS_SOLARIS || SystemUtils.IS_OS_SUN_OS
+        },
     ]
 
     static List<Field> availableContainerFields(Object object) {
@@ -56,7 +58,7 @@ class DSLUtil {
         undefinedClosurePropertyMethods(object).each { Field field ->
             object.metaClass."${field.name}" = { Object... lazyClosure ->
                 //println "Calling ${field.name}(Object...) at ${delegate.class.simpleName} ${delegate.name}"
-                delegate.@"${field.name}" = lazyValue(lazyClosure).dehydrate()
+                delegate.@"${field.name}" = deferredValue(lazyClosure).dehydrate()
                 return delegate
             }
         }
@@ -64,16 +66,15 @@ class DSLUtil {
 
     static void generateContainerMethods(Object object) {
         undefinedContainerMethods(object).each { Field field ->
-            println "Generating ${field.name}(Closure) at ${delegate.class.simpleName} ${delegate.name}"
             object.metaClass."${field.name}" = { Closure configureClosure ->
-                println "Calling ${field.name}(Closure) at ${delegate.class.simpleName} ${delegate.name}"
+                //println "Calling ${field.name}(Closure) at ${delegate.class.simpleName} ${delegate.name}"
                 delegate.@"${field.name}".configure(configureClosure)
                 return delegate
             }
         }
     }
 
-    static Closure lazyValue(Object... args) throws IllegalArgumentException {
+    static Closure deferredValue(Object... args) throws IllegalArgumentException {
 
         // if nothing is defined, return empty closure, e.g. closure that returns null
         if(args==null || args.length==0) {
@@ -101,7 +102,7 @@ class DSLUtil {
                 Closure platformValue = null
                 osMapping.each { platform, condition ->
                     if (condition.call()) {
-                        platformValue = lazyValue(arg[platform])
+                        platformValue = deferredValue(arg[platform])
                         return
                     }
                 }
@@ -124,12 +125,68 @@ class DSLUtil {
             }
             // if there are behavior arguments, for real value we should slice the array
             if(!getBehaviors(args).isEmpty()) {
-                return lazyValue(Arrays.asList(args).tail().toArray())
+                return deferredValue(Arrays.asList(args).tail().toArray())
             }
         }
 
         // we do not support passing different values in DSL, make sure that we won't return null by incomplete branching
         throw new IllegalArgumentException("Unsupported parameters passed to method (" + args.collect { it.class?.simpleName}.join(', ') +")")
+    }
+
+    static Object resolve(Closure closure, Object ownerAndThis) {
+        return resolve(closure, ownerAndThis, ownerAndThis)
+    }
+
+    static Object resolve(Closure closure, Object owner, Object thisObject) {
+        return resolve(Object.class, closure, owner, thisObject)
+    }
+
+    static <T> T resolve(Class<T> returnType, Closure closure, Object ownerAndThis) {
+        return resolve(returnType, closure, ownerAndThis, ownerAndThis)
+    }
+
+    static <T> T resolve(Class<T> returnType, Closure closure, Object owner, Object thisObject) {
+        return resolve(returnType, closure, new GradleSpaceliftDelegate(), owner, thisObject)
+    }
+
+    static <T> T resolve(Class<T> returnType, Closure closure, Object delegate, Object owner, Object thisObject) {
+        return resolve(returnType, closure, delegate, owner, thisObject, null)
+    }
+
+    static <T> T resolve(Class<T> returnType, Closure closure, Object delegate, Object owner, Object thisObject, Object arguments) {
+
+        Object retVal = null;
+        if(closure.maximumNumberOfParameters==0) {
+            retVal = closure.rehydrate(delegate, owner, thisObject).call()
+        }
+        else {
+            retVal = closure.rehydrate(delegate, owner, thisObject).call(arguments)
+        }
+
+        //println "retval was ${retVal} ${retVal?.class?.simpleName} in ${owner.class?.simpleName} ${owner.name}"
+
+        if(retVal!=null && returnType.isAssignableFrom(retVal.class)) {
+            return (T) retVal
+        }
+        // make it a collection if asked for
+        else if(List.class.isAssignableFrom(returnType)) {
+            if(retVal!=null) {
+                return Collections.singletonList(retVal)
+            }
+            return Collections.emptyList()
+        }
+        // cast to String if this is different implementation
+        else if(retVal!=null && retVal instanceof CharSequence && returnType == String.class) {
+            return (T) retVal.toString()
+        }
+        // if that was null and collection return was not expected
+        else if(retVal==null) {
+            return null
+        }
+
+        // FIXME, would it be possible to get closure name here?
+        throw new IllegalArgumentException("Unable to evaluate closure " +
+        "of ${owner.class}, expected return value of ${returnType?.simpleName} but was ${retVal.class.simpleName}")
     }
 
     static Map getBehaviors(Object...args) {

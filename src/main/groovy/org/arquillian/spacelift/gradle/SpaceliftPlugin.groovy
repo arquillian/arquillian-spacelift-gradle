@@ -180,7 +180,8 @@ class SpaceliftPlugin implements Plugin<Project> {
 
                 project.selectedInstallations.each { Installation installation ->
                     if(installation.isInstalled()) {
-                        logger.lifecycle(":install:${installation.name} was already installed, skipping")
+                        logger.lifecycle(":install:${installation.name} was already installed, registering tools")
+                        installation.registerTools(GradleSpacelift.toolRegistry())
                     }
                     else {
                         logger.lifecycle(":install:${installation.name} will be installed")

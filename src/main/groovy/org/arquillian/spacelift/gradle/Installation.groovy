@@ -1,6 +1,7 @@
 package org.arquillian.spacelift.gradle
 
 import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.tool.ToolRegistry;
 import org.arquillian.spacelift.tool.basic.DownloadTool
 import org.arquillian.spacelift.tool.basic.UntarTool
 import org.arquillian.spacelift.tool.basic.UnzipTool
@@ -42,4 +43,12 @@ interface Installation extends ContainerizableObject<Installation> {
      * @param logger
      */
     void install(Logger logger)
+
+    /**
+     * Registers provided tools into registry
+     * @param registry
+     */
+    void registerTools(ToolRegistry registry)
+
+    // FIXME installation should also have uninstall(logger) or something like that
 }

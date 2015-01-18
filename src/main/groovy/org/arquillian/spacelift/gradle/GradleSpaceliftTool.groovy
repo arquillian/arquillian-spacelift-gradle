@@ -28,7 +28,7 @@ class GradleSpaceliftTool extends BaseContainerizableObject<GradleSpaceliftTool>
      * @param other Tool to be cloned
      */
     GradleSpaceliftTool(String name, GradleSpaceliftTool other) {
-        supert(name, other)
+        super(name, other)
         // use direct access to skip call of getter
         this.command = other.@command.clone()
     }
@@ -83,7 +83,7 @@ class GradleSpaceliftTool extends BaseContainerizableObject<GradleSpaceliftTool>
     }
 
     def getCommand() {
-        def commandTool = command.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        def commandTool = DSLUtil.resolve(command, this)
         if(commandTool==null) {
             return Tasks.prepare(CommandTool)
         }

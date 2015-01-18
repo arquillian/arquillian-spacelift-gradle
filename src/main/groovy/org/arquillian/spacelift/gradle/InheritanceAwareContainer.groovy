@@ -57,7 +57,7 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
      */
     def methodMissing(String name, args) {
         Map behavior = DSLUtil.getBehaviors(args)
-        Closure configureClosure = DSLUtil.lazyValue(args).dehydrate()
+        Closure configureClosure = DSLUtil.deferredValue(args).dehydrate()
         create(name, behavior, configureClosure)
     }
 
@@ -95,7 +95,7 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
 
     @Override
     public TYPE configure(Closure configuration) {
-        Closure config = DSLUtil.lazyValue(configuration).dehydrate()
+        Closure config = DSLUtil.deferredValue(configuration).dehydrate()
         config.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
     }
 

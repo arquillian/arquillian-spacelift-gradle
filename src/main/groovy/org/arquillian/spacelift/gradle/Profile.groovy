@@ -7,13 +7,13 @@ import org.gradle.api.Project
 class Profile extends BaseContainerizableObject<Profile> implements ContainerizableObject<Profile> {
 
     // list of enabled installations
-    Closure enabledInstallations = { []}
+    Closure enabledInstallations = { [] }
 
     // list of tests to execute
-    Closure tests = { []}
+    Closure tests = { [] }
 
     // list of tests to exclude
-    Closure excludedTests = { []}
+    Closure excludedTests = { [] }
 
     Profile(String profileName, Project project) {
         super(profileName, project)
@@ -37,19 +37,16 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
         return new Profile(name, this)
     }
 
-    def getEnabledInstallations() {
-        def enabledInstallationsList = enabledInstallations.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        return asFlatList(enabledInstallationsList)
+    List<String> getEnabledInstallations() {
+        return DSLUtil.resolve(List.class, enabledInstallations, this)
     }
 
-    def getTests() {
-        def enabledTestList = tests.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        return asFlatList(enabledTestList)
+    List<String> getTests() {
+        return DSLUtil.resolve(List.class, tests, this)
     }
 
-    def getExcludedTests() {
-        def excludedTestList = excludedTests.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
-        return asFlatList(excludedTestList)
+    List<String> getExcludedTests() {
+        return DSLUtil.resolve(List.class, excludedTests, this)
     }
 
     /**
@@ -59,17 +56,6 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
      */
     def propertyMissing(String name) {
         return name
-    }
-
-
-    static asFlatList(charSequenceOrCollection) {
-        if(charSequenceOrCollection == null) {
-            return []
-        } else if(charSequenceOrCollection instanceof CharSequence) {
-            return [charSequenceOrCollection]
-        } else {
-            return charSequenceOrCollection.flatten()
-        }
     }
 
     @Override

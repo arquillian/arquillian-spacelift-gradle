@@ -21,21 +21,21 @@ class AndroidSdkUpdater extends Task<Object, Void>{
     // Backed by JIRA: https://issues.jboss.org/browse/MP-209
     //
     private String buildToolsVersion = "21.1.1"
-    
-    public AndroidSdkUpdater target(String target) {
+
+    AndroidSdkUpdater target(String target) {
         if (target && !target.isEmpty()) {
             this.target = target
         }
         this
     }
 
-    public AndroidSdkUpdater buildTools(String buildToolsVersion) {
+    AndroidSdkUpdater buildTools(String buildToolsVersion) {
         if (buildToolsVersion && !buildToolsVersion.isEmpty()) {
             this.buildToolsVersion = buildToolsVersion
         }
         this
     }
-    
+
     @Override
     protected Void process(Object ignored) throws Exception {
 
@@ -98,7 +98,7 @@ class AndroidSdkUpdater extends Task<Object, Void>{
         log.info("Android SDK was updated.")
     }
 
-    Integer androidVersionInteger(androidTarget) {
+    private Integer androidVersionInteger(androidTarget) {
 
         if(androidTarget.isInteger()) {
             return androidTarget.toInteger()

@@ -48,44 +48,44 @@ class DefaultTest extends BaseContainerizableObject<DefaultTest> implements Test
 
         // before suite
         logger.info(":test:${name} before suite execution")
-        beforeSuite.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        DSLUtil.resolve(beforeSuite, this)
 
         // in case anything in this try block fails, we will still run the `after suite` in the finally block
         try {
             // iterate through beforeTest, execute and afterTest based on data provider
-            dataProvider.rehydrate(new GradleSpaceliftDelegate(), this, this).call().each { data ->
+            DSLUtil.resolve(List.class, dataProvider, this).each { data ->
 
                 if (data == null) {
                     logger.info(":test:${name} before test execution")
-                    beforeTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+                    DSLUtil.resolve(beforeTest, this)
                 } else {
                     logger.info(":test:${name} before test execution (${data})")
-                    beforeTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call(data)
+                    DSLUtil.resolve(Object.class, beforeTest, new GradleSpaceliftDelegate(), this, this, data)
                 }
 
                 // in case anything in this try block fails, we will still run the `after test` in the finally block
                 try {
                     if (data == null) {
                         logger.lifecycle(":test:${name}")
-                        execute.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+                        DSLUtil.resolve(execute, this)
                     } else {
                         logger.lifecycle(":test:${name} (${data})")
-                        execute.rehydrate(new GradleSpaceliftDelegate(), this, this).call(data)
+                        DSLUtil.resolve(Object.class, execute, new GradleSpaceliftDelegate(), this, this, data)
                     }
                 } finally {
                     if (data == null) {
                         logger.info(":test:${name} after test execution")
-                        afterTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+                        DSLUtil.resolve(afterTest, this)
                     } else {
                         logger.info(":test:${name} after test execution (${data})")
-                        afterTest.rehydrate(new GradleSpaceliftDelegate(), this, this).call(data)
+                        DSLUtil.resolve(Object.class, afterTest, new GradleSpaceliftDelegate(), this, this, data)
                     }
                 }
             }
         } finally {
             // after suite
             logger.info(":test:${name} after suite execution")
-            afterSuite.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+            DSLUtil.resolve(afterSuite, this)
         }
     }
 }

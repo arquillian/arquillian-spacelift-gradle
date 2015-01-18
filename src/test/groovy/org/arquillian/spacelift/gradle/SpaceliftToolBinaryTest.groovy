@@ -13,6 +13,8 @@ import org.arquillian.spacelift.process.impl.CommandTool
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
 
+
+// NOTE some of these tests might not work in IDE
 class SpaceliftToolBinaryTest {
 
     @Test

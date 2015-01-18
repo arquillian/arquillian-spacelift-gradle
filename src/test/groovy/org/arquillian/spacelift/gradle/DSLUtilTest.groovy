@@ -112,7 +112,7 @@ class DSLUtilTest {
 
     def methodMissing(String name, args) {
         //System.err.println("Called ${name}(" + args.collect { it.class?.simpleName}.join(', ') +")")
-        return DSLUtil.lazyValue(args)
+        return DSLUtil.deferredValue(args)
     }
 
     def propertyMissing(String name) {

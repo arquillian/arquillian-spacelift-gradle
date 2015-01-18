@@ -32,7 +32,7 @@ class ClosureEvaluationTest {
                             assertThat project, is(notNullValue())
                             assertThat project.spacelift, is(notNullValue())
                             assertThat project.spacelift.installationsDir, is(notNullValue())
-                            assertThat "${fsPath}".toString(), containsString("${project.spacelift.installationsDir}/test/1/index.html")
+                            assertThat fsPath, is(new File(project.spacelift.installationsDir, "test/1/index.html"))
                             assertThat tool('java'), is(notNullValue())
                             assertThat tool(AndroidSdkUpdater), is(notNullValue())
                         }

@@ -85,4 +85,5 @@ class DSLClosureCallTest {
             installation.install(project.logger)
         }
     }
+
 }

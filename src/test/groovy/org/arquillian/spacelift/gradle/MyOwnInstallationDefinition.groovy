@@ -1,6 +1,7 @@
 package org.arquillian.spacelift.gradle
 
 import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.tool.ToolRegistry;
 import org.arquillian.spacelift.tool.basic.DownloadTool
 import org.gradle.api.Project
 import org.slf4j.Logger
@@ -38,6 +39,11 @@ class MyOwnInstallationDefinition extends BaseContainerizableObject<MyOwnInstall
     @Override
     public boolean isInstalled() {
         return false;
+    }
+
+    @Override
+    public void registerTools(ToolRegistry registry) {
+        // do nothing
     }
 
     @Override
