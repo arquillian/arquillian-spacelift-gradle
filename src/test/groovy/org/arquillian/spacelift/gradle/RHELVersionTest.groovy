@@ -11,9 +11,6 @@ class RHELVersionTest {
 
     @Test
     public void testRHELVersion() {
-		
-		Tasks.setDefaultExecutionServiceFactory(new DefaultExecutionServiceFactory())		
-
         def rhelVersionFile = new File("/etc/redhat-release")
 
         def version = Tasks.prepare(RHELVersion).execute().await()

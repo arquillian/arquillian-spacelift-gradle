@@ -4,17 +4,19 @@ import java.util.Properties
 
 class DBAllocation {
 
-    private def Properties properties
+    private Properties properties
 
     DBAllocation(Properties properties) {
         this.properties = properties
     }
 
-    def String getProperty(String property) {
-        this.properties.getProperty(property)
+    // FIXME this overrides Groovy method, it should rather have better name
+    @Override
+    String getProperty(String property) {
+        return properties.getProperty(property)
     }
 
-    def Properties getProperties() {
-        properties
+    Properties getProperties() {
+        return properties
     }
 }

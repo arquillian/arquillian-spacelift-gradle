@@ -27,7 +27,6 @@ class GradleSpacelift {
     }
 
     public static void currentProject(Project project) {
-        Tasks.setDefaultExecutionServiceFactory(new DefaultExecutionServiceFactory())
         ProjectHolder.project = project;
         ProjectHolder.tools = new ToolRegistryImpl()
         GradleSpaceliftDelegate.init()

@@ -53,7 +53,7 @@ class UpdateDatasourceScript {
         linesToFile(targetScript)
     }
 
-    private def String replaceLine(String line, DBAllocation allocation) {
+    private String replaceLine(String line, DBAllocation allocation) {
 
         def properties = allocation.getProperties()
 
@@ -66,10 +66,10 @@ class UpdateDatasourceScript {
             }
         }
 
-        line
+        return line
     }
 
-    private def File linesToFile(lines) {
+    private File linesToFile(lines) {
         File file = File.createTempFile(dbAllocation.getProperty("uuid") +"-" + dbAllocation.getProperty("db.primary_label")    , ".cli.tmp")
 
         def lineSeparator = System.getProperty("line.separator")
@@ -78,6 +78,6 @@ class UpdateDatasourceScript {
             file.append(line + lineSeparator)
         }
 
-        file
+        return file
     }
 }

@@ -12,7 +12,6 @@ class ArquillianXmlUpdaterTest {
 
     @BeforeClass
     public static void initializeSpacelift() {
-        Tasks.setDefaultExecutionServiceFactory(new DefaultExecutionServiceFactory())
         Project project = ProjectBuilder.builder().build()
         project.apply plugin: 'spacelift'
     }

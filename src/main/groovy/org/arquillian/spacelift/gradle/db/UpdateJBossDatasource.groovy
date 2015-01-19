@@ -1,49 +1,50 @@
 package org.arquillian.spacelift.gradle.db
 
-import org.jboss.aerogear.test.container.manager.ManagedContainerConfiguration
-import org.jboss.aerogear.test.container.spacelift.JBossStarter;
-import org.jboss.aerogear.test.container.spacelift.JBossStopper;
-import org.jboss.aerogear.test.container.spacelift.JBossCLI;
 import org.arquillian.spacelift.execution.Tasks
+import org.jboss.aerogear.test.container.manager.JBossManager
+import org.jboss.aerogear.test.container.manager.JBossManagerConfiguration
+import org.jboss.aerogear.test.container.spacelift.JBossCLI
+import org.jboss.aerogear.test.container.spacelift.JBossStarter
+import org.jboss.aerogear.test.container.spacelift.JBossStopper
 
 class UpdateJBossDatasource {
 
-    def jbossHome = System.getenv("JBOSS_HOME")
+    String jbossHome = System.getenv("JBOSS_HOME")
 
-    def script
+    String script
 
-    def shouldStartContainer = false
+    boolean shouldStartContainer = false
 
-    def withScript(String script) {
+    UpdateJBossDatasource withScript(String script) {
         this.script = script
         this
     }
 
-    def withScript(File script) {
+    UpdateJBossDatasource withScript(File script) {
         withScript(script.getCanonicalPath())
     }
 
-    def withJBossHome(File jbossHome) {
+    UpdateJBossDatasource withJBossHome(File jbossHome) {
         withJBossHome(jbossHome.getCanonicalPath())
     }
 
-    def withJBossHome(String jbossHome) {
+    UpdateJBossDatasource withJBossHome(String jbossHome) {
         this.jbossHome = jbossHome
         this
     }
 
-    def shouldStartContainer() {
+    UpdateJBossDatasource shouldStartContainer() {
         shouldStartContainer = true
         this
     }
 
-    def update() {
+    UpdateJBossDatasource update() {
 
-        def manager
+        JBossManager manager
 
         if (shouldStartContainer) {
             manager = Tasks.prepare(JBossStarter)
-                    .configuration(new ManagedContainerConfiguration().setJbossHome(jbossHome))
+                    .configuration(new JBossManagerConfiguration().setJBossHome(jbossHome))
                     .execute()
                     .await()
         }
@@ -58,6 +59,6 @@ class UpdateJBossDatasource {
             Tasks.chain(manager, JBossStopper).execute().await()
         }
 
-        this
+        return this
     }
 }

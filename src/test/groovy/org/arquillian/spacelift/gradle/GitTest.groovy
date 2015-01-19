@@ -21,11 +21,6 @@ class GitTest {
 
     private static final URI testRepository = new URI("ssh://git@github.com/smiklosovic/test.git")
 
-    @BeforeClass
-    static void setup() {
-        Tasks.setDefaultExecutionServiceFactory(new DefaultExecutionServiceFactory())
-    }
-
     @Test
     void initAndBranchGitTest() {
 

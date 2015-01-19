@@ -14,9 +14,6 @@ class SpaceliftPlugin implements Plugin<Project> {
     // this plugin prepares Arquillian Spacelift environment
     void apply(Project project) {
 
-        // initialize Spacelift task factory
-        Tasks.setDefaultExecutionServiceFactory(new DefaultExecutionServiceFactory())
-
         // set current project reference
         GradleSpacelift.currentProject(project)
 

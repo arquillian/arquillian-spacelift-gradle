@@ -13,7 +13,6 @@ class PomXmlUpdaterTest {
 
     @BeforeClass
     public static void initializeSpacelift() {
-        Tasks.setDefaultExecutionServiceFactory(new DefaultExecutionServiceFactory())
         Project project = ProjectBuilder.builder().build()
         project.apply plugin: 'spacelift'
 
@@ -44,7 +43,7 @@ class PomXmlUpdaterTest {
                 .dir(GradleSpacelift.currentProject().spacelift.workspace)
                 .execute().await()
     }
-    
+
     @Test
     void "modify pom.xml files dir specified by path"() {
         Tasks.chain(
