@@ -28,7 +28,7 @@ class DSLClosureCallTest {
         project.spacelift {
             tests {
                 firstTest {
-                    project.exception.expect(GroovyRuntimeException)
+                    project.exception.expect(MissingMethodException)
                     // here you can't define sharedAsFoo
                     sharedAsFoo {x, y -> println x, y}
                 }

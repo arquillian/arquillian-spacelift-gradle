@@ -77,6 +77,30 @@ class ClosureEvaluationTest {
     }
 
     @Test
+    void "ant closure in test"() {
+
+        def project = defineProject(
+                tests:{
+                    bar {
+                        execute {
+                            assertThat project, is(notNullValue())
+                            project.ant.mkdir(dir:"${project.spacelift.workspace}/ant-closure-test")
+                            project.ant.copy(todir:"${project.spacelift.workspace}/ant-closure-test", verbose:true) {
+                                fileset(file:"${System.getProperty('user.dir')}/build.gradle")
+                            }
+
+                            File copiedFile = new File(project.spacelift.workspace, "ant-closure-test/build.gradle")
+                            assertThat copiedFile.exists(), is(true)
+                        }
+                    }
+                })
+
+        project.spacelift.tests.each { test ->
+            test.executeTest(project.logger)
+        }
+    }
+
+    @Test
     void "closure extract mapper bindings"() {
 
         def project = defineProject(installations:{

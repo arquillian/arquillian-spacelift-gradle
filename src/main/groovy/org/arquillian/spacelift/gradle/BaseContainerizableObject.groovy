@@ -35,9 +35,15 @@ abstract class BaseContainerizableObject<TYPE extends BaseContainerizableObject<
      * @param args
      * @return
      */
+    // FIXME, same as propertyMissing, this is causing issues trying to resolve closures we do not control
+    /*
     def methodMissing(String name, args) {
+
+        println "In method: ${name} as ${this}"
+
         List<String> availableDSL = DSLUtil.availableClosurePropertyNames(this).collect { "${it}(Object...objects)"} + DSLUtil.availableContainerNames(this).collect { "${it}(Closure closure)"};
         throw new GroovyRuntimeException("${this.class} named ${this.name}, unable to call method ${name}(" +
         args.collect { it.class }.join(', ')+"), have you meant one of: ${availableDSL.join(', ')}?");
     }
+    */
 }
