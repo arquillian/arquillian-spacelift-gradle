@@ -67,7 +67,15 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
 
         // if from behavior is not specified, default to default type for container
         // @Deprecated inherits - inherits to be deprecated and replaced with from
-        Object from = behavior.get('from', behavior.get('inherits', defaultType))
+        // implementation note - not using map.get('key', defaultValue) as this adds
+        // to the map
+        Object from = behavior['from']
+        if(from==null) {
+            from = behavior['inherits']
+        }
+        if(from==null) {
+            from = defaultType
+        }
 
         // FIXME we need to unwrap reference, but it is not clear why this happens
         if(from instanceof List && from.size()==1) {
