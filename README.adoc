@@ -153,9 +153,9 @@ profiles::
 [source,groovy]
 ----
 profileName {
-    enabledInstallations installation1, installation2
-    tests test1, test3, test27
-    excludedTests test3
+    enabledInstallations 'installation1', 'installation2'
+    tests 'test1', 'test3', 'test27'
+    excludedTests 'test3'
 }
 ----
 +

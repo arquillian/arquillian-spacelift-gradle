@@ -78,9 +78,9 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
         }
 
         // FIXME we need to unwrap reference, but it is not clear why this happens
-        if(from instanceof List && from.size()==1) {
-            from = from[0]
-        }
+        //if(from instanceof List && from.size()==1) {
+        //    from = from[0]
+        //}
 
         if(from instanceof Class && type.isAssignableFrom(from)) {
             object = from.newInstance(name, project)

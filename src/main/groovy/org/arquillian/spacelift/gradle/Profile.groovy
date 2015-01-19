@@ -54,9 +54,10 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
      * @param name installation or test name
      * @return string value of the property
      */
-    def propertyMissing(String name) {
-        return name
-    }
+    // FIXME this is causing issues with DSL, likely it should rather be defined in Profiles container
+    //def propertyMissing(String name) {
+    //    return name
+    //}
 
     @Override
     public String toString() {
