@@ -50,7 +50,7 @@ class GitCommitTool extends Tool<File, File> {
         logger.info(command.toString())
 
         try {
-            Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            Tasks.prepare(CommandTool).workingDirectory(repositoryDir.getAbsolutePath()).command(command).execute().await()
         } catch (ExecutionException ex) {
             throw new ExecutionException(
                     ex, "Committing changes in repository '{0}' was not successful. Command '{1}'.",

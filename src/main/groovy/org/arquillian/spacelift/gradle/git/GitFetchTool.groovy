@@ -109,7 +109,7 @@ class GitFetchTool extends Tool<File, File> {
 
         try {
 
-            CommandTool fetch = Tasks.prepare(CommandTool).workingDir(repositoryDir.getAbsolutePath()).command(command)
+            CommandTool fetch = Tasks.prepare(CommandTool).workingDirectory(repositoryDir.getAbsolutePath()).command(command)
 
             if (gitSsh) {
                 fetch.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])

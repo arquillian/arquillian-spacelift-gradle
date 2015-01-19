@@ -121,7 +121,7 @@ class GitRemoveTool extends Tool<File, File> {
         logger.info(command.toString())
 
         try {
-            Tasks.prepare(CommandTool).workingDir(repositoryDir.getCanonicalPath()).command(command).execute().await()
+            Tasks.prepare(CommandTool).workingDirectory(repositoryDir.getCanonicalPath()).command(command).execute().await()
         } catch (ExecutionException ex) {
             throw new ExecutionException(ex, "Could not remove files with command {0}.", command.toString())
         }
