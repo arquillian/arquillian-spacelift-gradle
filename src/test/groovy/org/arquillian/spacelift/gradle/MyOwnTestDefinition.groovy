@@ -1,8 +1,12 @@
 package org.arquillian.spacelift.gradle
 
+import groovy.transform.CompileStatic
+
 import org.gradle.api.Project
 import org.slf4j.Logger
 
+
+@CompileStatic
 class MyOwnTestDefinition extends BaseContainerizableObject<MyOwnTestDefinition> implements Test {
 
     Closure myDSL = {}
@@ -13,7 +17,7 @@ class MyOwnTestDefinition extends BaseContainerizableObject<MyOwnTestDefinition>
 
     MyOwnTestDefinition(String name, MyOwnTestDefinition other) {
         super(name, other)
-        this.myDSL = other.@myDSL.clone()
+        this.myDSL = (Closure) other.@myDSL.clone()
     }
 
     @Override

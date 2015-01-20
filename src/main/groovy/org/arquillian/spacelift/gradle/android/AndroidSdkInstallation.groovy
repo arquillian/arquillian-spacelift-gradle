@@ -1,5 +1,7 @@
 package org.arquillian.spacelift.gradle.android
 
+import groovy.transform.CompileStatic
+
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.gradle.BaseContainerizableObject
 import org.arquillian.spacelift.gradle.DSLUtil
@@ -17,15 +19,22 @@ import org.arquillian.spacelift.tool.basic.UnzipTool
 import org.gradle.api.Project
 import org.slf4j.Logger
 
+@CompileStatic
 class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstallation> implements Installation {
 
-    Closure product = { "android" }
+    Closure product = {
+        "android"
+    }
 
-    Closure version = { "24.0.2" }
+    Closure version = {
+        "24.0.2"
+    }
 
     Closure androidTargets = {}
 
-    Closure updateSdk = { true }
+    Closure updateSdk = {
+        true
+    }
 
     Closure isInstalled = {
         return getHome().exists()
@@ -34,10 +43,18 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     Closure postActions = {}
 
     Map remoteUrl = [
-        linux: { "http://dl.google.com/android/android-sdk_r${version}-linux.tgz"},
-        windows: { "http://dl.google.com/android/android-sdk_r${version}-windows.zip"},
-        mac: { "http://dl.google.com/android/android-sdk_r${version}-macosx.zip"},
-        solaris: {"http://dl.google.com/android/android-sdk_r${version}-linux.tgz" }
+        linux: {
+            "http://dl.google.com/android/android-sdk_r${version}-linux.tgz"
+        },
+        windows: {
+            "http://dl.google.com/android/android-sdk_r${version}-windows.zip"
+        },
+        mac: {
+            "http://dl.google.com/android/android-sdk_r${version}-macosx.zip"
+        },
+        solaris: {
+            "http://dl.google.com/android/android-sdk_r${version}-linux.tgz"
+        }
     ]
 
     Map home = [
@@ -48,10 +65,18 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     ]
 
     Map fileName = [
-        linux: {"android-sdk_r${version}-linux.tgz"},
-        windows: {"android-sdk_r${version}-windows.zip"},
-        mac: {"android-sdk_r${version}-macosx.zip"},
-        solaris: {"android-sdk_r${version}-linux.tgz"}
+        linux: {
+            "android-sdk_r${version}-linux.tgz"
+        },
+        windows: {
+            "android-sdk_r${version}-windows.zip"
+        },
+        mac: {
+            "android-sdk_r${version}-macosx.zip"
+        },
+        solaris: {
+            "android-sdk_r${version}-linux.tgz"
+        }
     ]
 
     // tools provided by this installation
@@ -65,12 +90,12 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     AndroidSdkInstallation(String name, AndroidSdkInstallation other) {
         super(name, other)
 
-        this.version = other.@version.clone()
-        this.product = other.@product.clone()
-        this.androidTargets = other.@androidTargets.clone()
-        this.isInstalled = other.@isInstalled.clone()
-        this.postActions = other.@postActions.clone()
-        this.tools = other.@tools.clone()
+        this.version = (Closure) other.@version.clone()
+        this.product = (Closure) other.@product.clone()
+        this.androidTargets = (Closure) other.@androidTargets.clone()
+        this.isInstalled = (Closure)other.@isInstalled.clone()
+        this.postActions = (Closure) other.@postActions.clone()
+        this.tools = (InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory>) other.@tools.clone()
     }
 
     @Override
@@ -106,7 +131,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     @Override
     public void registerTools(ToolRegistry registry) {
         registry.register(AndroidTool)
-        tools.each { GradleSpaceliftTaskFactory factory ->
+        ((Iterable<GradleSpaceliftTaskFactory>) tools).each { GradleSpaceliftTaskFactory factory ->
             factory.register(registry)
         }
     }
@@ -114,7 +139,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     @Override
     public File getHome() {
         String homeDir = DSLUtil.resolve(String.class, DSLUtil.deferredValue(home), this)
-        return new File(project.spacelift.workspace, homeDir)
+        return new File((File)project['spacelift']['workspace'], homeDir)
     }
 
     @Override
@@ -144,19 +169,19 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         // based on installation type, we might want to unzip/untar/something else
         switch(getFileName()) {
             case ~/.*zip/:
-                Tasks.chain(getFsPath(),UnzipTool).toDir(project.spacelift.workspace).execute().await()
-                break
+            Tasks.chain(getFsPath(),UnzipTool).toDir((File)project['spacelift']['workspace']).execute().await()
+            break
             case ~/.*tgz/:
             case ~/.*tar\.gz/:
-                Tasks.chain(getFsPath(),UntarTool).toDir(project.spacelift.workspace).execute().await()
-                break
+            Tasks.chain(getFsPath(),UntarTool).toDir((File)project['spacelift']['workspace']).execute().await()
+            break
             default:
-                logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
+            logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
         }
 
 
         // we need to fix executable flags as Java Unzip does not preserve them
-        project.ant.chmod(dir: "${getHome()}/tools", perm:"a+x", includes:"*", excludes:"*.txt")
+        project.getAnt().invokeMethod("chmod", [dir: "${getHome()}/tools", perm:"a+x", includes:"*", excludes:"*.txt"])
 
         // register tools from installation
         registerTools(GradleSpacelift.toolRegistry())
@@ -199,7 +224,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     public List<AndroidTarget> getAndroidTargets() {
         List<Object> targets = DSLUtil.resolve(List.class, androidTargets, this)
 
-        return targets.collect { new AndroidTarget(it) }
+        return targets.collect { Object it -> new AndroidTarget(it) }
     }
 
     public Boolean getUpdateSdk() {
@@ -207,7 +232,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     }
 
     private File getFsPath() {
-        return new File(project.spacelift.installationsDir, "${getProduct()}/${getVersion()}/${getFileName()}")
+        return new File((File) project['spacelift']['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
     static class AndroidTool extends CommandTool {
@@ -221,8 +246,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                     "/C",
                     "${home}/tools/android.bat"
                 ]},
-            solaris: {[
-                    "${home}/tools/android" ]}
+            solaris: {[ "${home}/tools/android"
+                ]}
         ]
 
         // FIXME this is something what should be provided by spacelift
@@ -238,7 +263,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
             // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
             // This will be most likely fixed in both depends/provides and task factories
-            this.sdk = GradleSpacelift.currentProject().spacelift.installations.find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.class)}
+            this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
+            .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
             List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpacelift.ECHO_OUTPUT
@@ -255,17 +281,18 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         final String name
         final String abi
 
-        AndroidTarget(String name) {
-            this.name = name
-            this.abi = null
-        }
-
-        AndroidTarget(Map map) {
-            if(!map.containsKey("name")) {
-                throw new IllegalArgumentException("Android target definition must contain name")
+        AndroidTarget(Object object) {
+            if(object instanceof Map) {
+                Map map = (Map) object
+                if(!map.containsKey("name")) {
+                    throw new IllegalArgumentException("Android target definition must contain name")
+                }
+                this.name = map.name
+                this.abi = map.abi
             }
-            this.name = map.name
-            this.abi = map.abi
+            else {
+                this.name = object.toString()
+            }
         }
 
         @Override

@@ -1,11 +1,13 @@
 package org.arquillian.spacelift.gradle
 
 import groovy.lang.Closure;
+import groovy.transform.CompileStatic;
 
 import java.lang.reflect.Field
 
 import org.gradle.api.Project
 
+@CompileStatic
 abstract class BaseContainerizableObject<TYPE extends BaseContainerizableObject<TYPE>> implements ContainerizableObject<TYPE> {
 
     final String name

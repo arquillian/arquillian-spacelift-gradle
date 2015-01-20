@@ -1,10 +1,11 @@
 package org.arquillian.spacelift.gradle
 
-import groovy.lang.Closure;
+import groovy.transform.CompileStatic
 
-import org.gradle.api.Project;
-import org.slf4j.Logger;
+import org.gradle.api.Project
+import org.slf4j.Logger
 
+@CompileStatic
 class DefaultTest extends BaseContainerizableObject<DefaultTest> implements Test {
 
     Closure execute = {}
@@ -27,15 +28,15 @@ class DefaultTest extends BaseContainerizableObject<DefaultTest> implements Test
      * Cloning constructor. Preserves lazy nature of closures to be evaluated later on.
      * @param other Test to be cloned
      */
-    DefaultTest(String testName, Test other) {
+    DefaultTest(String testName, DefaultTest other) {
         super(testName, other)
         // use direct access to skip call of getter
-        this.execute = other.@execute.clone()
-        this.dataProvider = other.@dataProvider.clone()
-        this.beforeSuite = other.@beforeSuite.clone()
-        this.beforeTest = other.@beforeTest.clone()
-        this.afterSuite = other.@afterSuite.clone()
-        this.afterTest = other.@afterTest.clone()
+        this.execute = (Closure) other.@execute.clone()
+        this.dataProvider = (Closure) other.@dataProvider.clone()
+        this.beforeSuite = (Closure) other.@beforeSuite.clone()
+        this.beforeTest = (Closure) other.@beforeTest.clone()
+        this.afterSuite = (Closure) other.@afterSuite.clone()
+        this.afterTest = (Closure) other.@afterTest.clone()
     }
 
     @Override
@@ -66,10 +67,10 @@ class DefaultTest extends BaseContainerizableObject<DefaultTest> implements Test
                 // in case anything in this try block fails, we will still run the `after test` in the finally block
                 try {
                     if (data == null) {
-                        logger.lifecycle(":test:${name}")
+                        logger.invokeMethod("lifecycle", ":test:${name}")
                         DSLUtil.resolve(execute, this)
                     } else {
-                        logger.lifecycle(":test:${name} (${data})")
+                        logger.invokeMethod("lifecycle", ":test:${name} (${data})")
                         DSLUtil.resolve(Object.class, execute, new GradleSpaceliftDelegate(), this, this, data)
                     }
                 } finally {

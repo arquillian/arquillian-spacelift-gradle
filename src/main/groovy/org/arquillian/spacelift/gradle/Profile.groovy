@@ -1,19 +1,22 @@
 package org.arquillian.spacelift.gradle
 
+import groovy.transform.CompileStatic
+
 import org.gradle.api.Project
 
 // this class represents a profile enumerating installations to be installed
 
+@CompileStatic
 class Profile extends BaseContainerizableObject<Profile> implements ContainerizableObject<Profile> {
 
     // list of enabled installations
-    Closure enabledInstallations = { [] }
+    Closure enabledInstallations = { []}
 
     // list of tests to execute
-    Closure tests = { [] }
+    Closure tests = { []}
 
     // list of tests to exclude
-    Closure excludedTests = { [] }
+    Closure excludedTests = { []}
 
     Profile(String profileName, Project project) {
         super(profileName, project)
@@ -27,9 +30,9 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
         super(profileName, other)
 
         // use direct access to skip call of getter
-        this.enabledInstallations = other.@enabledInstallations.clone()
-        this.tests = other.@tests.clone()
-        this.excludedTests = other.@excludedTests.clone()
+        this.enabledInstallations = (Closure) other.@enabledInstallations.clone()
+        this.tests = (Closure) other.@tests.clone()
+        this.excludedTests = (Closure) other.@excludedTests.clone()
     }
 
     @Override

@@ -1,11 +1,15 @@
 package org.arquillian.spacelift.gradle
 
+import groovy.transform.CompileStatic
+
 import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.tool.ToolRegistry;
+import org.arquillian.spacelift.tool.ToolRegistry
 import org.arquillian.spacelift.tool.basic.DownloadTool
 import org.gradle.api.Project
 import org.slf4j.Logger
 
+
+@CompileStatic
 class MyOwnInstallationDefinition extends BaseContainerizableObject<MyOwnInstallationDefinition> implements Installation {
 
     MyOwnInstallationDefinition(String name, Project project) {
@@ -33,7 +37,7 @@ class MyOwnInstallationDefinition extends BaseContainerizableObject<MyOwnInstall
 
     @Override
     public File getHome() {
-        project.spacelift.workspace
+        return (File) project['spacelift']['workspace']
     }
 
     @Override

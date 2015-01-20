@@ -1,13 +1,16 @@
 package org.arquillian.spacelift.gradle
 
+import groovy.transform.CompileStatic
+
 import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.tool.ToolRegistry;
+import org.arquillian.spacelift.tool.ToolRegistry
 import org.arquillian.spacelift.tool.basic.DownloadTool
 import org.arquillian.spacelift.tool.basic.UntarTool
 import org.arquillian.spacelift.tool.basic.UnzipTool
 import org.gradle.api.Project
 import org.slf4j.Logger
 
+@CompileStatic
 class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation> implements Installation {
 
     // version of the product installation belongs to
@@ -61,18 +64,18 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     DefaultInstallation(String installationName, DefaultInstallation other) {
         super(installationName, other)
         // use direct access to skip call of getter
-        this.version = other.@version.clone()
-        this.product = other.@product.clone()
-        this.fsPath = other.@fsPath.clone()
-        this.remoteUrl = other.@remoteUrl.clone()
-        this.fileName = other.@fileName.clone()
-        this.home = other.@home.clone()
-        this.isInstalled = other.@isInstalled.clone()
-        this.autoExtract = other.@autoExtract.clone()
-        this.extractMapper = other.@extractMapper.clone()
-        this.preconditions = other.@preconditions.clone()
-        this.postActions = other.@postActions.clone()
-        this.tools = other.@tools.clone()
+        this.version = (Closure) other.@version.clone()
+        this.product = (Closure) other.@product.clone()
+        this.fsPath = (Closure) other.@fsPath.clone()
+        this.remoteUrl = (Closure) other.@remoteUrl.clone()
+        this.fileName = (Closure) other.@fileName.clone()
+        this.home = (Closure) other.@home.clone()
+        this.isInstalled = (Closure) other.@isInstalled.clone()
+        this.autoExtract = (Closure) other.@autoExtract.clone()
+        this.extractMapper = (Closure) other.@extractMapper.clone()
+        this.preconditions = (Closure) other.@preconditions.clone()
+        this.postActions = (Closure) other.@postActions.clone()
+        this.tools =  (InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory>) other.@tools.clone()
     }
 
     @Override
@@ -89,11 +92,11 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
                 homeDir = guessDirNameFromUrl(url)
             }
             else {
-                return project.spacelift.workspace
+                return (File) project['spacelift']['workspace'] //project.spacelift.workspace
             }
         }
 
-        new File(project.spacelift.workspace, homeDir)
+        new File((File) project['spacelift']['workspace'], homeDir)
     }
 
     @Override
@@ -124,7 +127,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     @Override
     public void registerTools(ToolRegistry registry) {
         // register installed tools
-        tools.each { factory ->
+        ((Iterable<GradleSpaceliftTaskFactory>)tools).each { GradleSpaceliftTaskFactory factory ->
             factory.register(registry)
         }
     }
@@ -157,7 +160,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         if(getAutoExtract() && getFileName() != "") {
             if(getHome().exists()) {
                 logger.info(":install:${name} Deleting previous installation at ${getHome()}")
-                project.ant.delete(dir: getHome())
+                project.getAnt().invokeMethod("delete", [dir: getHome()])
             }
 
             def remap = extractMapper.rehydrate(new GradleSpaceliftDelegate(), this, this)
@@ -167,19 +170,19 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
             // based on installation type, we might want to unzip/untar/something else
             switch(getFileName()) {
                 case ~/.*jar/:
-                    project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(new File(project.spacelift.workspace, getFileName())), remap)
+                    ((UnzipTool)project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(new File((File) project['spacelift']['workspace'], getFileName())), remap))
                     .execute().await()
                     break
                 case ~/.*zip/:
-                    project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(project.spacelift.workspace), remap).execute().await()
+                    ((UnzipTool)project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
                     break
                 case ~/.*tgz/:
                 case ~/.*tar\.gz/:
-                    project.configure(Tasks.chain(getFsPath(),UntarTool).toDir(project.spacelift.workspace), remap).execute().await()
+                    ((UntarTool)project.configure(Tasks.chain(getFsPath(),UntarTool).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
                     break
                 case ~/.*tbz/:
                 case ~/.*tar\.bz2/:
-                    project.configure(Tasks.chain(getFsPath(),UntarTool).bzip2(true).toDir(project.spacelift.workspace), remap).execute().await()
+                    ((UntarTool)project.configure(Tasks.chain(getFsPath(),UntarTool).bzip2(true).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
                     break
                 default:
                     logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
@@ -188,13 +191,13 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         else {
             if(new File(getHome(), getFileName()).exists()) {
                 logger.info(":install:${name} Deleting previous installation at ${new File(getHome(), getFileName())}")
-                project.ant.delete(file: new File(getHome(), getFileName()))
+                project.getAnt().invokeMethod("delete", [file: new File(getHome(), getFileName())])
 
                 logger.info(":install:${name} Reusing existing installation ${new File(getHome(), getFileName())}")
             }
             else {
-                logger.info(":install:${name} Copying installation to ${project.spacelift.workspace}")
-                project.ant.copy(file: getFsPath(), tofile: new File(getHome(), getFileName()))
+                logger.info(":install:${name} Copying installation to ${(File) project['spacelift']['workspace']}")
+                project.getAnt().invokeMethod("copy", [file: getFsPath(), tofile: new File(getHome(), getFileName())])
             }
         }
 
@@ -225,7 +228,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     File getFsPath() {
         String filePath = DSLUtil.resolve(String.class, fsPath, this)
         if(filePath==null) {
-            filePath = "${project.spacelift.installationsDir}/${getProduct()}/${getVersion()}/${getFileName()}"
+            filePath = "${(File) project['spacelift']['installationsDir']}/${getProduct()}/${getVersion()}/${getFileName()}"
         }
         return new File(filePath.toString());
     }
