@@ -29,11 +29,10 @@ class SpaceliftToolBinaryTest {
         project.spacelift {
             tools {
                 ant {
-                    command {
-                        Tasks.prepare(CommandTool)
-                                .command(new CommandBuilder("ant"))
-                                .addEnvironment("ANT_HOME", System.getenv("ANT_HOME"))
+                    environment {
+                        [ANT_HOME: System.getenv("ANT_HOME")]
                     }
+                    command {"ant"}
                 }
             }
             profiles {
@@ -60,8 +59,8 @@ class SpaceliftToolBinaryTest {
 
         project.spacelift {
             tools {
-                ant { command { Tasks.prepare(CommandTool).command(new CommandBuilder("ant")) }}
-                mvn { command { Tasks.prepare(CommandTool).command(new CommandBuilder("mvn")) }}
+                ant { command { new CommandBuilder("ant") }}
+                mvn { command { new CommandBuilder("mvn") }}
             }
             profiles {
             }
@@ -76,14 +75,14 @@ class SpaceliftToolBinaryTest {
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        GradleSpacelift.tools("ant").parameters("-help").interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        GradleSpacelift.tools("ant").parameters("-help").execute().await()
 
         // find mvn tool
         def mvnTool = GradleSpacelift.tools("mvn")
         assertThat mvnTool, is(notNullValue())
 
         // call mvn help
-        GradleSpacelift.tools("mvn").parameters("-help").interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        GradleSpacelift.tools("mvn").parameters("-help").execute().await()
 
     }
 
@@ -108,7 +107,7 @@ class SpaceliftToolBinaryTest {
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        GradleSpacelift.tools("ant").parameters("-help").interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        GradleSpacelift.tools("ant").parameters("-help").execute().await()
     }
 
     @Test
@@ -136,7 +135,7 @@ class SpaceliftToolBinaryTest {
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        GradleSpacelift.tools("ant").parameters("-help").interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        GradleSpacelift.tools("ant").parameters("-help").execute().await()
     }
 
     @Test
@@ -151,9 +150,9 @@ class SpaceliftToolBinaryTest {
                     command {
                         def antHome = System.getenv("ANT_HOME")
                         if (antHome != null && !antHome.isEmpty()) {
-                            return Tasks.prepare(CommandTool).command(new CommandBuilder(antHome + "/bin/ant"))
+                            return new CommandBuilder(antHome + "/bin/ant")
                         } else {
-                            return Tasks.prepare(CommandTool).command(new CommandBuilder("ant"))
+                            return new CommandBuilder("ant")
                         }
                     }
                 }
@@ -171,7 +170,7 @@ class SpaceliftToolBinaryTest {
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        ProcessResult result = GradleSpacelift.tools("ant").parameters("-help").interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        ProcessResult result = GradleSpacelift.tools("ant").parameters("-help").execute().await()
         assertThat result.exitValue(), is(0)
     }
 
@@ -188,10 +187,10 @@ class SpaceliftToolBinaryTest {
                 android {
                     command ([
                         linux: {
-                            Tasks.prepare(CommandTool).command(new CommandBuilder(new File(project.androidHome, "tools/android.bat").getAbsolutePath()))
+                            new CommandBuilder(new File(project.androidHome, "tools/android.bat").getAbsolutePath())
                         },
                         windows: {
-                            Tasks.prepare(CommandTool).command(new CommandBuilder("cmd.exe", "/C", new File(project.androidHome, "tools/android.bat").getAbsolutePath()))
+                            new CommandBuilder("cmd.exe", "/C", new File(project.androidHome, "tools/android.bat").getAbsolutePath())
                         }
                     ])
                 }

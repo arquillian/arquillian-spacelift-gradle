@@ -43,14 +43,14 @@ class ClosureEvaluationTest {
                         command {
                             assertThat project, is(notNullValue())
                             assertThat project.spacelift, is(notNullValue())
-                            return tool(CommandTool).command(new CommandBuilder("java"))
+                            return new CommandBuilder("java")
                         }
                     }
                     java2 {
                         command {
                             assertThat project, is(notNullValue())
                             assertThat project.rootDir, is(notNullValue())
-                            return tool(CommandTool).command(new CommandBuilder("${project.rootDir}/java"))
+                            return new CommandBuilder("${project.rootDir}/java")
                         }
                     }
                 },

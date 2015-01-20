@@ -10,7 +10,7 @@ import org.arquillian.spacelift.tool.Tool
 import java.util.logging.Logger
 
 /**
- * Creates a branch and sets it as a tracking branch, by default to branch 'master'. When a branch to create 
+ * Creates a branch and sets it as a tracking branch, by default to branch 'master'. When a branch to create
  * is not set by method {@link #branch(String)}, processing of this tool does effectively nothing with repository.
  *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>

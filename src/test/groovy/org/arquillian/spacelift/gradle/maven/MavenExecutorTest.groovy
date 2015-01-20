@@ -27,7 +27,7 @@ class MavenExecutorTest {
         ProcessResult result = maven.env("HEY_SPACELIFT", "'This is plugin!'").goal("help:system").execute().await()
         assertThat result.output().find { line -> line.contains("HEY_SPACELIFT")}, is(notNullValue())
     }
-    
+
     @Test
     void "propagate env property by pair"() {
 
@@ -38,7 +38,7 @@ class MavenExecutorTest {
         ProcessResult result = maven.env([HEY_SPACELIFT: "'This is plugin!'"]).goal("help:system").execute().await()
         assertThat result.output().find { line -> line.contains("HEY_SPACELIFT")}, is(notNullValue())
     }
-    
+
     @Test
     void "propagete env property with GString value"() {
         Assume.assumeThat EnvironmentUtils.runsOnLinux(), is(true)
@@ -49,7 +49,7 @@ class MavenExecutorTest {
         ProcessResult result = maven.env([HEY_SPACELIFT: "${hello}"]).goal("help:system").execute().await()
         assertThat result.output().find { line -> line.contains("HEY_SPACELIFT")}, is(notNullValue())
     }
-    
+
     @Test
     void "propagete env property with GString key and value"() {
         Assume.assumeThat EnvironmentUtils.runsOnLinux(), is(true)
@@ -61,7 +61,7 @@ class MavenExecutorTest {
         ProcessResult result = maven.env(["${hellokey}": "${hello}"]).goal("help:system").execute().await()
         assertThat result.output().find { line -> line.contains("HEY_SPACELIFT")}, is(notNullValue())
     }
-    
+
 
     private MavenExecutor instantiateSimpleProjectWithMavenExecutor() {
         Project project = ProjectBuilder.builder().build()
@@ -71,9 +71,7 @@ class MavenExecutorTest {
         project.spacelift {
             tools {
                 mvn {
-                    command {
-                        Tasks.prepare(CommandTool).command(new CommandBuilder("mvn"))
-                    }
+                    command "mvn"
                 }
             }
         }
@@ -84,7 +82,7 @@ class MavenExecutorTest {
         // find and execute maven executor
         def maven = Tasks.prepare(MavenExecutor)
         assertThat maven, is(notNullValue())
-        
+
         maven
     }
 }

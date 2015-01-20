@@ -46,12 +46,12 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     Closure preconditions = { true }
 
     // tools provided by this installation
-    InheritanceAwareContainer<GradleSpaceliftTool, GradleSpaceliftTool> tools
+    InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory> tools
 
     DefaultInstallation(String productName, Project project) {
         super(productName, project)
         this.product = { productName }
-        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool, GradleSpaceliftTool)
+        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory)
     }
 
     /**
@@ -124,8 +124,8 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     @Override
     public void registerTools(ToolRegistry registry) {
         // register installed tools
-        tools.each { tool ->
-            tool.registerInSpacelift(registry)
+        tools.each { factory ->
+            factory.register(registry)
         }
     }
 

@@ -3,14 +3,14 @@ package org.arquillian.spacelift.gradle.android
 import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.gradle.BaseContainerizableObject
 import org.arquillian.spacelift.gradle.DSLUtil
+import org.arquillian.spacelift.gradle.DefaultGradleSpaceliftTaskFactory
 import org.arquillian.spacelift.gradle.GradleSpacelift
-import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
-import org.arquillian.spacelift.gradle.GradleSpaceliftTool
+import org.arquillian.spacelift.gradle.GradleSpaceliftTaskFactory
 import org.arquillian.spacelift.gradle.InheritanceAwareContainer
 import org.arquillian.spacelift.gradle.Installation
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.ToolRegistry;
+import org.arquillian.spacelift.tool.ToolRegistry
 import org.arquillian.spacelift.tool.basic.DownloadTool
 import org.arquillian.spacelift.tool.basic.UntarTool
 import org.arquillian.spacelift.tool.basic.UnzipTool
@@ -55,11 +55,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     ]
 
     // tools provided by this installation
-    InheritanceAwareContainer<GradleSpaceliftTool, GradleSpaceliftTool> tools
+    InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory> tools
 
     AndroidSdkInstallation(String name, Project project) {
         super(name, project)
-        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool, GradleSpaceliftTool)
+        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory)
     }
 
     AndroidSdkInstallation(String name, AndroidSdkInstallation other) {
@@ -106,8 +106,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     @Override
     public void registerTools(ToolRegistry registry) {
         registry.register(AndroidTool)
-        tools.each { tool ->
-            tool.registerInSpacelift(registry)
+        tools.each { GradleSpaceliftTaskFactory factory ->
+            factory.register(registry)
         }
     }
 

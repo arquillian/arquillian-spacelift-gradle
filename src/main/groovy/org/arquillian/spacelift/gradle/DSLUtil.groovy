@@ -165,7 +165,7 @@ class DSLUtil {
 
         //println "retval was ${retVal} ${retVal?.class?.simpleName} in ${owner.class?.simpleName} ${owner.name}"
 
-        if(retVal!=null && returnType.isAssignableFrom(retVal.class)) {
+        if(retVal!=null && returnType.isAssignableFrom(retVal.getClass())) {
             return (T) retVal
         }
         // make it a collection if asked for
@@ -186,7 +186,7 @@ class DSLUtil {
 
         // FIXME, would it be possible to get closure name here?
         throw new IllegalArgumentException("Unable to evaluate closure " +
-        "of ${owner.class}, expected return value of ${returnType?.simpleName} but was ${retVal.class.simpleName}")
+        "of ${owner.getClass()}, expected return value of ${returnType.simpleName} but was ${retVal.getClass().simpleName}")
     }
 
     static Map getBehaviors(Object...args) {

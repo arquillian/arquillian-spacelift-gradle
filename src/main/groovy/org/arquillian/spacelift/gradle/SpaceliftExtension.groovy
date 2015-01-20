@@ -33,7 +33,7 @@ class SpaceliftExtension {
 
     // internal DSL
     InheritanceAwareContainer<Profile, Profile> profiles
-    InheritanceAwareContainer<GradleSpaceliftTool, GradleSpaceliftTool> tools
+    InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory> tools
     InheritanceAwareContainer<Installation, DefaultInstallation> installations
     InheritanceAwareContainer<Test, DefaultTest> tests
 
@@ -50,7 +50,7 @@ class SpaceliftExtension {
         this.enableSnapshots = false
         this.project = project
         this.profiles = new InheritanceAwareContainer(project, this, Profile, Profile)
-        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTool, GradleSpaceliftTool)
+        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory)
         this.installations = new InheritanceAwareContainer(project, this, Installation, DefaultInstallation)
         this.tests = new InheritanceAwareContainer(project, this, Test, DefaultTest)
     }
@@ -68,14 +68,14 @@ class SpaceliftExtension {
         tools.configure(closure)
 
         // register existing tools
-        tools.each { tool ->
-            tool.registerInSpacelift(GradleSpacelift.toolRegistry())
+        tools.each { factory ->
+            factory.register(GradleSpacelift.toolRegistry())
         }
 
         this
     }
 
-    InheritanceAwareContainer<GradleSpaceliftTool, GradleSpaceliftTool> getTools() {
+    InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory> getTools() {
         tools
     }
 
