@@ -43,6 +43,10 @@ class ClassGenerator {
             delegate.interaction = DSLUtil.resolve(ProcessInteraction.class, interaction, parentObject)
             delegate.isDaemon = DSLUtil.resolve(Boolean.class, isDaemon, parentObject)
             delegate.environment = DSLUtil.resolve(Map.class, environment, parentObject)
+                    // transform to Map<String,String>
+                    .collectEntries(new HashMap<String, String>()) {  key, value ->
+                        [ (key.toString()):value.toString()]
+                    }
 
             Object commandBuilder = DSLUtil.resolve(command, parentObject)
 

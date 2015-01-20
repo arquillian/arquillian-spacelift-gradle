@@ -52,6 +52,41 @@ class SpaceliftToolBinaryTest {
     }
 
     @Test
+    void "env property as GStringImpl"() {
+
+        Assume.assumeThat System.getenv("ANT_HOME"), is(notNullValue())
+
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'spacelift'
+
+        project.spacelift {
+            tools {
+                ant {
+                    environment {
+                        def foo = "foo"
+                        [FOO_TEST: "${foo}"]
+                    }
+                    command {"ant"}
+                }
+            }
+            profiles {
+            }
+            installations {
+            }
+            tests {
+            }
+        }
+
+        // find ant tool
+        def antTool = GradleSpacelift.tools("ant")
+        assertThat antTool, is(notNullValue())
+
+        // call ant help
+        GradleSpacelift.tools("ant").parameters("-help").execute().await()
+    }
+
+    @Test
     public void multipleTools() {
         Project project = ProjectBuilder.builder().build()
 
