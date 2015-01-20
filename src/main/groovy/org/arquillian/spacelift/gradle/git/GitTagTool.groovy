@@ -84,7 +84,7 @@ class GitTagTool extends Tool<File, File> {
         logger.info(command.toString())
 
         try {
-            Tasks.prepare(CommandTool).workingDirectory(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            Tasks.prepare(CommandTool).workingDirectory(repositoryDir).command(command).execute().await()
         } catch (ExecutionException ex) {
             throw new ExecutionException(ex, "Could not add tag {0} using command {1}", tag, command.toString())
         }

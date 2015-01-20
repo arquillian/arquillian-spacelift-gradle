@@ -73,7 +73,7 @@ class GitBranchTool extends Tool<File, File> {
         logger.info(command.toString())
 
         try {
-            Tasks.prepare(CommandTool).workingDirectory(repositoryDir.getAbsolutePath()).command(command).execute().await()
+            Tasks.prepare(CommandTool).workingDirectory(repositoryDir).command(command).execute().await()
         } catch (ExecutionException ex) {
             throw new ExecutionException(
                     ex, "Creating branch '{0}' in repository '{1}' was not successful. Command '{2}'.", branch,

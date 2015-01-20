@@ -95,7 +95,7 @@ class GitPushTool extends Tool<File, File> {
         logger.info(command.toString())
 
         try {
-            CommandTool push = Tasks.prepare(CommandTool).workingDirectory(repositoryDir.getAbsolutePath()).command(command)
+            CommandTool push = Tasks.prepare(CommandTool).workingDirectory(repositoryDir).command(command)
 
             if (gitSsh) {
                 push.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
