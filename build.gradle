@@ -5,6 +5,17 @@ apply plugin: 'maven-publish-auth'
 group 'org.arquillian.spacelift.gradle'
 version '1.0.0-alpha-6'
 
+allprojects {
+    tasks.withType(JavaCompile) { 
+        sourceCompatibility = "1.6"
+        targetCompatibility = "1.6" 
+    }
+    tasks.withType(GroovyCompile) { 
+        sourceCompatibility = "1.6"
+        targetCompatibility = "1.6" 
+    }
+}
+
 repositories {
     mavenCentral()
     // adding staging repository, might be handy for lastest Arquillian Spacelift version
