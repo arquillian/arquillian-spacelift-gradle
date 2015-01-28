@@ -11,6 +11,8 @@ class AVDCreator extends Task<Object, Void> {
     private String abi
     private String name
     private boolean force
+    private boolean createSdCard
+    private int sdCardSize = 128
 
     AVDCreator target(String target) {
         if (target && target.length() != 0) {
@@ -38,6 +40,18 @@ class AVDCreator extends Task<Object, Void> {
         this
     }
 
+    AVDCreator sdCard(int size) {
+        if (size > 0) {
+            createSdCard = true
+            sdCardSize = size
+        }
+        this
+    }
+    
+    AVDCreator sdCard() {
+        sdCard(sdCardSize)
+    }
+    
     @Override
     protected Void process(Object input) throws Exception {
 
@@ -65,6 +79,10 @@ class AVDCreator extends Task<Object, Void> {
                     "-t",
                     target,
                 ]).interaction(interaction)
+
+        if (createSdCard) {
+            tool.parameters(["-c", sdCardSize + "M" ])            
+        }                    
 
         if (force) {
             tool.parameter("--force")
