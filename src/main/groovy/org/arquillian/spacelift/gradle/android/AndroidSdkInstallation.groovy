@@ -40,6 +40,10 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return getHome().exists()
     }
 
+    Closure createEmulators = {
+        false
+    }
+    
     Closure postActions = {}
 
     Map remoteUrl = [
@@ -94,6 +98,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         this.product = (Closure) other.@product.clone()
         this.androidTargets = (Closure) other.@androidTargets.clone()
         this.isInstalled = (Closure)other.@isInstalled.clone()
+        this.createEmulators = (Closure)other.@createEmulators.clone()
         this.postActions = (Closure) other.@postActions.clone()
         this.tools = (InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory>) other.@tools.clone()
     }
@@ -131,6 +136,9 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     @Override
     public void registerTools(ToolRegistry registry) {
         registry.register(AndroidTool)
+        registry.register(AndroidAdbTool)
+        registry.register(AndroidEmulatorTool)
+
         ((Iterable<GradleSpaceliftTaskFactory>) tools).each { GradleSpaceliftTaskFactory factory ->
             factory.register(registry)
         }
@@ -196,17 +204,19 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         // opt out for stats
         Tasks.prepare(AndroidSdkOptForStats).execute().await()
 
-        // create AVDs
-        getAndroidTargets().each { AndroidTarget androidTarget ->
-            String avdName = androidTarget.name
-            AVDCreator avdcreator = Tasks.prepare(AVDCreator).target(avdName).name(avdName.replaceAll("\\W", "")).force()
+        if (getCreateEmulators()) {
+            // create AVDs
+            getAndroidTargets().each { AndroidTarget androidTarget ->
+                String avdName = androidTarget.name
+                AVDCreator avdcreator = Tasks.prepare(AVDCreator).target(avdName).name(avdName.replaceAll("\\W", "")).force()
 
-            // set abi if it was defined
-            if(androidTarget.abi) {
-                avdcreator.abi(androidTarget.abi)
+                // set abi if it was defined
+                if(androidTarget.abi) {
+                    avdcreator.abi(androidTarget.abi)
+                }
+
+                avdcreator.execute().await()
             }
-
-            avdcreator.execute().await()
         }
 
         // execute post actions
@@ -227,6 +237,10 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return targets.collect { Object it -> new AndroidTarget(it) }
     }
 
+    public boolean getCreateEmulators() {
+        return DSLUtil.resolve(Boolean.class, createEmulators, this)
+    }
+
     public Boolean getUpdateSdk() {
         return DSLUtil.resolve(Boolean.class, updateSdk, this)
     }
@@ -235,6 +249,85 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return new File((File) project['spacelift']['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
+    static class AndroidAdbTool extends CommandTool {
+        
+        Map nativeCommand = [
+            linux: { ["${home}/platform-tools/adb"]},
+            mac: { ["${home}/platform-tools/adb"]},
+            windows: {
+                [
+                    "cmd.exe",
+                    "/C",
+                    "${home}/platform-tools/adb.exe"
+                ]},
+            solaris: {[ "${home}/platform-tools/adb"]}
+        ]
+        
+        // FIXME this is something what should be provided by spacelift
+        private AndroidSdkInstallation sdk
+
+        @Override
+        protected Collection<String> aliases() {
+            return ["adb"]
+        }
+
+        AndroidAdbTool() {
+            super()
+                // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
+                // This will be most likely fixed in both depends/provides and task factories
+                this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
+                .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
+                List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+                this.commandBuilder = new CommandBuilder(command as CharSequence[])
+                this.interaction = GradleSpacelift.ECHO_OUTPUT
+            }
+
+        @Override
+        public String toString() {
+            return "AndroidAdbTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+        }
+    }
+
+    static class AndroidEmulatorTool extends CommandTool {
+
+        Map nativeCommand = [
+            linux: { ["${home}/tools/emulator"]},
+            mac: { ["${home}/tools/emulator"]},
+            windows: {
+                [
+                    "cmd.exe",
+                    "/C",
+                    "${home}/tools/emulator.exe"
+                ]},
+            solaris: {[ "${home}/tools/emulator" ]}
+        ]
+
+        // FIXME this is something what should be provided by spacelift
+        private AndroidSdkInstallation sdk
+
+        @Override
+        protected Collection<String> aliases() {
+            return ["emulator"]
+        }
+
+        AndroidEmulatorTool() {
+            super()
+
+            // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
+            // This will be most likely fixed in both depends/provides and task factories
+            this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
+            .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
+            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+            this.commandBuilder = new CommandBuilder(command as CharSequence[])
+            this.interaction = GradleSpacelift.ECHO_OUTPUT
+        }
+
+        @Override
+        public String toString() {
+            return "AndroidEmulatorTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+        }
+    }
+    
     static class AndroidTool extends CommandTool {
 
         Map nativeCommand = [
@@ -269,7 +362,6 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpacelift.ECHO_OUTPUT
         }
-
 
         @Override
         public String toString() {

@@ -109,10 +109,7 @@ public class SpaceliftToolFromInstallationTest {
                         [name:"android-19"],
                         [name:"Google Inc.:Google APIs (x86 System Image):21"]
                     ])
-                    tools {
-                        // adb is additional command provided by installation, android is provided by default
-                        adb { command "${home}/platform-tools/adb" }
-                    }
+                    createEmulators { false }
                 }
             }
         }
@@ -141,6 +138,10 @@ public class SpaceliftToolFromInstallationTest {
         def adbTool = GradleSpacelift.tools("adb")
         assertThat "Adb tool is available after installation", adbTool, is(notNullValue())
         assertThat "Adb tool location is installed into workspace, which is in local directory", adbTool.toString(), containsString("${project.spacelift.workspace}")
+        // find emulator tool
+        def emulatorTool = GradleSpacelift.tools("emulator")
+        assertThat "Emulator tool is available after installation", emulatorTool, is(notNullValue())
+        assertThat "Emulator tool location is installed into workspace, which is in local directory", emulatorTool.toString(), containsString("${project.spacelift.workspace}")
 
     }
 
