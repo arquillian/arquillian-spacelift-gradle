@@ -109,7 +109,13 @@ public class SpaceliftToolFromInstallationTest {
                         [name:"android-19"],
                         [name:"Google Inc.:Google APIs (x86 System Image):21"]
                     ])
-                    createEmulators { false }
+                    tools {
+                        monitor {
+                            // additional tool provided by installation
+                            command "${home}/tools/monitor"
+                        }
+                    }
+                    createAvds { false }
                 }
             }
         }
@@ -142,6 +148,10 @@ public class SpaceliftToolFromInstallationTest {
         def emulatorTool = GradleSpacelift.tools("emulator")
         assertThat "Emulator tool is available after installation", emulatorTool, is(notNullValue())
         assertThat "Emulator tool location is installed into workspace, which is in local directory", emulatorTool.toString(), containsString("${project.spacelift.workspace}")
+
+        def monitorTool = GradleSpacelift.tools("monitor")
+        assertThat "Monitor tool is available after installation", monitorTool, is(notNullValue())
+        assertThat "Monitor tool location is installed into workspace, which is in local directory", monitorTool.toString(), containsString("${project.spacelift.workspace}")
 
     }
 

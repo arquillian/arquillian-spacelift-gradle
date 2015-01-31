@@ -22,43 +22,27 @@ import org.slf4j.Logger
 @CompileStatic
 class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstallation> implements Installation {
 
-    Closure product = {
-        "android"
-    }
+    Closure product = { "android" }
 
-    Closure version = {
-        "24.0.2"
-    }
+    Closure version = { "24.0.2" }
 
     Closure androidTargets = {}
 
-    Closure updateSdk = {
-        true
-    }
+    Closure updateSdk = { true }
 
     Closure isInstalled = {
         return getHome().exists()
     }
 
-    Closure createEmulators = {
-        false
-    }
-    
+    Closure createAvds = { false }
+
     Closure postActions = {}
 
     Map remoteUrl = [
-        linux: {
-            "http://dl.google.com/android/android-sdk_r${version}-linux.tgz"
-        },
-        windows: {
-            "http://dl.google.com/android/android-sdk_r${version}-windows.zip"
-        },
-        mac: {
-            "http://dl.google.com/android/android-sdk_r${version}-macosx.zip"
-        },
-        solaris: {
-            "http://dl.google.com/android/android-sdk_r${version}-linux.tgz"
-        }
+        linux: { "http://dl.google.com/android/android-sdk_r${version}-linux.tgz" },
+        windows: { "http://dl.google.com/android/android-sdk_r${version}-windows.zip" },
+        mac: { "http://dl.google.com/android/android-sdk_r${version}-macosx.zip" },
+        solaris: { "http://dl.google.com/android/android-sdk_r${version}-linux.tgz" }
     ]
 
     Map home = [
@@ -69,18 +53,10 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     ]
 
     Map fileName = [
-        linux: {
-            "android-sdk_r${version}-linux.tgz"
-        },
-        windows: {
-            "android-sdk_r${version}-windows.zip"
-        },
-        mac: {
-            "android-sdk_r${version}-macosx.zip"
-        },
-        solaris: {
-            "android-sdk_r${version}-linux.tgz"
-        }
+        linux: { "android-sdk_r${version}-linux.tgz" },
+        windows: { "android-sdk_r${version}-windows.zip" },
+        mac: { "android-sdk_r${version}-macosx.zip" },
+        solaris: { "android-sdk_r${version}-linux.tgz" }
     ]
 
     // tools provided by this installation
@@ -98,7 +74,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         this.product = (Closure) other.@product.clone()
         this.androidTargets = (Closure) other.@androidTargets.clone()
         this.isInstalled = (Closure)other.@isInstalled.clone()
-        this.createEmulators = (Closure)other.@createEmulators.clone()
+        this.createAvds = (Closure)other.@createAvds.clone()
         this.postActions = (Closure) other.@postActions.clone()
         this.tools = (InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory>) other.@tools.clone()
     }
@@ -177,14 +153,14 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         // based on installation type, we might want to unzip/untar/something else
         switch(getFileName()) {
             case ~/.*zip/:
-            Tasks.chain(getFsPath(),UnzipTool).toDir((File)project['spacelift']['workspace']).execute().await()
-            break
+                Tasks.chain(getFsPath(),UnzipTool).toDir((File)project['spacelift']['workspace']).execute().await()
+                break
             case ~/.*tgz/:
             case ~/.*tar\.gz/:
-            Tasks.chain(getFsPath(),UntarTool).toDir((File)project['spacelift']['workspace']).execute().await()
-            break
+                Tasks.chain(getFsPath(),UntarTool).toDir((File)project['spacelift']['workspace']).execute().await()
+                break
             default:
-            logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
+                logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
         }
 
 
@@ -238,7 +214,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     }
 
     public boolean getCreateEmulators() {
-        return DSLUtil.resolve(Boolean.class, createEmulators, this)
+        return DSLUtil.resolve(Boolean.class, createAvds, this)
     }
 
     public Boolean getUpdateSdk() {
@@ -250,7 +226,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     }
 
     static class AndroidAdbTool extends CommandTool {
-        
+
         Map nativeCommand = [
             linux: { ["${home}/platform-tools/adb"]},
             mac: { ["${home}/platform-tools/adb"]},
@@ -260,9 +236,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                     "/C",
                     "${home}/platform-tools/adb.exe"
                 ]},
-            solaris: {[ "${home}/platform-tools/adb"]}
+            solaris: {[
+                    "${home}/platform-tools/adb"
+                ]}
         ]
-        
+
         // FIXME this is something what should be provided by spacelift
         private AndroidSdkInstallation sdk
 
@@ -273,14 +251,14 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
         AndroidAdbTool() {
             super()
-                // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
-                // This will be most likely fixed in both depends/provides and task factories
-                this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
-                .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
-                List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
-                this.commandBuilder = new CommandBuilder(command as CharSequence[])
-                this.interaction = GradleSpacelift.ECHO_OUTPUT
-            }
+            // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
+            // This will be most likely fixed in both depends/provides and task factories
+            this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
+                    .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
+            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+            this.commandBuilder = new CommandBuilder(command as CharSequence[])
+            this.interaction = GradleSpacelift.ECHO_OUTPUT
+        }
 
         @Override
         public String toString() {
@@ -299,7 +277,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                     "/C",
                     "${home}/tools/emulator.exe"
                 ]},
-            solaris: {[ "${home}/tools/emulator" ]}
+            solaris: {["${home}/tools/emulator"]}
         ]
 
         // FIXME this is something what should be provided by spacelift
@@ -312,11 +290,10 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
         AndroidEmulatorTool() {
             super()
-
             // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
             // This will be most likely fixed in both depends/provides and task factories
             this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
-            .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
+                    .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
             List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpacelift.ECHO_OUTPUT
@@ -327,7 +304,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             return "AndroidEmulatorTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
         }
     }
-    
+
     static class AndroidTool extends CommandTool {
 
         Map nativeCommand = [
@@ -339,8 +316,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                     "/C",
                     "${home}/tools/android.bat"
                 ]},
-            solaris: {[ "${home}/tools/android"
-                ]}
+            solaris: {[
+                    "${home}/tools/android" ]}
         ]
 
         // FIXME this is something what should be provided by spacelift
@@ -353,11 +330,10 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
         AndroidTool() {
             super()
-
             // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
             // This will be most likely fixed in both depends/provides and task factories
             this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
-            .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
+                    .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
             List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpacelift.ECHO_OUTPUT
