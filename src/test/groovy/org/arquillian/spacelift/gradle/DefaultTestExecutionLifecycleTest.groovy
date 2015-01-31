@@ -1,5 +1,8 @@
 package org.arquillian.spacelift.gradle
 
+import static org.hamcrest.CoreMatchers.*
+import static org.junit.Assert.assertThat
+
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
@@ -16,14 +19,47 @@ class DefaultTestExecutionLifecycleTest {
     @Test
     void "all phases should execute twice when dataProvider returns an array with two items"() {
         runAsSpaceliftTest {
+
+            def counter = 0
+            def value = { if(counter<3) { counter++; return "first" } else return "second" }
+
             dataProvider { ["first", "second"] }
-            beforeSuite { println "Executing beforeSuite" }
-            beforeTest { value -> println "Executing beforeTest with data ${value}" }
-            execute { value -> println "Executing test with data ${value}" }
-            afterTest { value -> println "Executing afterTest with data ${value}" }
-            afterSuite { println "Executing afterSuite" }
+            beforeSuite { }
+            beforeTest { data ->
+                assertThat data, is(value())
+            }
+            execute { data ->
+                assertThat data, is(value())
+            }
+            afterTest { data ->
+                assertThat data, is(value())
+            }
+            afterSuite { }
         }
     }
+
+    @Test
+    void "data provider as String[]"() {
+        runAsSpaceliftTest {
+
+            def counter = 0
+            def value = { if(counter<3) { counter++; return "first" } else return "second" }
+
+            dataProvider { "first,second".split(",") }
+            beforeSuite { }
+            beforeTest { data ->
+                assertThat data, is(value())
+            }
+            execute { data ->
+                assertThat data, is(value())
+            }
+            afterTest { data ->
+                assertThat data, is(value())
+            }
+            afterSuite { }
+        }
+    }
+
 
     @Test
     void "all phases should execute once when no dataProvider is specified"() {

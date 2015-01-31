@@ -293,8 +293,8 @@ class SpaceliftPlugin implements Plugin<Project> {
                 def newValue = project.property(overrideKey)
 
                 // if we have current as array, we want to model command line override as array as well
-                if(value instanceof Object[] || value instanceof Collection) {
-                    newValue = newValue.toString().split(",")
+                if((value!=null && value.getClass().isArray()) || value instanceof List) {
+                    newValue = Arrays.asList(newValue.toString().split(","))
                 }
 
                 // new set default value

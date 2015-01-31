@@ -88,7 +88,7 @@ class DSLUtil {
                 return { arg.toString() }
             }
             // wrap to call that returns List
-            else if(arg instanceof Object[]) {
+            else if(arg!=null && arg.getClass().isArray()) {
                 return { Arrays.asList(arg) }
             }
             // wrap to call that returns Collection
@@ -171,6 +171,10 @@ class DSLUtil {
         // make it a collection if asked for
         else if(List.class.isAssignableFrom(returnType)) {
             if(retVal!=null) {
+                // cast array if supplied
+                if(retVal.getClass().isArray()) {
+                    return Arrays.asList(retVal);
+                }
                 return Collections.singletonList(retVal)
             }
             return Collections.emptyList()

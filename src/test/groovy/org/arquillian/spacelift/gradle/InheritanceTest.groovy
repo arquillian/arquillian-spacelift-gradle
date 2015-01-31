@@ -103,11 +103,6 @@ class InheritanceTest {
 
         project.apply plugin: 'spacelift'
 
-        project.ext.verifier = [:]
-        project.verifier['invoked']=0
-        project.verifier['0']='foo'
-        project.verifier['1']='bar'
-
         project.spacelift {
             tests {
 
