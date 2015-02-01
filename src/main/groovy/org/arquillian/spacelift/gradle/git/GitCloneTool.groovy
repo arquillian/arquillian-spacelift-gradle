@@ -19,7 +19,7 @@ import org.arquillian.spacelift.task.os.CommandTool
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
  */
-class GitCloneTool extends Task<URI, File> {
+class GitCloneTool extends Task<String, File> {
 
     private Logger logger = Logger.getLogger(GitCloneTool.class.getName())
 
@@ -59,7 +59,7 @@ class GitCloneTool extends Task<URI, File> {
     }
 
     @Override
-    protected File process(URI uri) throws Exception {
+    protected File process(String repository) throws Exception {
 
         if (destination == null) {
             destination = File.createTempFile("spacelift-git-clone-", null)
@@ -68,29 +68,26 @@ class GitCloneTool extends Task<URI, File> {
         if (!destination.exists()) {
             if (!destination.mkdirs()) {
                 throw new IllegalStateException(
-                        String.format("Directory to clone repository (%s) into does not exist and it is unable to create it: %s",
-                                uri.toString(), destination.getAbsolutePath()))
+                String.format("Directory to clone repository (%s) into does not exist and it is unable to create it: %s", repository, destination.getAbsolutePath()))
             }
         }
 
         if (!destination.isDirectory()) {
             throw new IllegalStateException(
-                    String.format("Directory you want to clone repository (%s) into is not a directory: %s",
-                            uri.toString(), destination.getAbsolutePath()))
+            String.format("Directory you want to clone repository (%s) into is not a directory: %s", repository, destination.getAbsolutePath()))
         }
 
         if (!destination.canWrite()) {
             throw new IllegalStateException(String.format("Directory (%s) you want to clone repository (%s) into has to be writable.",
-                    destination, uri.toString()))
+            destination, repository))
         }
 
         if (destination.list().length != 0) {
             throw new IllegalStateException(
-                    String.format("Directory you want to clone repository (%s) into is not empty: %s",
-                            uri.toString(), destination.getAbsolutePath()))
+            String.format("Directory you want to clone repository (%s) into is not empty: %s", repository, destination.getAbsolutePath()))
         }
 
-        Command command = new CommandBuilder("git").parameters("clone", getAddress(uri), destination.getAbsolutePath()).build()
+        Command command = new CommandBuilder("git").parameters("clone", getAddress(repository), destination.getAbsolutePath()).build()
 
         logger.info(command.toString())
 
@@ -103,21 +100,19 @@ class GitCloneTool extends Task<URI, File> {
 
             clone.execute().await()
         } catch (ExecutionException ex) {
-            throw new ExecutionException(ex, "Unable to clone {0} to {1}.", uri.toString(),
-                    destination.getAbsolutePath())
-
+            throw new ExecutionException(ex, "Unable to clone {0} to {1}.", repository,
+            destination.getAbsolutePath())
         }
 
         destination
     }
 
-    private def getAddress(URI uri) {
-        String address = uri.toString()
+    private def getAddress(String address) {
 
         if (address.startsWith("file:/") && !address.startsWith("file:///")) {
             address = address.replace("file:/", "file:///")
         }
 
-        address
+        return address
     }
 }

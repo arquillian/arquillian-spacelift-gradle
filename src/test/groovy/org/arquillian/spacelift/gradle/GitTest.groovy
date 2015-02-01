@@ -17,7 +17,7 @@ import org.junit.Test
  */
 class GitTest {
 
-    private static final URI testRepository = new URI("ssh://git@github.com/smiklosovic/test.git")
+    private static final String testRepository = "ssh://git@github.com/smiklosovic/test.git"
 
     @Test
     void initAndBranchGitTest() {
@@ -76,7 +76,7 @@ class GitTest {
 
         File repository2CloneDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
 
-        Spacelift.task(repositoryInitDir.toURI(), GitCloneTool).destination(repository2CloneDir)
+        Spacelift.task(repositoryInitDir.canonicalPath, GitCloneTool).destination(repository2CloneDir)
                 .then(GitFetchTool)
                 .then(GitCheckoutTool).checkout("dummyBranch")
                 .execute().await()

@@ -15,12 +15,12 @@ import org.arquillian.spacelift.task.os.CommandTool
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
  */
-class GitInitTool extends Task<File, URI> {
+class GitInitTool extends Task<File, String> {
 
     private Logger logger = Logger.getLogger(GitInitTool.class.getName())
 
     @Override
-    protected URI process(File repositoryDir) throws Exception {
+    protected String process(File repositoryDir) throws Exception {
 
         Command command = new CommandBuilder("git").parameters("init", "--bare", repositoryDir.getAbsolutePath()).build()
 
@@ -32,6 +32,6 @@ class GitInitTool extends Task<File, URI> {
             throw new ExecutionException(ex, "Unable to initialize repository at {0}", repositoryDir.getAbsolutePath())
         }
 
-        repositoryDir.absoluteFile.toURI()
+        return repositoryDir.canonicalPath
     }
 }
