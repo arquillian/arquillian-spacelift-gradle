@@ -1,9 +1,10 @@
 package org.arquillian.spacelift.gradle.git
 
-import org.arquillian.spacelift.execution.Task
+import org.arquillian.spacelift.task.Task
+
 
 /**
- * Default GIT_SSH file does not check host key of a remote host so when used with git tools, 
+ * Default GIT_SSH file does not check host key of a remote host so when used with git tools,
  * these tools are not interactive hence not blocking.
  *
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>

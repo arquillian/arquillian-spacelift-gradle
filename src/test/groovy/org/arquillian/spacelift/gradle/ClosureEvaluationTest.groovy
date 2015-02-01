@@ -3,9 +3,9 @@ package org.arquillian.spacelift.gradle
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.*
 
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.android.AndroidSdkUpdater
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.impl.CommandTool
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
@@ -72,7 +72,7 @@ class ClosureEvaluationTest {
             test.executeTest(project.logger)
         }
 
-        def java2Tool = GradleSpacelift.tools("java2")
+        def java2Tool = Spacelift.task("java2")
         assertThat java2Tool, is(notNullValue())
     }
 

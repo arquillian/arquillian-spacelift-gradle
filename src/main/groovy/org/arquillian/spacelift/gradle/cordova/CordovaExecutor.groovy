@@ -1,11 +1,11 @@
 package org.arquillian.spacelift.gradle.cordova
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
-import org.arquillian.spacelift.process.impl.CommandTool
+import org.arquillian.spacelift.task.Task
+import org.arquillian.spacelift.task.os.CommandTool
 
 class CordovaExecutor extends Task<Object, ProcessResult> {
 
@@ -53,12 +53,12 @@ class CordovaExecutor extends Task<Object, ProcessResult> {
 
         // FIXME this should rely on Spacelift registry to get Cordova tool
 
-        return Tasks.prepare(CommandTool)
+        return Spacelift.task(CommandTool)
                 .command(new CommandBuilder("cordova").parameters(parameters.split(" ")))
                 .workingDir(dir)
                 .addEnvironment(env)
                 .addEnvironment("PATH", "${sdkHome}/tools${sep}${sdkHome}/platform-tools${sep}${System.getenv("PATH")}")
-                .interaction(GradleSpacelift.ECHO_OUTPUT)
+                .interaction(GradleSpaceliftDelegate.ECHO_OUTPUT)
                 .shouldExitWith(0,1)
                 .execute().await()
     }

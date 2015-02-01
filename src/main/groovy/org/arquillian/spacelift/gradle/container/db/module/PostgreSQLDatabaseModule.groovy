@@ -1,9 +1,9 @@
 package org.arquillian.spacelift.gradle.container.db.module
 
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.container.db.DatabaseModule
-import org.jboss.aerogear.test.container.spacelift.JBossCLI
 import org.arquillian.spacelift.gradle.maven.*
-import org.arquillian.spacelift.execution.Tasks
+import org.jboss.aerogear.test.container.spacelift.JBossCLI
 
 
 class PostgreSQLDatabaseModule extends DatabaseModule {
@@ -22,13 +22,13 @@ class PostgreSQLDatabaseModule extends DatabaseModule {
     def install() {
 
         def resolvedVersion = version
-        
+
         if (!resolvedVersion) {
             resolvedVersion = POSTGRESQL_VERSION
         }
-        
+
         if (!new File("${destination}/postgresql-${resolvedVersion}-jdbc41.jar").exists()) {
-            Tasks.prepare(MavenExecutor)
+            Spacelift.task(MavenExecutor)
                     .goal("dependency:copy")
                     .property("artifact=org.postgresql:postgresql:${resolvedVersion}-jdbc41")
                     .property("outputDirectory=${destination}")
@@ -36,10 +36,10 @@ class PostgreSQLDatabaseModule extends DatabaseModule {
         }
 
         if (! new File(jbossHome + "/modules/org/postgresql").exists()) {
-            
+
             startContainer()
-            
-            Tasks.prepare(JBossCLI)
+
+            Spacelift.task(JBossCLI)
                     .environment("JBOSS_HOME", jbossHome)
                     .connect()
                     .cliCommand("module add --name=org.postgresql --resources=${destination}/postgresql-${resolvedVersion}-jdbc41.jar --dependencies=javax.api,javax.transaction.api")
@@ -53,7 +53,7 @@ class PostgreSQLDatabaseModule extends DatabaseModule {
     def uninstall() {
         startContainer()
 
-        Tasks.prepare(JBossCLI).environment("JBOSS_HOME", jbossHome).connect().cliCommand("module remove --name=org.postgresql").execute().await()
+        Spacelift.task(JBossCLI).environment("JBOSS_HOME", jbossHome).connect().cliCommand("module remove --name=org.postgresql").execute().await()
 
         stopContainer()
     }

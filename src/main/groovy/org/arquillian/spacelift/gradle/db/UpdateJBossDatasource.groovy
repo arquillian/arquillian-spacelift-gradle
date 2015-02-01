@@ -1,8 +1,8 @@
 package org.arquillian.spacelift.gradle.db
 
-import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.Spacelift
 import org.jboss.aerogear.test.container.manager.JBossManager
-import org.jboss.aerogear.test.container.manager.JBossManagerConfiguration
+import org.jboss.aerogear.test.container.manager.ManagedContainerConfiguration
 import org.jboss.aerogear.test.container.spacelift.JBossCLI
 import org.jboss.aerogear.test.container.spacelift.JBossStarter
 import org.jboss.aerogear.test.container.spacelift.JBossStopper
@@ -43,20 +43,20 @@ class UpdateJBossDatasource {
         JBossManager manager
 
         if (shouldStartContainer) {
-            manager = Tasks.prepare(JBossStarter)
-                    .configuration(new JBossManagerConfiguration().setJBossHome(jbossHome))
+            manager = Spacelift.task(JBossStarter)
+                    .configuration(new ManagedContainerConfiguration().setJbossHome(jbossHome))
                     .execute()
                     .await()
         }
 
-        Tasks.prepare(JBossCLI)
+        Spacelift.task(JBossCLI)
                 .environment("JBOSS_HOME", jbossHome)
                 .file(script)
                 .execute()
                 .await()
 
         if (shouldStartContainer) {
-            Tasks.chain(manager, JBossStopper).execute().await()
+            Spacelift.task(manager, JBossStopper).execute().await()
         }
 
         return this

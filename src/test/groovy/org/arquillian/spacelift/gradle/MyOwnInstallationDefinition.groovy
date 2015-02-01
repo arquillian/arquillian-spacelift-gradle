@@ -2,9 +2,9 @@ package org.arquillian.spacelift.gradle
 
 import groovy.transform.CompileStatic
 
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.tool.ToolRegistry
-import org.arquillian.spacelift.tool.basic.DownloadTool
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.task.TaskRegistry
+import org.arquillian.spacelift.task.net.DownloadTool
 import org.gradle.api.Project
 import org.slf4j.Logger
 
@@ -46,14 +46,14 @@ class MyOwnInstallationDefinition extends BaseContainerizableObject<MyOwnInstall
     }
 
     @Override
-    public void registerTools(ToolRegistry registry) {
+    public void registerTools(TaskRegistry registry) {
         // do nothing
     }
 
     @Override
     public void install(Logger logger) {
         File location = new File(getHome(), "${product}-${version}")
-        Tasks.prepare(DownloadTool).from("https://github.com/arquillian/arquillian-selenium-bom/archive/master.zip").timeout(60000).to(location).execute().await()
+        Spacelift.task(DownloadTool).from("https://github.com/arquillian/arquillian-selenium-bom/archive/master.zip").timeout(60000).to(location).execute().await()
         assert location.exists()
     }
 }

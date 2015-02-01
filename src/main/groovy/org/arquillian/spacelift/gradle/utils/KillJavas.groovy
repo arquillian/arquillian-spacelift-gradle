@@ -1,11 +1,9 @@
 package org.arquillian.spacelift.gradle.utils
 
 import org.apache.commons.lang.SystemUtils
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.gradle.GradleSpacelift;
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.task.Task
+import org.arquillian.spacelift.task.os.CommandTool
 import org.slf4j.LoggerFactory
 
 /**
@@ -58,11 +56,11 @@ class KillJavas extends Task<Object, Void>{
     }
 
     def executeBash(String command) {
-        Tasks.prepare(CommandTool).programName("bash").parameters("-c").splitToParameters(command).execute().await().output()
+        Spacelift.task(CommandTool).programName("bash").parameters("-c").splitToParameters(command).execute().await().output()
     }
 
     def executeCmd(String command) {
-        Tasks.prepare(CommandTool).programName("cmd").parameters("/C").splitToParameters(command).execute().await().output()
+        Spacelift.task(CommandTool).programName("cmd").parameters("/C").splitToParameters(command).execute().await().output()
     }
 
     def jpsKill(String name, String signal) {

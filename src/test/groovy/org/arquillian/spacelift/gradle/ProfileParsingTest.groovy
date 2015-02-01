@@ -1,16 +1,13 @@
 package org.arquillian.spacelift.gradle
 
-import org.arquillian.spacelift.gradle.GradleSpacelift.ProjectHolder;
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Rule
-import org.junit.Test
-import org.junit.Ignore
-import org.junit.rules.ExpectedException
-
 import static org.hamcrest.CoreMatchers.is
 import static org.hamcrest.CoreMatchers.notNullValue
 import static org.junit.Assert.assertThat
+
+import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
+import org.junit.Ignore
+import org.junit.Test
 
 /**
  * Asserts that installations can be specified without home

@@ -1,7 +1,8 @@
 package org.arquillian.spacelift.gradle.java
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
+import org.arquillian.spacelift.task.Task
 
 class JavaExecutor extends Task<Object, Void> {
 
@@ -34,7 +35,7 @@ class JavaExecutor extends Task<Object, Void> {
     @Override
     protected Void process(Object input) throws Exception {
 
-        def command = GradleSpacelift.tools('java')
+        def command = Spacelift.task('java')
 
         if(workingDir) {
             command.workingDir(workingDir)
@@ -45,7 +46,7 @@ class JavaExecutor extends Task<Object, Void> {
         }
 
         command.parameters(parameters)
-        command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        command.interaction(GradleSpaceliftDelegate.ECHO_OUTPUT).execute().await()
 
         return null;
     }

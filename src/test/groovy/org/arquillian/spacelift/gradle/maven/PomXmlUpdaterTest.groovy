@@ -1,9 +1,7 @@
 package org.arquillian.spacelift.gradle.maven
 
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.execution.impl.DefaultExecutionServiceFactory
-import org.arquillian.spacelift.gradle.GradleSpacelift;
-import org.arquillian.spacelift.gradle.arquillian.ArquillianXmlUpdater
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.BeforeClass
@@ -38,23 +36,23 @@ class PomXmlUpdaterTest {
 
     @Test
     void "modify pom.xml files"() {
-        Tasks.chain(
+        Spacelift.task(
                 [foo:'bar'], PomXmlUpdater)
-                .dir(GradleSpacelift.currentProject().spacelift.workspace)
+                .dir(new GradleSpaceliftDelegate().project().spacelift.workspace)
                 .execute().await()
     }
 
     @Test
     void "modify pom.xml files dir specified by path"() {
-        Tasks.chain(
+        Spacelift.task(
                 [foo:'bar'], PomXmlUpdater)
-                .dir("${GradleSpacelift.currentProject().spacelift.workspace}")
+                .dir("${new GradleSpaceliftDelegate().project()}.spacelift.workspace}")
                 .execute().await()
     }
 
     @Test
     void "modify pom.xml files with includes, excludes"() {
-        Tasks.chain(
+        Spacelift.task(
                 [foo:'bar'], PomXmlUpdater)
                 .dir(dir:new File('.'), includes:["**/pomx.xml"], excludes:["**/target/**"])
                 .execute().await()

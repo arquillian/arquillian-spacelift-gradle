@@ -1,9 +1,9 @@
 package org.arquillian.spacelift.gradle.android
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.process.ProcessInteraction
 import org.arquillian.spacelift.process.ProcessInteractionBuilder
+import org.arquillian.spacelift.task.Task
 
 class AVDCreator extends Task<Object, Void> {
 
@@ -47,11 +47,11 @@ class AVDCreator extends Task<Object, Void> {
         }
         this
     }
-    
+
     AVDCreator sdCard() {
         sdCard(sdCardSize)
     }
-    
+
     @Override
     protected Void process(Object input) throws Exception {
 
@@ -70,7 +70,7 @@ class AVDCreator extends Task<Object, Void> {
                 .when("(?s).*").printToOut()
                 .build()
 
-        def tool = GradleSpacelift.tools("android")
+        def tool = Spacelift.task("android")
                 .parameters([
                     "create",
                     "avd",
@@ -81,8 +81,8 @@ class AVDCreator extends Task<Object, Void> {
                 ]).interaction(interaction)
 
         if (createSdCard) {
-            tool.parameters(["-c", sdCardSize + "M" ])            
-        }                    
+            tool.parameters(["-c", sdCardSize + "M" ])
+        }
 
         if (force) {
             tool.parameter("--force")

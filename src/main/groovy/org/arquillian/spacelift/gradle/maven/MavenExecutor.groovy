@@ -1,8 +1,9 @@
 package org.arquillian.spacelift.gradle.maven
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
 import org.arquillian.spacelift.process.ProcessResult
+import org.arquillian.spacelift.task.Task
 import org.slf4j.LoggerFactory
 
 class MavenExecutor extends Task<Object, ProcessResult>{
@@ -32,7 +33,7 @@ class MavenExecutor extends Task<Object, ProcessResult>{
     private def command = []
 
     MavenExecutor() {
-        def project = GradleSpacelift.currentProject()
+        def project = new GradleSpaceliftDelegate().project()
         if (new File("${project.spacelift.workspace}/settings.xml").exists()) {
             this.settingsXml = "${project.spacelift.workspace}/settings.xml"
             properties << "org.apache.maven.user-settings=${project.spacelift.workspace}/settings.xml"
@@ -42,7 +43,7 @@ class MavenExecutor extends Task<Object, ProcessResult>{
     @Override
     protected ProcessResult process(Object input) throws Exception {
 
-        def command = GradleSpacelift.tools('mvn')
+        def command = Spacelift.task('mvn')
 
         if (batchMode) {
             command.parameter('-B')
@@ -77,7 +78,7 @@ class MavenExecutor extends Task<Object, ProcessResult>{
             command.workingDir(workingDir)
         }
 
-        return command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        return command.interaction(GradleSpaceliftDelegate.ECHO_OUTPUT).execute().await()
     }
 
     def pom(projectPom) {

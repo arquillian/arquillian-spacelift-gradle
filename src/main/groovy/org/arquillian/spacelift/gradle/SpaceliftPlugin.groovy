@@ -1,13 +1,11 @@
 package org.arquillian.spacelift.gradle
 
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.execution.impl.DefaultExecutionServiceFactory
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.maven.SettingsXmlUpdater
 import org.arquillian.spacelift.gradle.utils.KillJavas
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.internal.reflect.Instantiator
 
 class SpaceliftPlugin implements Plugin<Project> {
 
@@ -15,7 +13,7 @@ class SpaceliftPlugin implements Plugin<Project> {
     void apply(Project project) {
 
         // set current project reference
-        GradleSpacelift.currentProject(project)
+        GradleSpaceliftDelegate.currentProject(project)
 
         // set default values if not specified from command line
         setDefaultDataProviders(project, project.logger);
@@ -157,28 +155,28 @@ class SpaceliftPlugin implements Plugin<Project> {
                 logger.lifecycle(":assemble:profile-${project.selectedProfile.name}")
 
                 if(project.spacelift.killServers) {
-                    Tasks.prepare(KillJavas).execute().await()
+                    Spacelift.task(KillJavas).execute().await()
                 }
 
                 // create settings.xml with local repository
-                Tasks.prepare(SettingsXmlUpdater).execute().await()
+                Spacelift.task(SettingsXmlUpdater).execute().await()
 
                 if(project.spacelift.enableStaging) {
                     // here it is named logger, because it is a part of Plugin<Project> implementation
                     logger.lifecycle(":assemble:enableJBossStagingRepository")
-                    Tasks.prepare(SettingsXmlUpdater).repository("jboss-staging-repository-group", new URI("https://repository.jboss.org/nexus/content/groups/staging"), true).execute().await()
+                    Spacelift.task(SettingsXmlUpdater).repository("jboss-staging-repository-group", new URI("https://repository.jboss.org/nexus/content/groups/staging"), true).execute().await()
 
                 }
 
                 if(project.spacelift.enableSnapshots) {
                     logger.lifecycle(":assemble:enableJBossSnapshotsRepository")
-                    Tasks.prepare(SettingsXmlUpdater).repository("jboss-snapshots-repository", new URI("https://repository.jboss.org/nexus/content/repositories/snapshots"), true).execute().await()
+                    Spacelift.task(SettingsXmlUpdater).repository("jboss-snapshots-repository", new URI("https://repository.jboss.org/nexus/content/repositories/snapshots"), true).execute().await()
                 }
 
                 project.selectedInstallations.each { Installation installation ->
                     if(installation.isInstalled()) {
                         logger.lifecycle(":install:${installation.name} was already installed, registering tools")
-                        installation.registerTools(GradleSpacelift.toolRegistry())
+                        installation.registerTools(Spacelift.registry())
                     }
                     else {
                         logger.lifecycle(":install:${installation.name} will be installed")

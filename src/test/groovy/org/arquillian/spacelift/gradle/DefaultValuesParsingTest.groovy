@@ -1,11 +1,12 @@
 package org.arquillian.spacelift.gradle
 
+import static org.hamcrest.CoreMatchers.*
+import static org.junit.Assert.assertThat
+
+import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Test
-
-import static org.hamcrest.CoreMatchers.*
-import static org.junit.Assert.assertThat
 
 /**
  * Ensures that setting default value reflect to values available in project
@@ -60,9 +61,9 @@ class DefaultValuesParsingTest {
             profiles {
             }
         }
-        
+
         // find rhc tool
-        def rhcTool = GradleSpacelift.tools("rhc")
+        def rhcTool = Spacelift.task("rhc")
         assertThat rhcTool, is(notNullValue())
 
         // ensure it is pointing to the right binary
@@ -84,7 +85,7 @@ class DefaultValuesParsingTest {
         assertThat androidTargets, is(notNullValue())
         assertThat androidTargets[0], is("18")
     }
-    
+
     @Test
     void "default value array override"() {
 
@@ -100,7 +101,7 @@ class DefaultValuesParsingTest {
         assertThat androidTargets, is(notNullValue())
         assertThat androidTargets[0], is("18")
     }
-    
+
     @Test
     void "default value scalar override"() {
 
@@ -116,7 +117,7 @@ class DefaultValuesParsingTest {
         assertThat androidTarget, is(notNullValue())
         assertThat androidTarget, is("18")
     }
-    
+
     @Test
     void "default value scalar override with commas"() {
 
@@ -132,5 +133,5 @@ class DefaultValuesParsingTest {
         assertThat androidTarget, is(notNullValue())
         assertThat androidTarget, is("18, 19")
     }
-    
+
 }

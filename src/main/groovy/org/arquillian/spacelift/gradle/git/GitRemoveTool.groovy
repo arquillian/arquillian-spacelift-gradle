@@ -1,13 +1,13 @@
 package org.arquillian.spacelift.gradle.git
 
+import java.util.logging.Logger
+
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool
-
-import java.util.logging.Logger
+import org.arquillian.spacelift.task.Task
+import org.arquillian.spacelift.task.os.CommandTool
 
 /**
  * Removes files from repository.
@@ -15,7 +15,7 @@ import java.util.logging.Logger
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
  */
-class GitRemoveTool extends Tool<File, File> {
+class GitRemoveTool extends Task<File, File> {
 
     private Logger logger = Logger.getLogger(GitRemoveTool.class.getName())
 
@@ -26,11 +26,6 @@ class GitRemoveTool extends Tool<File, File> {
     private boolean quiet
 
     private List<File> toRemove = new ArrayList<File>()
-
-    @Override
-    protected Collection<String> aliases() {
-        ["git_rm"]
-    }
 
     /**
      * Turns {@plain -f} flag on.
@@ -116,12 +111,13 @@ class GitRemoveTool extends Tool<File, File> {
             commandBuilder.parameter(file.getAbsolutePath())
         }
 
+        // FIXME, remove?
         Command command = commandBuilder.build()
 
         logger.info(command.toString())
 
         try {
-            Tasks.prepare(CommandTool).workingDirectory(repositoryDir).command(command).execute().await()
+            Spacelift.task(CommandTool).workingDirectory(repositoryDir).command(command).execute().await()
         } catch (ExecutionException ex) {
             throw new ExecutionException(ex, "Could not remove files with command {0}.", command.toString())
         }

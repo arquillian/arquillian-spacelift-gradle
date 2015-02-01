@@ -1,10 +1,10 @@
 package org.arquillian.spacelift.gradle.maven
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
 import org.arquillian.spacelift.gradle.xml.XmlFileLoader
 import org.arquillian.spacelift.gradle.xml.XmlUpdater
+import org.arquillian.spacelift.task.Task
 import org.gradle.api.Project
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -17,7 +17,7 @@ class PomXmlUpdater extends Task<Object, Void> {
     private Project project
 
     PomXmlUpdater() {
-        this.project = GradleSpacelift.currentProject()
+        this.project = new GradleSpaceliftDelegate().project()
     }
 
     /**
@@ -66,7 +66,7 @@ class PomXmlUpdater extends Task<Object, Void> {
     protected Void process(Object properties) throws Exception {
 
         xmlFiles.each { file ->
-            def pom = Tasks.chain(file, XmlFileLoader).execute().await()
+            def pom = Spacelift.task(file, XmlFileLoader).execute().await()
 
             properties.each { propertyKey, value ->
                 pom.properties.each { p ->
@@ -78,7 +78,7 @@ class PomXmlUpdater extends Task<Object, Void> {
                 }
             }
 
-            Tasks.chain(pom, XmlUpdater).file(file).execute().await()
+            Spacelift.task(pom, XmlUpdater).file(file).execute().await()
         }
 
         return null

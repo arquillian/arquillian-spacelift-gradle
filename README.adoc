@@ -148,11 +148,11 @@ command::
     Command defines what will be executed. In case you provide _string_ or _list of strings_, it will be transformed to 
     Spacelift +CommandBuilder+. In case you are using _block_, you are supposed to return +CommandBuilder+. In case of
     map, you can use *windows*, *linux*, *mac* and *solaris* keys that will match the platform. The block will register a +CommandTool+ 
-    you can retrieve by +GradleSpacelift.tools('toolName')+ later on.
+    you can retrieve by +Spacelift.task('toolName')+ later on.
 allowedExitCode::
     Exit codes that command executing can return, by default +0+
 interaction::
-    Interaction with the command process, by default +GradleSpacelift.ECHO_OUTPUT+
+    Interaction with the command process, by default +GradleSpaceliftDelegate.ECHO_OUTPUT+
 isDaemon::
     By default +false+. If set to +true+, tool will spawn a process that will survive Gradle execution exit.
 environment::

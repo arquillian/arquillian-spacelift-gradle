@@ -1,10 +1,6 @@
 package org.arquillian.spacelift.gradle.xml
 
-import groovy.util.Node;
-
-import java.io.File;
-
-import org.arquillian.spacelift.execution.Task
+import org.arquillian.spacelift.task.Task
 
 class XmlFileLoader extends Task<File, Object> {
 

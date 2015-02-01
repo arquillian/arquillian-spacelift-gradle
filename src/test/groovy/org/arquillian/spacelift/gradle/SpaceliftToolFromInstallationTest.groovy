@@ -2,7 +2,7 @@ package org.arquillian.spacelift.gradle;
 
 import groovy.lang.Closure;
 
-import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.arquillian.spacelift.gradle.android.AndroidSdkInstallation;
@@ -68,14 +68,14 @@ public class SpaceliftToolFromInstallationTest {
                         // update Android SDK, download / update each specified Android SDK version
                         // This is disabled by default as it takes too long to be executed
                         //project.androidTargets.each { v ->
-                        //    Tasks.prepare(AndroidSdkUpdater).target(v).execute().await()
+                        //    Spacelift.task(AndroidSdkUpdater).target(v).execute().await()
                         //}
 
                         // opt out for stats
-                        Tasks.prepare(AndroidSdkOptForStats).execute().await()
+                        Spacelift.task(AndroidSdkOptForStats).execute().await()
 
                         // update arquillian.xml files with Android homes
-                        Tasks.chain([
+                        Spacelift.task([
                             androidHome: "${home}",
                             androidSdkHome: "${project.spacelift.workspace}"
                         ], ArquillianXmlUpdater).dir(project.spacelift.workspace).container('android').execute().await()
@@ -87,7 +87,7 @@ public class SpaceliftToolFromInstallationTest {
         project.spacelift.installations.each { installation ->  installation.install(project.logger) }
 
         // find android tool
-        def androidTool = GradleSpacelift.tools("android")
+        def androidTool = Spacelift.task("android")
         assertThat "Android tool is available after installation", androidTool, is(notNullValue())
 
         assertThat "Android tool location is installed into workspace, which is in local directory", androidTool.toString(), containsString("${project.spacelift.workspace}")
@@ -128,7 +128,7 @@ public class SpaceliftToolFromInstallationTest {
                 installation.install(project.logger)
             }
             else {
-                installation.registerTools(GradleSpacelift.toolRegistry())
+                installation.registerTools(Spacelift.registry())
             }
         }
 
@@ -137,19 +137,19 @@ public class SpaceliftToolFromInstallationTest {
         assertThat project.spacelift.installations['androidSdk'].androidTargets[0].toString(), containsString("AndroidTarget: 19 - default/x86")
 
         // find android and adb tools
-        def androidTool = GradleSpacelift.tools("android")
+        def androidTool = Spacelift.task("android")
         assertThat "Android tool is available after installation", androidTool, is(notNullValue())
         assertThat "Android tool location is installed into workspace, which is in local directory", androidTool.toString(), containsString("${project.spacelift.workspace}")
         // find adb tool
-        def adbTool = GradleSpacelift.tools("adb")
+        def adbTool = Spacelift.task("adb")
         assertThat "Adb tool is available after installation", adbTool, is(notNullValue())
         assertThat "Adb tool location is installed into workspace, which is in local directory", adbTool.toString(), containsString("${project.spacelift.workspace}")
         // find emulator tool
-        def emulatorTool = GradleSpacelift.tools("emulator")
+        def emulatorTool = Spacelift.task("emulator")
         assertThat "Emulator tool is available after installation", emulatorTool, is(notNullValue())
         assertThat "Emulator tool location is installed into workspace, which is in local directory", emulatorTool.toString(), containsString("${project.spacelift.workspace}")
 
-        def monitorTool = GradleSpacelift.tools("monitor")
+        def monitorTool = Spacelift.task("monitor")
         assertThat "Monitor tool is available after installation", monitorTool, is(notNullValue())
         assertThat "Monitor tool location is installed into workspace, which is in local directory", monitorTool.toString(), containsString("${project.spacelift.workspace}")
 
@@ -179,7 +179,7 @@ public class SpaceliftToolFromInstallationTest {
                 installation.install(project.logger)
             }
             else {
-                installation.registerTools(GradleSpacelift.toolRegistry())
+                installation.registerTools(Spacelift.registry())
             }
         }
 
@@ -188,7 +188,7 @@ public class SpaceliftToolFromInstallationTest {
         assertThat project.spacelift.installations['androidSdk'].androidTargets[0].toString(), containsString("AndroidTarget: 19")
 
         // find android and adb tools
-        def androidTool = GradleSpacelift.tools("android")
+        def androidTool = Spacelift.task("android")
         assertThat "Android tool is available after installation", androidTool, is(notNullValue())
         assertThat "Android tool location is installed into workspace, which is in local directory", androidTool.toString(), containsString("${project.spacelift.workspace}")
 

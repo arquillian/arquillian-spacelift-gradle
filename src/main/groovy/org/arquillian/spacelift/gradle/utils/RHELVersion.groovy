@@ -1,22 +1,22 @@
 package org.arquillian.spacelift.gradle.utils
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.impl.CommandTool
+import org.arquillian.spacelift.task.Task
+import org.arquillian.spacelift.task.os.CommandTool
 
 class RHELVersion extends Task<Object, String> {
 
     @Override
     protected String process(Object input) throws Exception {
-        
+
         def version = "no RHEL"
-        
+
         if (!EnvironmentUtils.runsOnLinux()) {
             return version
         }
-        
-        def rhelVersion = Tasks.prepare(CommandTool).command(new CommandBuilder('cat'))
+
+        def rhelVersion = Spacelift.task(CommandTool).command(new CommandBuilder('cat'))
                 .parameters('/etc/redhat-release')
                 .shouldExitWith(0,1)
                 .execute()

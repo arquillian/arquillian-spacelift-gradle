@@ -1,14 +1,8 @@
 package org.arquillian.spacelift.gradle.android
 
-import java.util.Collection
-
-import org.arquillian.spacelift.execution.ExecutionCondition
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.process.ProcessResult
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool
+import org.arquillian.spacelift.task.Task
 
 class AndroidEmulatorStartedChecker extends Task<Object, ProcessResult> {
 
@@ -23,7 +17,7 @@ class AndroidEmulatorStartedChecker extends Task<Object, ProcessResult> {
 
     @Override
     protected ProcessResult process(Object input) throws Exception {
-        GradleSpacelift.tools("adb")
+        Spacelift.task("adb")
                 .parameters([
                     "-s",
                     device,

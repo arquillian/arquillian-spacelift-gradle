@@ -1,17 +1,15 @@
 package org.arquillian.spacelift.gradle
 
+import static org.hamcrest.CoreMatchers.*
+import static org.junit.Assert.assertThat
+
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Assume;
+import org.junit.Assume
 import org.junit.Test
-import org.junit.Assert
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.process.impl.CommandTool
-
-import static org.hamcrest.CoreMatchers.*
-import static org.junit.Assert.assertThat
 
 
 // NOTE some of these tests might not work in IDE
@@ -44,11 +42,11 @@ class SpaceliftToolBinaryTest {
         }
 
         // find ant tool
-        def antTool = GradleSpacelift.tools("ant")
+        def antTool = Spacelift.task("ant")
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        GradleSpacelift.tools("ant").parameters("-help").interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        Spacelift.task("ant").parameters("-help").interaction(GradleSpaceliftDelegate.ECHO_OUTPUT).execute().await()
     }
 
     @Test
@@ -79,11 +77,11 @@ class SpaceliftToolBinaryTest {
         }
 
         // find ant tool
-        def antTool = GradleSpacelift.tools("ant")
+        def antTool = Spacelift.task("ant")
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        GradleSpacelift.tools("ant").parameters("-help").execute().await()
+        Spacelift.task("ant").parameters("-help").execute().await()
     }
 
     @Test
@@ -106,18 +104,18 @@ class SpaceliftToolBinaryTest {
         }
 
         // find ant tool
-        def antTool = GradleSpacelift.tools("ant")
+        def antTool = Spacelift.task("ant")
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        GradleSpacelift.tools("ant").parameters("-help").execute().await()
+        Spacelift.task("ant").parameters("-help").execute().await()
 
         // find mvn tool
-        def mvnTool = GradleSpacelift.tools("mvn")
+        def mvnTool = Spacelift.task("mvn")
         assertThat mvnTool, is(notNullValue())
 
         // call mvn help
-        GradleSpacelift.tools("mvn").parameters("-help").execute().await()
+        Spacelift.task("mvn").parameters("-help").execute().await()
 
     }
 
@@ -138,11 +136,11 @@ class SpaceliftToolBinaryTest {
         }
 
         // find ant tool
-        def antTool = GradleSpacelift.tools("ant")
+        def antTool = Spacelift.task("ant")
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        GradleSpacelift.tools("ant").parameters("-help").execute().await()
+        Spacelift.task("ant").parameters("-help").execute().await()
     }
 
     @Test
@@ -166,11 +164,11 @@ class SpaceliftToolBinaryTest {
         }
 
         // find ant tool
-        def antTool = GradleSpacelift.tools("ant")
+        def antTool = Spacelift.task("ant")
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        GradleSpacelift.tools("ant").parameters("-help").execute().await()
+        Spacelift.task("ant").parameters("-help").execute().await()
     }
 
     @Test
@@ -201,11 +199,11 @@ class SpaceliftToolBinaryTest {
         }
 
         // find ant tool
-        def antTool = GradleSpacelift.tools("ant")
+        def antTool = Spacelift.task("ant")
         assertThat antTool, is(notNullValue())
 
         // call ant help
-        ProcessResult result = GradleSpacelift.tools("ant").parameters("-help").execute().await()
+        ProcessResult result = Spacelift.task("ant").parameters("-help").execute().await()
         assertThat result.exitValue(), is(0)
     }
 
@@ -239,7 +237,7 @@ class SpaceliftToolBinaryTest {
         }
 
         // find android tool
-        def antTool = GradleSpacelift.tools("android")
+        def antTool = Spacelift.task("android")
         assertThat antTool, is(notNullValue())
     }
 
@@ -275,7 +273,7 @@ class SpaceliftToolBinaryTest {
         }
 
         // find android tool
-        def antTool = GradleSpacelift.tools("android")
+        def antTool = Spacelift.task("android")
         assertThat antTool, is(notNullValue())
     }
 }

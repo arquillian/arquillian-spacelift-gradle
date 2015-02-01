@@ -3,7 +3,7 @@ package org.arquillian.spacelift.gradle;
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
 
-import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.arquillian.spacelift.gradle.utils.KillJavas
@@ -29,6 +29,6 @@ public class KillJavasTest {
         }
 
         // kill servers
-        Tasks.prepare(KillJavas).execute().await()
+        Spacelift.task(KillJavas).execute().await()
     }
 }

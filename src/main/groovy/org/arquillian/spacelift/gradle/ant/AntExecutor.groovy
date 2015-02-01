@@ -1,15 +1,9 @@
 package org.arquillian.spacelift.gradle.ant
 
-import java.text.MessageFormat
-import java.util.Collection;
-
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.process.Command
-import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.ProcessInteractionBuilder
-import org.arquillian.spacelift.process.ProcessResult;
-import org.arquillian.spacelift.gradle.GradleSpacelift;
-import org.arquillian.spacelift.gradle.utils.EnvironmentUtils
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
+import org.arquillian.spacelift.process.ProcessResult
+import org.arquillian.spacelift.task.Task
 
 class AntExecutor extends Task<Object, ProcessResult>{
 
@@ -42,7 +36,7 @@ class AntExecutor extends Task<Object, ProcessResult>{
     @Override
     protected ProcessResult process(Object input) throws Exception {
 
-        def command = GradleSpacelift.tools('ant')
+        def command = Spacelift.task('ant')
 
         if (buildFile) {
             command.parameters('-buildfile', buildFile)
@@ -56,6 +50,6 @@ class AntExecutor extends Task<Object, ProcessResult>{
 
         command.parameters(targets)
 
-        return command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        return command.interaction(GradleSpaceliftDelegate.ECHO_OUTPUT).execute().await()
     }
 }

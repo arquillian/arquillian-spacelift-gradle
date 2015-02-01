@@ -1,6 +1,6 @@
 package org.arquillian.spacelift.gradle.xml
 
-import org.arquillian.spacelift.execution.Task
+import org.arquillian.spacelift.task.Task
 
 class XmlTextLoader extends Task<String, Object>{
 

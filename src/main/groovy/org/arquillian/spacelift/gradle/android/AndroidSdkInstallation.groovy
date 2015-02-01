@@ -2,20 +2,22 @@ package org.arquillian.spacelift.gradle.android
 
 import groovy.transform.CompileStatic
 
-import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.BaseContainerizableObject
 import org.arquillian.spacelift.gradle.DSLUtil
-import org.arquillian.spacelift.gradle.DefaultGradleSpaceliftTaskFactory
-import org.arquillian.spacelift.gradle.GradleSpacelift
-import org.arquillian.spacelift.gradle.GradleSpaceliftTaskFactory
+import org.arquillian.spacelift.gradle.DefaultGradleTask
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
+import org.arquillian.spacelift.gradle.GradleTask
 import org.arquillian.spacelift.gradle.InheritanceAwareContainer
 import org.arquillian.spacelift.gradle.Installation
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.ToolRegistry
-import org.arquillian.spacelift.tool.basic.DownloadTool
-import org.arquillian.spacelift.tool.basic.UntarTool
-import org.arquillian.spacelift.tool.basic.UnzipTool
+import org.arquillian.spacelift.task.Task
+import org.arquillian.spacelift.task.TaskFactory
+import org.arquillian.spacelift.task.TaskRegistry
+import org.arquillian.spacelift.task.archive.UntarTool
+import org.arquillian.spacelift.task.archive.UnzipTool
+import org.arquillian.spacelift.task.net.DownloadTool
+import org.arquillian.spacelift.task.os.CommandTool
 import org.gradle.api.Project
 import org.slf4j.Logger
 
@@ -60,11 +62,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     ]
 
     // tools provided by this installation
-    InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory> tools
+    InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
 
     AndroidSdkInstallation(String name, Project project) {
         super(name, project)
-        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory)
+        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
     }
 
     AndroidSdkInstallation(String name, AndroidSdkInstallation other) {
@@ -76,7 +78,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         this.isInstalled = (Closure)other.@isInstalled.clone()
         this.createAvds = (Closure)other.@createAvds.clone()
         this.postActions = (Closure) other.@postActions.clone()
-        this.tools = (InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory>) other.@tools.clone()
+        this.tools = (InheritanceAwareContainer<GradleTask, DefaultGradleTask>) other.@tools.clone()
     }
 
     @Override
@@ -110,13 +112,37 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     }
 
     @Override
-    public void registerTools(ToolRegistry registry) {
-        registry.register(AndroidTool)
-        registry.register(AndroidAdbTool)
-        registry.register(AndroidEmulatorTool)
+    public void registerTools(TaskRegistry registry) {
+        registry.register(AndroidAdbTool, new TaskFactory(){
+                    Task create() {
+                        Task task = new AndroidAdbTool()
+                        // FIXME inject execution service via private field
+                        task.executionService = Spacelift.service()
+                        return task;
+                    }
+                    Collection aliases() { ["adb"]}
+                })
+        registry.register(AndroidTool, new TaskFactory(){
+            Task create() {
+                Task task = new AndroidTool()
+                // FIXME inject execution service via private field
+                task.executionService = Spacelift.service()
+                return task;
+            }
+            Collection aliases() { ["android"]}
+        })
+        registry.register(AndroidEmulatorTool, new TaskFactory() {
+                    Task create() {
+                        Task task = new AndroidEmulatorTool()
+                        // FIXME inject execution service via private field
+                        task.executionService = Spacelift.service()
+                        return task
+                    }
+                    Collection aliases() {["emulator"]}
+                })
 
-        ((Iterable<GradleSpaceliftTaskFactory>) tools).each { GradleSpaceliftTaskFactory factory ->
-            factory.register(registry)
+        ((Iterable<GradleTask>) tools).each { GradleTask task ->
+            Spacelift.registry().register(task.factory())
         }
     }
 
@@ -139,7 +165,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
             // dowload bits if they do not exists
             logger.info(":install:${name} Grabbing from ${getRemoteUrl()}, storing at ${targetFile}")
-            Tasks.prepare(DownloadTool).from(getRemoteUrl()).timeout(60000).to(targetFile).execute().await()
+            Spacelift.task(DownloadTool).from(getRemoteUrl()).timeout(60000).to(targetFile).execute().await()
         }
 
         // extract file if set to and at the same time file is defined
@@ -153,11 +179,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         // based on installation type, we might want to unzip/untar/something else
         switch(getFileName()) {
             case ~/.*zip/:
-                Tasks.chain(getFsPath(),UnzipTool).toDir((File)project['spacelift']['workspace']).execute().await()
+                Spacelift.task(getFsPath(),UnzipTool).toDir((File)project['spacelift']['workspace']).execute().await()
                 break
             case ~/.*tgz/:
             case ~/.*tar\.gz/:
-                Tasks.chain(getFsPath(),UntarTool).toDir((File)project['spacelift']['workspace']).execute().await()
+                Spacelift.task(getFsPath(),UntarTool).toDir((File)project['spacelift']['workspace']).execute().await()
                 break
             default:
                 logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
@@ -168,23 +194,23 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         project.getAnt().invokeMethod("chmod", [dir: "${getHome()}/tools", perm:"a+x", includes:"*", excludes:"*.txt"])
 
         // register tools from installation
-        registerTools(GradleSpacelift.toolRegistry())
+        registerTools(Spacelift.registry())
 
         // update Android SDK, download / update each specified Android SDK version
         if(getUpdateSdk()) {
             getAndroidTargets().each { AndroidTarget androidTarget ->
-                Tasks.prepare(AndroidSdkUpdater).target(androidTarget.name).execute().await()
+                Spacelift.task(AndroidSdkUpdater).target(androidTarget.name).execute().await()
             }
         }
 
         // opt out for stats
-        Tasks.prepare(AndroidSdkOptForStats).execute().await()
+        Spacelift.task(AndroidSdkOptForStats).execute().await()
 
         if (getCreateEmulators()) {
             // create AVDs
             getAndroidTargets().each { AndroidTarget androidTarget ->
                 String avdName = androidTarget.name
-                AVDCreator avdcreator = Tasks.prepare(AVDCreator).target(avdName).name(avdName.replaceAll("\\W", "")).force()
+                AVDCreator avdcreator = Spacelift.task(AVDCreator).target(avdName).name(avdName.replaceAll("\\W", "")).force()
 
                 // set abi if it was defined
                 if(androidTarget.abi) {
@@ -225,7 +251,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return new File((File) project['spacelift']['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
-    static class AndroidAdbTool extends CommandTool {
+    class AndroidAdbTool extends CommandTool {
 
         Map nativeCommand = [
             linux: { ["${home}/platform-tools/adb"]},
@@ -241,32 +267,20 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                 ]}
         ]
 
-        // FIXME this is something what should be provided by spacelift
-        private AndroidSdkInstallation sdk
-
-        @Override
-        protected Collection<String> aliases() {
-            return ["adb"]
-        }
-
         AndroidAdbTool() {
             super()
-            // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
-            // This will be most likely fixed in both depends/provides and task factories
-            this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
-                    .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
-            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
-            this.interaction = GradleSpacelift.ECHO_OUTPUT
+            this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
         }
 
         @Override
         public String toString() {
-            return "AndroidAdbTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+            return "AndroidAdbTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
         }
     }
 
-    static class AndroidEmulatorTool extends CommandTool {
+    class AndroidEmulatorTool extends CommandTool {
 
         Map nativeCommand = [
             linux: { ["${home}/tools/emulator"]},
@@ -280,32 +294,20 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             solaris: {["${home}/tools/emulator"]}
         ]
 
-        // FIXME this is something what should be provided by spacelift
-        private AndroidSdkInstallation sdk
-
-        @Override
-        protected Collection<String> aliases() {
-            return ["emulator"]
-        }
-
         AndroidEmulatorTool() {
             super()
-            // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
-            // This will be most likely fixed in both depends/provides and task factories
-            this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
-                    .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
-            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
-            this.interaction = GradleSpacelift.ECHO_OUTPUT
+            this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
         }
 
         @Override
         public String toString() {
-            return "AndroidEmulatorTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+            return "AndroidEmulatorTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
         }
     }
 
-    static class AndroidTool extends CommandTool {
+    class AndroidTool extends CommandTool {
 
         Map nativeCommand = [
             linux: { ["${home}/tools/android"]},
@@ -320,28 +322,16 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                     "${home}/tools/android" ]}
         ]
 
-        // FIXME this is something what should be provided by spacelift
-        private AndroidSdkInstallation sdk
-
-        @Override
-        protected Collection<String> aliases() {
-            return ["android"]
-        }
-
         AndroidTool() {
             super()
-            // FIXME Spacelift does not support instantiation of inner classes - because of constructor parameter, we need to go through project
-            // This will be most likely fixed in both depends/provides and task factories
-            this.sdk = (AndroidSdkInstallation) GradleSpacelift.currentProject()['spacelift']['installations']
-                    .find { it -> AndroidSdkInstallation.class.isAssignableFrom(it.getClass())}
-            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
-            this.interaction = GradleSpacelift.ECHO_OUTPUT
+            this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
         }
 
         @Override
         public String toString() {
-            return "AndroidTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), sdk, this, this)
+            return "AndroidTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
         }
     }
 

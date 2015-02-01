@@ -1,10 +1,8 @@
 package org.arquillian.spacelift.gradle.android
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.process.ProcessInteractionBuilder
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.task.Task
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -42,7 +40,7 @@ class AndroidSdkUpdater extends Task<Object, Void>{
         log.info("Checking installed Android target: ${target}")
 
         // first, check whether Android version is already installed
-        def availableTargets = GradleSpacelift.tools('android').parameters([
+        def availableTargets = Spacelift.task('android').parameters([
             "list",
             "target",
             "-c"
@@ -74,7 +72,7 @@ class AndroidSdkUpdater extends Task<Object, Void>{
             androidVersionSpecificPackages += ",sys-img-x86-android-${androidVersion}"
         }
 
-        GradleSpacelift.tools('android').parameters([
+        Spacelift.task('android').parameters([
             "update",
             "sdk",
             "--filter",

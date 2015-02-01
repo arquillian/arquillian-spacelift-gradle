@@ -1,13 +1,13 @@
 package org.arquillian.spacelift.gradle.git
 
+import java.util.logging.Logger
+
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool
-
-import java.util.logging.Logger
+import org.arquillian.spacelift.task.Task
+import org.arquillian.spacelift.task.os.CommandTool
 
 /**
  * Clones repository as chained input to specified destination.
@@ -19,18 +19,13 @@ import java.util.logging.Logger
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
  */
-class GitCloneTool extends Tool<URI, File> {
+class GitCloneTool extends Task<URI, File> {
 
     private Logger logger = Logger.getLogger(GitCloneTool.class.getName())
 
     private File destination = null
 
     private File gitSsh
-
-    @Override
-    protected Collection<String> aliases() {
-        ["git_clone"]
-    }
 
     /**
      *
@@ -100,7 +95,7 @@ class GitCloneTool extends Tool<URI, File> {
         logger.info(command.toString())
 
         try {
-            CommandTool clone = Tasks.prepare(CommandTool).command(command)
+            CommandTool clone = Spacelift.task(CommandTool).command(command)
 
             if (gitSsh) {
                 clone.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])

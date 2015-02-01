@@ -2,8 +2,8 @@ package org.arquillian.spacelift.gradle.container
 
 import java.text.MessageFormat
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.task.Task
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.xml.XmlFileLoader
 import org.arquillian.spacelift.gradle.xml.XmlTextLoader
 import org.arquillian.spacelift.gradle.xml.XmlUpdater
@@ -42,8 +42,8 @@ class DomainXmlUpdater extends Task<Object, File> {
     @Override
     protected File process(Object input) throws Exception {
 
-        def domain = Tasks.chain(domainXmlFile, XmlFileLoader).execute().await()
-        def sslConnectorElement = Tasks.chain(MessageFormat.format(SSL_CONNECTOR_TEMPLATE, keystorePass, keystoreFile.getAbsolutePath(), truststoreFile.getAbsolutePath(), protocol),
+        def domain = Spacelift.task(domainXmlFile, XmlFileLoader).execute().await()
+        def sslConnectorElement = Spacelift.task(MessageFormat.format(SSL_CONNECTOR_TEMPLATE, keystorePass, keystoreFile.getAbsolutePath(), truststoreFile.getAbsolutePath(), protocol),
                 XmlTextLoader).execute().await()
 
         domain.profiles.profile.find {p -> p.@name == profile}.subsystem.find { s -> s.@xmlns.contains('jboss:domain:web:')}.connector.findAll{ c -> c.@name == "https" }.each { it.replaceNode { } }
@@ -54,25 +54,25 @@ class DomainXmlUpdater extends Task<Object, File> {
         }
 
         // define JVM parameters after <extensions>
-        
+
         // if there is no system-properties section, create one
         if (domain."system-properties".isEmpty()) {
             domain.children().add(1, new Node(null, "system-properties"))
         }
-        
+
         // remove truststore properties
         domain."system-properties".property.findAll { s ->
             s.@name == "javax.net.ssl.trustStore" || s.@name == "javax.net.ssl.trustStorePassword"
         }.each {
             it.replaceNode { }
         }
-        
+
         // add new truststore properties
         def systemProperties = domain."system-properties"[0]
         systemProperties.appendNode("property", [name: "javax.net.ssl.trustStore", value: truststoreFile.getAbsolutePath()])
         systemProperties.appendNode("property", [name: "javax.net.ssl.trustStorePassword", value: keystorePass])
-        
-        Tasks.chain(domain, XmlUpdater).file(domainXmlFile).execute().await()
+
+        Spacelift.task(domain, XmlUpdater).file(domainXmlFile).execute().await()
 
         return domainXmlFile
     }

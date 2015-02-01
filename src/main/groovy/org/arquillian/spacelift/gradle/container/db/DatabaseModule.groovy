@@ -1,9 +1,8 @@
 package org.arquillian.spacelift.gradle.container.db
 
-
-import org.arquillian.spacelift.execution.Tasks
-import org.jboss.aerogear.test.container.manager.JBossManager;
-import org.jboss.aerogear.test.container.manager.JBossManagerConfiguration
+import org.arquillian.spacelift.Spacelift
+import org.jboss.aerogear.test.container.manager.JBossManager
+import org.jboss.aerogear.test.container.manager.ManagedContainerConfiguration
 import org.jboss.aerogear.test.container.spacelift.JBossStarter
 import org.jboss.aerogear.test.container.spacelift.JBossStopper
 
@@ -45,13 +44,13 @@ abstract class DatabaseModule {
 
     def startContainer() {
         if (startContainer) {
-            manager = Tasks.prepare(JBossStarter).configuration(new JBossManagerConfiguration().setJBossHome(jbossHome)).execute().await()
+            manager = Spacelift.task(JBossStarter).configuration(new ManagedContainerConfiguration().setJbossHome(jbossHome)).execute().await()
         }
     }
 
     def stopContainer() {
         if (startContainer && manager) {
-            Tasks.chain(manager, JBossStopper).execute().await()
+            Spacelift.task(manager, JBossStopper).execute().await()
         }
     }
 

@@ -1,21 +1,18 @@
 package org.arquillian.spacelift.gradle.android
 
-import java.util.Collection
 import java.util.concurrent.TimeUnit
 
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.execution.CountDownWatch
 import org.arquillian.spacelift.execution.Execution
 import org.arquillian.spacelift.execution.ExecutionCondition
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.gradle.GradleSpacelift
 import org.arquillian.spacelift.process.ProcessResult
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool
+import org.arquillian.spacelift.task.Task
 
-class AndroidEmulatorStarter extends Tool<Object, Execution<ProcessResult>> {
+class AndroidEmulatorStarter extends Task<Object, Execution<ProcessResult>> {
 
     private static final ExecutionCondition<Boolean> EMULATOR_STARTED_CONDITION = new AndroidEmulatorStarter.AndroidEmulatorStartedCondition()
-    
+
     private String avd
 
     private String port = "5554"
@@ -62,24 +59,19 @@ class AndroidEmulatorStarter extends Tool<Object, Execution<ProcessResult>> {
     }
 
     @Override
-    protected Collection<String> aliases() {
-        ["android_emulator_starter"]
-    }
-
-    @Override
     protected Execution<ProcessResult> process(Object input) throws Exception {
 
         if (!avd) {
             throw new IllegalStateException("avd to start was not speficied")
         }
 
-        GradleSpacelift.tools("emulator").parameters(["-avd", avd, "-port", port]).parameters(emulatorParameters).execute()
+        Spacelift.task("emulator").parameters(["-avd", avd, "-port", port]).parameters(emulatorParameters).execute()
 
-        Tasks.prepare(AndroidEmulatorStartedChecker)
+        Spacelift.task(AndroidEmulatorStartedChecker)
                 .device("emulator-" + port)
                 .execute().until(new CountDownWatch(timeout, TimeUnit.SECONDS), EMULATOR_STARTED_CONDITION)
 
-        Tasks.prepare(UnlockEmulatorTask).device("emulator-" + port).execute().await()
+        Spacelift.task(UnlockEmulatorTask).device("emulator-" + port).execute().await()
     }
 
     private static final class AndroidEmulatorStartedCondition implements ExecutionCondition<ProcessResult> {

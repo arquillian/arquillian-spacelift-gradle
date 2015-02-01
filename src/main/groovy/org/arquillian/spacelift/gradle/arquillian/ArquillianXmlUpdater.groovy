@@ -1,10 +1,10 @@
 package org.arquillian.spacelift.gradle.arquillian
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
 import org.arquillian.spacelift.gradle.xml.XmlFileLoader
 import org.arquillian.spacelift.gradle.xml.XmlUpdater
+import org.arquillian.spacelift.task.Task
 import org.gradle.api.Project
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -21,7 +21,7 @@ class ArquillianXmlUpdater extends Task<Object, Void>{
     private Project project
 
     ArquillianXmlUpdater() {
-        this.project = GradleSpacelift.currentProject()
+        this.project = new GradleSpaceliftDelegate().project()
     }
 
     /**
@@ -33,9 +33,9 @@ class ArquillianXmlUpdater extends Task<Object, Void>{
 
     /**
      * Allows to further define includes and excludes pattern for the directory.
-     * 
+     *
      * Map accepts following arguments:
-     * dir - directory to be scanned, can be File or String 
+     * dir - directory to be scanned, can be File or String
      * includes - array of includes in Ant format
      * excludes - array of excludes in Ant format
      */
@@ -111,7 +111,7 @@ class ArquillianXmlUpdater extends Task<Object, Void>{
 
     def configureContainer(def containers, def properties, File arquillianXml) {
 
-        def arquillian = Tasks.chain(arquillianXml, XmlFileLoader).execute().await()
+        def arquillian = Spacelift.task(arquillianXml, XmlFileLoader).execute().await()
 
         containers.each { container ->
             log.debug("Modifying container \"*${container}*\" configuration(s) in ${arquillianXml}")
@@ -135,7 +135,7 @@ class ArquillianXmlUpdater extends Task<Object, Void>{
                 }
             }
         }
-        Tasks.chain(arquillian, XmlUpdater).file(arquillianXml).execute().await()
+        Spacelift.task(arquillian, XmlUpdater).file(arquillianXml).execute().await()
     }
 
     def configureExtension(def extensions, def properties) {
@@ -146,7 +146,7 @@ class ArquillianXmlUpdater extends Task<Object, Void>{
 
     def configureExtension(def extensions, def properties, File arquillianXml) {
 
-        def arquillian = Tasks.chain(arquillianXml, XmlFileLoader).execute().await()
+        def arquillian = Spacelift.task(arquillianXml, XmlFileLoader).execute().await()
         extensions.each { extensionQualifier ->
             log.debug("Modifying Arquillian extension \"${extensionQualifier}\" configuration(s) at ${arquillianXml}")
 
@@ -159,6 +159,6 @@ class ArquillianXmlUpdater extends Task<Object, Void>{
                 }
             }
         }
-        Tasks.chain(arquillian, XmlUpdater).file(arquillianXml).execute().await()
+        Spacelift.task(arquillian, XmlUpdater).file(arquillianXml).execute().await()
     }
 }

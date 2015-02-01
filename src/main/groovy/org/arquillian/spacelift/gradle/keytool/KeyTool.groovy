@@ -15,27 +15,16 @@
  * limitations under the License.
  */
 package org.arquillian.spacelift.gradle.keytool
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.execution.Execution
+import org.arquillian.spacelift.execution.ExecutionException
 import org.arquillian.spacelift.gradle.utils.*
-import org.arquillian.spacelift.execution.Execution;
-import org.arquillian.spacelift.execution.ExecutionException;
-import org.arquillian.spacelift.execution.Tasks;
-import org.arquillian.spacelift.process.Command;
-import org.arquillian.spacelift.process.CommandBuilder;
-import org.arquillian.spacelift.process.ProcessInteraction;
-import org.arquillian.spacelift.process.ProcessInteractionBuilder;
-import org.arquillian.spacelift.process.ProcessResult;
-import org.arquillian.spacelift.tool.Tool;
-import org.arquillian.spacelift.process.impl.CommandTool;
+import org.arquillian.spacelift.process.CommandBuilder
+import org.arquillian.spacelift.process.ProcessResult
+import org.arquillian.spacelift.task.os.CommandTool
 
 /**
- * Keytool 
+ * Keytool
  *
  * @author <a href="asaleh@redhat.com">Adam Saleh</a>
  *
@@ -44,11 +33,6 @@ public class KeyTool extends CommandTool {
 
     protected String command;
     protected HashMap<String,String> opts = new HashMap<String,String>();
-
-    @Override
-    public Collection<String> aliases() {
-        ["keytool"]
-    }
 
     KeyTool setAlias(String alias){
         this.opts.put("alias", alias)
@@ -125,7 +109,7 @@ public class KeyTool extends CommandTool {
     }
 
     protected void buildKeytoolCommand(){
-        CommandTool t =  GradleSpacelift.tools("keytool");
+        CommandTool t =  Spacelift.task("keytool");
     	CommandBuilder builder = t.commandBuilder;
 
         builder.parameter("-"+command);

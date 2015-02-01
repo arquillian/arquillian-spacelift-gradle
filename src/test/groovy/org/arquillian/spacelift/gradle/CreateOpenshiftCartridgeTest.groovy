@@ -1,6 +1,6 @@
 package org.arquillian.spacelift.gradle
 
-import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.process.ProcessResult
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -37,7 +37,7 @@ public class CreateOpenshiftCartridgeTest {
         }
 
         // kill servers
-        Tasks.prepare(CreateOpenshiftCartridge)
+        Spacelift.task(CreateOpenshiftCartridge)
                 .named('foobar')
                 .at('mobileqa')
                 .sized("small")

@@ -1,21 +1,15 @@
 package org.arquillian.spacelift.gradle.android
 
-import java.util.Collection
 import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
-import org.arquillian.spacelift.tool.Tool
+import org.arquillian.spacelift.task.Task
 
-class AndroidEmulatorStopper extends Tool<Object, Boolean> {
+class AndroidEmulatorStopper extends Task<Object, Boolean> {
 
     private String device = "emulator-5554"
 
     private int timeout = 10 // in seconds
-    
-    @Override
-    protected Collection<String> aliases() {
-        ["android_emulator_stopper"]
-    }
 
     def device(String device) {
         if (device && device.length() != 0) {
@@ -42,41 +36,41 @@ class AndroidEmulatorStopper extends Tool<Object, Boolean> {
 
     private Callable<Boolean> sendEmulatorCommand(final int port, final String command) {
         return new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws IOException {
-                Socket socket = null
-                BufferedReader input = null
-                PrintWriter output = null
+                    @Override
+                    public Boolean call() throws IOException {
+                        Socket socket = null
+                        BufferedReader input = null
+                        PrintWriter output = null
 
-                try {
-                    socket = new Socket("127.0.0.1", port)
-                    output = new PrintWriter(socket.getOutputStream(), true)
-                    input = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+                        try {
+                            socket = new Socket("127.0.0.1", port)
+                            output = new PrintWriter(socket.getOutputStream(), true)
+                            input = new BufferedReader(new InputStreamReader(socket.getInputStream()))
 
-                    String telnetOutputString = null
+                            String telnetOutputString = null
 
-                    while ((telnetOutputString = input.readLine()) != null) {
-                        if (telnetOutputString.equals("OK")) {
-                            break
+                            while ((telnetOutputString = input.readLine()) != null) {
+                                if (telnetOutputString.equals("OK")) {
+                                    break
+                                }
+                            }
+
+                            output.write(command)
+                            output.write("\n")
+                            output.flush()
+                        } finally {
+                            try {
+                                output.close()
+                                input.close()
+                                socket.close()
+                            } catch (Exception e) {
+                                // ignore
+                            }
                         }
-                    }
 
-                    output.write(command)
-                    output.write("\n")
-                    output.flush()
-                } finally {
-                    try {
-                        output.close()
-                        input.close()
-                        socket.close()
-                    } catch (Exception e) {
-                        // ignore
+                        return true
                     }
                 }
-
-                return true
-            }
-        }
     }
 
     private int extractPortFromDevice(String device) {

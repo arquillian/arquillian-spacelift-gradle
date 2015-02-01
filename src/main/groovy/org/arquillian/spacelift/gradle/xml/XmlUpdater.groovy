@@ -1,15 +1,10 @@
 package org.arquillian.spacelift.gradle.xml
 
-import java.io.File;
-
-import org.arquillian.spacelift.execution.Task
-import org.gradle.api.AntBuilder;
-import org.arquillian.spacelift.gradle.GradleSpacelift;
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
+import org.arquillian.spacelift.task.Task
+import org.gradle.api.AntBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-import groovy.util.XmlNodePrinter
-import groovy.util.XmlParser
 
 class XmlUpdater extends Task<Object, File>{
 
@@ -21,7 +16,7 @@ class XmlUpdater extends Task<Object, File>{
     private AntBuilder ant
 
     XmlUpdater() {
-        this.ant = GradleSpacelift.currentProject().ant
+        this.ant = new GradleSpaceliftDelegate().project().ant
     }
 
     XmlUpdater file(File file) {

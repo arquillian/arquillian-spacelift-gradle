@@ -1,13 +1,13 @@
 package org.arquillian.spacelift.gradle.git
 
+import java.util.logging.Logger
+
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool
-
-import java.util.logging.Logger
+import org.arquillian.spacelift.task.Task
+import org.arquillian.spacelift.task.os.CommandTool
 
 /**
  * Checkouts some branch. If {@link #checkout(String)} is not called, it is checked out to master.
@@ -15,16 +15,11 @@ import java.util.logging.Logger
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
  */
-class GitCheckoutTool extends Tool<File, File> {
+class GitCheckoutTool extends Task<File, File> {
 
     private Logger logger = Logger.getLogger(GitCheckoutTool.class.getName())
 
     private String branch = "master"
-
-    @Override
-    protected Collection<String> aliases() {
-        ["git_checkout"]
-    }
 
     /**
      *
@@ -48,7 +43,7 @@ class GitCheckoutTool extends Tool<File, File> {
         logger.info(command.toString())
 
         try {
-            Tasks.prepare(CommandTool).workingDirectory(repositoryDir).command(command).execute().await()
+            Spacelift.task(CommandTool).workingDirectory(repositoryDir).command(command).execute().await()
         } catch (ExecutionException ex) {
             throw new ExecutionException(
                     ex, "Checking out branch '{0}' in repository '{1}' was not successful. Command '{2}'.", branch,

@@ -1,5 +1,6 @@
 package org.arquillian.spacelift.gradle
 
+import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
 
 
@@ -33,7 +34,7 @@ class SpaceliftExtension {
 
     // internal DSL
     InheritanceAwareContainer<Profile, Profile> profiles
-    InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory> tools
+    InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
     InheritanceAwareContainer<Installation, DefaultInstallation> installations
     InheritanceAwareContainer<Test, DefaultTest> tests
 
@@ -50,7 +51,7 @@ class SpaceliftExtension {
         this.enableSnapshots = false
         this.project = project
         this.profiles = new InheritanceAwareContainer(project, this, Profile, Profile)
-        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory)
+        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
         this.installations = new InheritanceAwareContainer(project, this, Installation, DefaultInstallation)
         this.tests = new InheritanceAwareContainer(project, this, Test, DefaultTest)
     }
@@ -68,14 +69,14 @@ class SpaceliftExtension {
         tools.configure(closure)
 
         // register existing tools
-        tools.each { factory ->
-            factory.register(GradleSpacelift.toolRegistry())
+        tools.each { GradleTask task ->
+            Spacelift.registry().register(task.factory())
         }
 
         this
     }
 
-    InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory> getTools() {
+    InheritanceAwareContainer<GradleTask, DefaultGradleTask> getTools() {
         tools
     }
 

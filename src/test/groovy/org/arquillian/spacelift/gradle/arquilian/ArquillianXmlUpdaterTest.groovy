@@ -1,7 +1,6 @@
 package org.arquillian.spacelift.gradle.arquilian
 
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.execution.impl.DefaultExecutionServiceFactory
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.arquillian.ArquillianXmlUpdater
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -18,7 +17,7 @@ class ArquillianXmlUpdaterTest {
 
     @Test
     void "modify arquillian.xml files"() {
-        Tasks.chain(
+        Spacelift.task(
                 [foo:'bar'], ArquillianXmlUpdater)
                 .dir(new File('.'))
                 .execute().await()
@@ -26,7 +25,7 @@ class ArquillianXmlUpdaterTest {
 
     @Test
     void "modify arquillian.xml files with includes, excludes"() {
-        Tasks.chain(
+        Spacelift.task(
                 [foo:'bar'], ArquillianXmlUpdater)
                 .dir(dir:new File('.'), includes:["foo/arquillian.xml"], excludes:["**/target/**"])
                 .execute().await()

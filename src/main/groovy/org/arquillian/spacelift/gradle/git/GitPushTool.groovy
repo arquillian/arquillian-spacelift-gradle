@@ -1,13 +1,13 @@
 package org.arquillian.spacelift.gradle.git
 
+import java.util.logging.Logger
+
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.execution.Tasks
 import org.arquillian.spacelift.process.Command
 import org.arquillian.spacelift.process.CommandBuilder
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool
-
-import java.util.logging.Logger
+import org.arquillian.spacelift.task.Task
+import org.arquillian.spacelift.task.os.CommandTool
 
 /**
  * By default it pushes to "{@literal origin :.}". You can override this by {@link #remote(String) and {@link # branch ( String )}.
@@ -16,7 +16,7 @@ import java.util.logging.Logger
  * @author <a href="mailto:smikloso@redhat.com">Stefan Miklosovic</a>
  *
  */
-class GitPushTool extends Tool<File, File> {
+class GitPushTool extends Task<File, File> {
 
     private Logger logger = Logger.getLogger(GitPushTool.class.getName())
 
@@ -27,11 +27,6 @@ class GitPushTool extends Tool<File, File> {
     private boolean tags
 
     private File gitSsh
-
-    @Override
-    protected Collection<String> aliases() {
-        ["git_push"]
-    }
 
     /**
      * By default set to "origin". Null values and empty strings are not taken into consideration.
@@ -95,7 +90,7 @@ class GitPushTool extends Tool<File, File> {
         logger.info(command.toString())
 
         try {
-            CommandTool push = Tasks.prepare(CommandTool).workingDirectory(repositoryDir).command(command)
+            CommandTool push = Spacelift.task(CommandTool).workingDirectory(repositoryDir).command(command)
 
             if (gitSsh) {
                 push.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
@@ -104,7 +99,7 @@ class GitPushTool extends Tool<File, File> {
             push.execute().await()
         } catch (ExecutionException ex) {
             throw new ExecutionException(
-                    ex, "Could not push {0} to {1} using command {2}.", branch, remote, command.toString())
+            ex, "Could not push {0} to {1} using command {2}.", branch, remote, command.toString())
         }
 
         repositoryDir

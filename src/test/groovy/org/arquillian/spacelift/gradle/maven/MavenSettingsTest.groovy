@@ -3,7 +3,7 @@ package org.arquillian.spacelift.gradle.maven
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
 
-import org.arquillian.spacelift.execution.Tasks
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.maven.SettingsXmlUpdater
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -42,6 +42,6 @@ class MavenSettingsTest {
             }
         }
 
-        Tasks.prepare(SettingsXmlUpdater)
+        Spacelift.task(SettingsXmlUpdater)
     }
 }

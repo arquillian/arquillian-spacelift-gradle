@@ -2,11 +2,11 @@ package org.arquillian.spacelift.gradle
 
 import groovy.transform.CompileStatic
 
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.tool.ToolRegistry
-import org.arquillian.spacelift.tool.basic.DownloadTool
-import org.arquillian.spacelift.tool.basic.UntarTool
-import org.arquillian.spacelift.tool.basic.UnzipTool
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.task.TaskRegistry
+import org.arquillian.spacelift.task.archive.UntarTool
+import org.arquillian.spacelift.task.archive.UnzipTool
+import org.arquillian.spacelift.task.net.DownloadTool
 import org.gradle.api.Project
 import org.slf4j.Logger
 
@@ -49,12 +49,12 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     Closure preconditions = { true }
 
     // tools provided by this installation
-    InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory> tools
+    InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
 
     DefaultInstallation(String productName, Project project) {
         super(productName, project)
         this.product = { productName }
-        this.tools = new InheritanceAwareContainer(project, this, GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory)
+        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
     }
 
     /**
@@ -75,7 +75,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         this.extractMapper = (Closure) other.@extractMapper.clone()
         this.preconditions = (Closure) other.@preconditions.clone()
         this.postActions = (Closure) other.@postActions.clone()
-        this.tools =  (InheritanceAwareContainer<GradleSpaceliftTaskFactory, DefaultGradleSpaceliftTaskFactory>) other.@tools.clone()
+        this.tools =  (InheritanceAwareContainer<GradleTask, DefaultGradleTask>) other.@tools.clone()
     }
 
     @Override
@@ -125,10 +125,10 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     }
 
     @Override
-    public void registerTools(ToolRegistry registry) {
+    public void registerTools(TaskRegistry registry) {
         // register installed tools
-        ((Iterable<GradleSpaceliftTaskFactory>)tools).each { GradleSpaceliftTaskFactory factory ->
-            factory.register(registry)
+        ((Iterable<GradleTask>)tools).each { GradleTask task ->
+            Spacelift.registry().register(task.factory());
         }
     }
 
@@ -153,7 +153,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
             // dowload bits if they do not exists
             logger.info(":install:${name} Grabbing from ${getRemoteUrl()}, storing at ${targetFile}")
-            Tasks.prepare(DownloadTool).from(getRemoteUrl()).timeout(60000).to(targetFile).execute().await()
+            Spacelift.task(DownloadTool).from(getRemoteUrl()).timeout(60000).to(targetFile).execute().await()
         }
 
         // extract file if set to and at the same time file is defined
@@ -170,19 +170,19 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
             // based on installation type, we might want to unzip/untar/something else
             switch(getFileName()) {
                 case ~/.*jar/:
-                    ((UnzipTool)project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir(new File((File) project['spacelift']['workspace'], getFileName())), remap))
+                    ((UnzipTool)project.configure(Spacelift.task(getFsPath(),UnzipTool).toDir(new File((File) project['spacelift']['workspace'], getFileName())), remap))
                     .execute().await()
                     break
                 case ~/.*zip/:
-                    ((UnzipTool)project.configure(Tasks.chain(getFsPath(),UnzipTool).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
+                    ((UnzipTool)project.configure(Spacelift.task(getFsPath(),UnzipTool).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
                     break
                 case ~/.*tgz/:
                 case ~/.*tar\.gz/:
-                    ((UntarTool)project.configure(Tasks.chain(getFsPath(),UntarTool).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
+                    ((UntarTool)project.configure(Spacelift.task(getFsPath(),UntarTool).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
                     break
                 case ~/.*tbz/:
                 case ~/.*tar\.bz2/:
-                    ((UntarTool)project.configure(Tasks.chain(getFsPath(),UntarTool).bzip2(true).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
+                    ((UntarTool)project.configure(Spacelift.task(getFsPath(),UntarTool).bzip2(true).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
                     break
                 default:
                     logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
@@ -202,7 +202,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         }
 
         // register tools
-        registerTools(GradleSpacelift.toolRegistry())
+        registerTools(Spacelift.registry())
 
         // execute post actions
         DSLUtil.resolve(postActions, this)

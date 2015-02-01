@@ -2,12 +2,12 @@ package org.arquillian.spacelift.gradle.maven
 
 import java.text.MessageFormat
 
-import org.arquillian.spacelift.execution.Task
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.gradle.GradleSpacelift
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
 import org.arquillian.spacelift.gradle.xml.XmlFileLoader
 import org.arquillian.spacelift.gradle.xml.XmlTextLoader
 import org.arquillian.spacelift.gradle.xml.XmlUpdater
+import org.arquillian.spacelift.task.Task
 import org.slf4j.LoggerFactory
 
 class SettingsXmlUpdater extends Task<Object, Void> {
@@ -66,7 +66,7 @@ class SettingsXmlUpdater extends Task<Object, Void> {
 
     SettingsXmlUpdater() {
 
-        def project = GradleSpacelift.currentProject()
+        def project = new GradleSpaceliftDelegate().project()
         def ant = project.ant
 
         this.settingsXmlFile = new File(project.spacelift.workspace, "settings.xml")
@@ -97,7 +97,7 @@ class SettingsXmlUpdater extends Task<Object, Void> {
 
     @Override
     protected Void process(Object input) throws Exception {
-        def settings = Tasks.chain(settingsXmlFile, XmlFileLoader).execute().await()
+        def settings = Spacelift.task(settingsXmlFile, XmlFileLoader).execute().await()
 
         // in case there is not any 'profiles' or 'activeProfiles' element, add them to settings.xml
         if (settings.profiles.isEmpty()) {
@@ -110,8 +110,8 @@ class SettingsXmlUpdater extends Task<Object, Void> {
 
         // update with defined repositories
         repositories.each { r ->
-            def profileElement = Tasks.chain(MessageFormat.format(PROFILE_TEMPLATE, r.repositoryId, r.repositoryUri, r.snapshotsEnabled), XmlTextLoader).execute().await()
-            def profileActivationElement = Tasks.chain(MessageFormat.format(PROFILE_ACTIVATION_TEMPLATE, r.repositoryId), XmlTextLoader).execute().await()
+            def profileElement = Spacelift.task(MessageFormat.format(PROFILE_TEMPLATE, r.repositoryId, r.repositoryUri, r.snapshotsEnabled), XmlTextLoader).execute().await()
+            def profileActivationElement = Spacelift.task(MessageFormat.format(PROFILE_ACTIVATION_TEMPLATE, r.repositoryId), XmlTextLoader).execute().await()
 
             // profiles
 
@@ -133,7 +133,7 @@ class SettingsXmlUpdater extends Task<Object, Void> {
         settings.localRepository.each { it.replaceNode {} }
         settings.children().add(0, new Node(null, 'localRepository', "${localRepositoryDir.getAbsolutePath()}"))
 
-        Tasks.chain(settings, XmlUpdater).file(settingsXmlFile).execute().await()
+        Spacelift.task(settings, XmlUpdater).file(settingsXmlFile).execute().await()
         return null;
     }
 

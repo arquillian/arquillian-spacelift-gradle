@@ -1,14 +1,11 @@
 package org.arquillian.spacelift.gradle.openshift
 
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.process.ProcessInteractionBuilder
-import org.arquillian.spacelift.process.ProcessResult;
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.arquillian.spacelift.tool.Tool
-import org.arquillian.spacelift.gradle.GradleSpacelift
-import org.arquillian.spacelift.gradle.git.GitSshFileTask
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
+import org.arquillian.spacelift.process.ProcessResult
+import org.arquillian.spacelift.task.Task
 
-class CreateOpenshiftCartridge extends Tool<Object, ProcessResult> {
+class CreateOpenshiftCartridge extends Task<Object, ProcessResult> {
 
     def name
     def namespace
@@ -28,20 +25,15 @@ class CreateOpenshiftCartridge extends Tool<Object, ProcessResult> {
     def token
 
     @Override
-    protected Collection<String> aliases() {
-        return "rhc-create-app"
-    }
-
-    @Override
     protected ProcessResult process(Object unused) throws Exception {
 
         // delete app if it exists
         if(force) {
-            def command = GradleSpacelift.tools('rhc')
+            def command = Spacelift.task('rhc')
                     .parameters("app", "delete", "--confirm", name, "-n", namespace)
                     // if app is not present, it will fail with 101
                     .shouldExitWith(0, 101)
-                    .interaction(GradleSpacelift.ECHO_OUTPUT)
+                    .interaction(GradleSpaceliftDelegate.ECHO_OUTPUT)
 
             if(login) {
                 command.parameters("-l", login)
@@ -56,7 +48,7 @@ class CreateOpenshiftCartridge extends Tool<Object, ProcessResult> {
             command.execute().await()
         }
 
-        def command = GradleSpacelift.tools('rhc')
+        def command = Spacelift.task('rhc')
 
         if (gitSsh) {
             command.addEnvironment(["GIT_SSH": gitSsh.getAbsolutePath()])
@@ -97,7 +89,7 @@ class CreateOpenshiftCartridge extends Tool<Object, ProcessResult> {
 
         command.parameters(cartridges)
 
-        ProcessResult result = command.interaction(GradleSpacelift.ECHO_OUTPUT).execute().await()
+        ProcessResult result = command.interaction(GradleSpaceliftDelegate.ECHO_OUTPUT).execute().await()
 
         result
     }

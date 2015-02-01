@@ -1,15 +1,13 @@
 package org.arquillian.spacelift.gradle
 
-import org.arquillian.spacelift.execution.Tasks
-import org.arquillian.spacelift.execution.impl.DefaultExecutionServiceFactory
-import org.arquillian.spacelift.gradle.git.*
-import org.arquillian.spacelift.process.impl.CommandTool
-import org.junit.BeforeClass
-import org.junit.Ignore
-import org.junit.Test
-
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
+
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.git.*
+import org.arquillian.spacelift.task.os.CommandTool
+import org.junit.Ignore
+import org.junit.Test
 
 /**
  *
@@ -28,15 +26,15 @@ class GitTest {
 
         File repositoryCloneDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
 
-        Tasks.chain(repositoryInitDir, GitInitTool).then(GitCloneTool).destination(repositoryCloneDir).execute().await()
+        Spacelift.task(repositoryInitDir, GitInitTool).then(GitCloneTool).destination(repositoryCloneDir).execute().await()
 
         // We need to configure the user, otherwise it git will be failing with exit code 128
-        Tasks.prepare(CommandTool)
+        Spacelift.task(CommandTool)
                 .workingDir(repositoryCloneDir.absolutePath)
                 .programName('git')
                 .parameters('config', 'user.email', 'spacelift@arquillian.org').execute().await()
 
-        Tasks.prepare(CommandTool)
+        Spacelift.task(CommandTool)
                 .workingDir(repositoryCloneDir.absolutePath)
                 .programName('git')
                 .parameters('config', 'user.name', 'Arquillian Spacelift')
@@ -55,7 +53,7 @@ class GitTest {
         File outsideOfRepositoryRelative = new File(repositoryCloneDir, "../" + UUID.randomUUID().toString())
         outsideOfRepositoryRelative.createNewFile()
 
-        Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile1, dummyFile2, outsideOfRepository])
+        Spacelift.task(repositoryCloneDir, GitAddTool).add([dummyFile1, dummyFile2, outsideOfRepository])
                 .then(GitCommitTool).message("added some files")
                 .then(GitPushTool).branch("master")
                 .then(GitBranchTool.class).branch("dummyBranch")
@@ -69,7 +67,7 @@ class GitTest {
         dummyFile3.createNewFile()
         dummyFile4.createNewFile()
 
-        Tasks.chain(repositoryCloneDir, GitAddTool).add([dummyFile3, dummyFile4, outsideOfRepositoryRelative])
+        Spacelift.task(repositoryCloneDir, GitAddTool).add([dummyFile3, dummyFile4, outsideOfRepositoryRelative])
                 .then(GitRemoveTool).force().remove(dummyFile3).remove([outsideOfRepository, outsideOfRepositoryRelative])
                 .then(GitCommitTool).message("deleted dummyFile3 and added dummyFile4")
                 .then(GitTagTool).tag("1.0.0")
@@ -78,7 +76,7 @@ class GitTest {
 
         File repository2CloneDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
 
-        Tasks.chain(repositoryInitDir.toURI(), GitCloneTool).destination(repository2CloneDir)
+        Spacelift.task(repositoryInitDir.toURI(), GitCloneTool).destination(repository2CloneDir)
                 .then(GitFetchTool)
                 .then(GitCheckoutTool).checkout("dummyBranch")
                 .execute().await()
@@ -98,9 +96,9 @@ class GitTest {
 
         File repositoryCloneDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString())
 
-        File gitSshFile = Tasks.prepare(GitSshFileTask).execute().await()
+        File gitSshFile = Spacelift.task(GitSshFileTask).execute().await()
 
-        Tasks.chain(testRepository, GitCloneTool).gitSsh(gitSshFile).destination(repositoryCloneDir)
+        Spacelift.task(testRepository, GitCloneTool).gitSsh(gitSshFile).destination(repositoryCloneDir)
                 .then(GitFetchTool)
                 .then(GitBranchTool).branch("dummyBranch")
                 .then(GitCheckoutTool).checkout("dummyBranch")
@@ -112,7 +110,7 @@ class GitTest {
         file1.createNewFile()
         file2.createNewFile()
 
-        Tasks.chain(repositoryCloneDir, GitAddTool).add([file1, file2])
+        Spacelift.task(repositoryCloneDir, GitAddTool).add([file1, file2])
                 .then(GitCommitTool).message("added some files")
                 .then(GitPushTool).remote("origin").branch("dummyBranch")
                 .then(GitPushTool).remote("origin").branch(":dummyBranch") // delete that branch
