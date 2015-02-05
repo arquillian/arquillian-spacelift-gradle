@@ -40,6 +40,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
     Closure postActions = {}
 
+    Closure buildTools = { "21.1.2" }
+    
     Map remoteUrl = [
         linux: { "http://dl.google.com/android/android-sdk_r${version}-linux.tgz" },
         windows: { "http://dl.google.com/android/android-sdk_r${version}-windows.zip" },
@@ -199,14 +201,14 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         // update Android SDK, download / update each specified Android SDK version
         if(getUpdateSdk()) {
             getAndroidTargets().each { AndroidTarget androidTarget ->
-                Spacelift.task(AndroidSdkUpdater).target(androidTarget.name).execute().await()
+                Spacelift.task(AndroidSdkUpdater).buildTools(getBuildTools()).target(androidTarget.name).execute().await()
             }
         }
 
         // opt out for stats
         Spacelift.task(AndroidSdkOptForStats).execute().await()
 
-        if (getCreateEmulators()) {
+        if (getCreateAvds()) {
             // create AVDs
             getAndroidTargets().each { AndroidTarget androidTarget ->
                 String avdName = androidTarget.name
@@ -239,10 +241,14 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return targets.collect { Object it -> new AndroidTarget(it) }
     }
 
-    public boolean getCreateEmulators() {
+    public boolean getCreateAvds() {
         return DSLUtil.resolve(Boolean.class, createAvds, this)
     }
 
+    public String getBuildTools() {
+        return DSLUtil.resolve(String.class, buildTools, this)
+    }
+    
     public Boolean getUpdateSdk() {
         return DSLUtil.resolve(Boolean.class, updateSdk, this)
     }
@@ -251,6 +257,19 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return new File((File) project['spacelift']['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
+    private Map<String, String> getAndroidEnvironmentProperties() {
+        Map<String, String> envProperties = new HashMap<String, String>();
+
+        File androidHome = getHome()
+
+        envProperties.put("ANDROID_HOME", androidHome.canonicalPath)
+        envProperties.put("ANDROID_SDK_HOME", new File((File) project['spacelift']['workspace'],"").canonicalPath)
+        envProperties.put("ANDROID_TOOLS", new File(androidHome, "tools").canonicalPath)
+        envProperties.put("ANDROID_PLATFORM_TOOLS", new File(androidHome, "platform-tools").canonicalPath)
+        
+        return envProperties
+    }
+    
     class AndroidAdbTool extends CommandTool {
 
         Map nativeCommand = [
@@ -272,6 +291,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
+            this.environment.putAll(AndroidSdkInstallation.this.getAndroidEnvironmentProperties())
         }
 
         @Override
@@ -299,6 +319,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
+            this.environment.putAll(AndroidSdkInstallation.this.getAndroidEnvironmentProperties())
         }
 
         @Override
@@ -327,6 +348,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
+            this.environment.putAll(AndroidSdkInstallation.this.getAndroidEnvironmentProperties())
         }
 
         @Override
