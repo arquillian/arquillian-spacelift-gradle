@@ -251,6 +251,19 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return new File((File) project['spacelift']['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
+    private Map<String, String> getAndroidEnvironmentProperties() {
+        Map<String, String> envProperties = new HashMap<String, String>();
+        
+        File androidHome = getHome()
+        
+        envProperties.put("ANDROID_HOME", androidHome.absolutePath)
+        envProperties.put("ANDROID_SDK_HOME", androidHome.parentFile.absolutePath)
+        envProperties.put("ANDROID_TOOLS", new File(androidHome, "tools").absolutePath)
+        envProperties.put("ANDROID_PLATFORM_TOOLS", new File(androidHome, "platform-tools").absolutePath)
+        
+        return envProperties
+    }
+    
     class AndroidAdbTool extends CommandTool {
 
         Map nativeCommand = [
@@ -272,6 +285,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
+            this.environment.putAll(AndroidSdkInstallation.this.getAndroidEnvironmentProperties())
         }
 
         @Override
@@ -299,6 +313,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
+            this.environment.putAll(AndroidSdkInstallation.this.getAndroidEnvironmentProperties())
         }
 
         @Override
@@ -327,6 +342,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
+            this.environment.putAll(AndroidSdkInstallation.this.getAndroidEnvironmentProperties())
         }
 
         @Override
