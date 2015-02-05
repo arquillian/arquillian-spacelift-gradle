@@ -40,6 +40,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
     Closure postActions = {}
 
+    Closure buildTools = { "21.1.2" }
+    
     Map remoteUrl = [
         linux: { "http://dl.google.com/android/android-sdk_r${version}-linux.tgz" },
         windows: { "http://dl.google.com/android/android-sdk_r${version}-windows.zip" },
@@ -199,14 +201,14 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         // update Android SDK, download / update each specified Android SDK version
         if(getUpdateSdk()) {
             getAndroidTargets().each { AndroidTarget androidTarget ->
-                Spacelift.task(AndroidSdkUpdater).target(androidTarget.name).execute().await()
+                Spacelift.task(AndroidSdkUpdater).buildTools(getBuildTools()).target(androidTarget.name).execute().await()
             }
         }
 
         // opt out for stats
         Spacelift.task(AndroidSdkOptForStats).execute().await()
 
-        if (getCreateEmulators()) {
+        if (getCreateAvds()) {
             // create AVDs
             getAndroidTargets().each { AndroidTarget androidTarget ->
                 String avdName = androidTarget.name
@@ -239,10 +241,14 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return targets.collect { Object it -> new AndroidTarget(it) }
     }
 
-    public boolean getCreateEmulators() {
+    public boolean getCreateAvds() {
         return DSLUtil.resolve(Boolean.class, createAvds, this)
     }
 
+    public String getBuildTools() {
+        return DSLUtil.resolve(String.class, buildTools, this)
+    }
+    
     public Boolean getUpdateSdk() {
         return DSLUtil.resolve(Boolean.class, updateSdk, this)
     }

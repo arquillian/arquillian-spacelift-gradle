@@ -18,7 +18,7 @@ class AndroidSdkUpdater extends Task<Object, Void>{
     //
     // Backed by JIRA: https://issues.jboss.org/browse/MP-209
     //
-    private String buildToolsVersion = "21.1.1"
+    private String buildToolsVersion = "21.1.2"
 
     AndroidSdkUpdater target(String target) {
         if (target && !target.isEmpty()) {
