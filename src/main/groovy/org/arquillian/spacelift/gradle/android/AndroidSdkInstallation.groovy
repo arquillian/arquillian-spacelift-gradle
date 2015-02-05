@@ -262,10 +262,10 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         
         File androidHome = getHome()
         
-        envProperties.put("ANDROID_HOME", androidHome.absolutePath)
-        envProperties.put("ANDROID_SDK_HOME", androidHome.parentFile.absolutePath)
-        envProperties.put("ANDROID_TOOLS", new File(androidHome, "tools").absolutePath)
-        envProperties.put("ANDROID_PLATFORM_TOOLS", new File(androidHome, "platform-tools").absolutePath)
+        envProperties.put("ANDROID_HOME", androidHome.canonicalPath)
+        envProperties.put("ANDROID_SDK_HOME", androidHome.parentFile.canonicalPath)
+        envProperties.put("ANDROID_TOOLS", new File(androidHome, "tools").canonicalPath)
+        envProperties.put("ANDROID_PLATFORM_TOOLS", new File(androidHome, "platform-tools").canonicalPath)
         
         return envProperties
     }
