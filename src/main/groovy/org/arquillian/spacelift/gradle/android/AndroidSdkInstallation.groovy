@@ -259,11 +259,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
     private Map<String, String> getAndroidEnvironmentProperties() {
         Map<String, String> envProperties = new HashMap<String, String>();
-        
+
         File androidHome = getHome()
-        
+
         envProperties.put("ANDROID_HOME", androidHome.canonicalPath)
-        envProperties.put("ANDROID_SDK_HOME", androidHome.parentFile.canonicalPath)
+        envProperties.put("ANDROID_SDK_HOME", new File((File) project['spacelift']['workspace'],"").canonicalPath)
         envProperties.put("ANDROID_TOOLS", new File(androidHome, "tools").canonicalPath)
         envProperties.put("ANDROID_PLATFORM_TOOLS", new File(androidHome, "platform-tools").canonicalPath)
         
