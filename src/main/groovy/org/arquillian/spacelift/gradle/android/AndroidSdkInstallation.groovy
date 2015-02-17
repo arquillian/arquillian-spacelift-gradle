@@ -41,7 +41,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     Closure postActions = {}
 
     Closure buildTools = { "21.1.2" }
-    
+
     Map remoteUrl = [
         linux: { "http://dl.google.com/android/android-sdk_r${version}-linux.tgz" },
         windows: { "http://dl.google.com/android/android-sdk_r${version}-windows.zip" },
@@ -66,9 +66,9 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     // tools provided by this installation
     InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
 
-    AndroidSdkInstallation(String name, Project project) {
-        super(name, project)
-        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
+    AndroidSdkInstallation(String name, Object parent) {
+        super(name, parent)
+        this.tools = new InheritanceAwareContainer(this, GradleTask, DefaultGradleTask)
     }
 
     AndroidSdkInstallation(String name, AndroidSdkInstallation other) {
@@ -151,7 +151,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     @Override
     public File getHome() {
         String homeDir = DSLUtil.resolve(String.class, DSLUtil.deferredValue(home), this)
-        return new File((File)project['spacelift']['workspace'], homeDir)
+        return new File((File) parent['workspace'], homeDir)
     }
 
     @Override
@@ -181,11 +181,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         // based on installation type, we might want to unzip/untar/something else
         switch(getFileName()) {
             case ~/.*zip/:
-                Spacelift.task(getFsPath(),UnzipTool).toDir((File)project['spacelift']['workspace']).execute().await()
+                Spacelift.task(getFsPath(),UnzipTool).toDir((File)parent['workspace']).execute().await()
                 break
             case ~/.*tgz/:
             case ~/.*tar\.gz/:
-                Spacelift.task(getFsPath(),UntarTool).toDir((File)project['spacelift']['workspace']).execute().await()
+                Spacelift.task(getFsPath(),UntarTool).toDir((File)parent['workspace']).execute().await()
                 break
             default:
                 logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
@@ -193,7 +193,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
 
         // we need to fix executable flags as Java Unzip does not preserve them
-        project.getAnt().invokeMethod("chmod", [dir: "${getHome()}/tools", perm:"a+x", includes:"*", excludes:"*.txt"])
+        // FIXME
+        new GradleSpaceliftDelegate().project().getAnt().invokeMethod("chmod", [dir: "${getHome()}/tools", perm:"a+x", includes:"*", excludes:"*.txt"])
 
         // register tools from installation
         registerTools(Spacelift.registry())
@@ -248,13 +249,13 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     public String getBuildTools() {
         return DSLUtil.resolve(String.class, buildTools, this)
     }
-    
+
     public Boolean getUpdateSdk() {
         return DSLUtil.resolve(Boolean.class, updateSdk, this)
     }
 
     private File getFsPath() {
-        return new File((File) project['spacelift']['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+        return new File((File) parent['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
     private Map<String, String> getAndroidEnvironmentProperties() {
@@ -263,13 +264,13 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         File androidHome = getHome()
 
         envProperties.put("ANDROID_HOME", androidHome.canonicalPath)
-        envProperties.put("ANDROID_SDK_HOME", new File((File) project['spacelift']['workspace'],"").canonicalPath)
+        envProperties.put("ANDROID_SDK_HOME", new File((File) parent['workspace'],"").canonicalPath)
         envProperties.put("ANDROID_TOOLS", new File(androidHome, "tools").canonicalPath)
         envProperties.put("ANDROID_PLATFORM_TOOLS", new File(androidHome, "platform-tools").canonicalPath)
-        
+
         return envProperties
     }
-    
+
     class AndroidAdbTool extends CommandTool {
 
         Map nativeCommand = [

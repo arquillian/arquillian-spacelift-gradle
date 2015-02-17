@@ -29,8 +29,8 @@ class DefaultGradleTask extends BaseContainerizableObject<DefaultGradleTask> imp
         new HashMap<String, String>()
     }
 
-    DefaultGradleTask(String name, Project project) {
-        super(name, project)
+    DefaultGradleTask(String name, Object parent) {
+        super(name, parent)
     }
 
     DefaultGradleTask(String name, DefaultGradleTask other) {

@@ -1,7 +1,11 @@
 package org.arquillian.spacelift.gradle
 
+import java.lang.reflect.Field
+
 import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 
 /**
@@ -9,6 +13,7 @@ import org.gradle.api.Project
  *
  */
 class SpaceliftExtension {
+    private static final Logger logger = LoggerFactory.getLogger(SpaceliftExtension)
 
     // workspace configuration
     File workspace
@@ -50,10 +55,10 @@ class SpaceliftExtension {
         this.enableStaging = false
         this.enableSnapshots = false
         this.project = project
-        this.profiles = new InheritanceAwareContainer(project, this, Profile, Profile)
-        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
-        this.installations = new InheritanceAwareContainer(project, this, Installation, DefaultInstallation)
-        this.tests = new InheritanceAwareContainer(project, this, Test, DefaultTest)
+        this.profiles = new InheritanceAwareContainer(this, Profile, Profile)
+        this.tools = new InheritanceAwareContainer(this, GradleTask, DefaultGradleTask)
+        this.installations = new InheritanceAwareContainer(this, Installation, DefaultInstallation)
+        this.tests = new InheritanceAwareContainer(this, Test, DefaultTest)
     }
 
     def profiles(Closure closure) {
@@ -110,5 +115,56 @@ class SpaceliftExtension {
         }
 
         this.workspace = workspace
+    }
+
+
+    /**
+     * Modification of getProperty method that traverses also content of containers
+     * @param name
+     * @return
+     */
+     def propertyMissing(String name) {
+        Field property = this.getClass().declaredFields.find { Field f ->
+            return f.name == name
+        }
+        if(property!=null) {
+            Object value = this.@"${property.name}"
+            logger.debug("Resolved Spacelift property ${name} of value ${value}")
+            return value
+        }
+
+        // try all containers to find resolution in particular order
+        //order here defines order of reference in case reference to the same object is found, laters are ignored
+        def object, objectType
+        for(def container : ([installations, tests, tools, profiles])) {
+            def resolved = resolve(container, name)
+            if(object==null && resolved != null) {
+                logger.debug("Resolved ${container.type.getSimpleName()} named ${name}")
+                object = resolved
+                objectType = container.type
+            }
+            else if(object!=null && resolved != null) {
+                logger.warn("Detected ambiguous reference ${name}, using ${objectType.getSimpleName()}, ignoring ${container.type.getSimpleName()}")
+            }
+        }
+
+        if(object!=null) {
+            return object
+        }
+
+        println "Object ${name} was not resolved"
+
+        // pass resolution to parent
+        throw new MissingPropertyException("Unable to resolve property named ${name} in Spacelift DSL")
+    }
+
+    private <TYPE extends ContainerizableObject<TYPE>, DEFAULT_TYPE extends TYPE> TYPE resolve(InheritanceAwareContainer<TYPE, DEFAULT_TYPE> container, String name) {
+        try {
+            return container.getAt(name)
+        }
+        catch(MissingPropertyException e) {
+            logger.debug("Unable to resolve ${container.type.getSimpleName()} named ${name}")
+            return null
+        }
     }
 }

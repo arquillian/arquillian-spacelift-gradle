@@ -11,8 +11,8 @@ class MyOwnTestDefinition extends BaseContainerizableObject<MyOwnTestDefinition>
 
     Closure myDSL = {}
 
-    MyOwnTestDefinition(String name, Project project) {
-        super(name, project)
+    MyOwnTestDefinition(String name, Object parent) {
+        super(name, parent)
     }
 
     MyOwnTestDefinition(String name, MyOwnTestDefinition other) {

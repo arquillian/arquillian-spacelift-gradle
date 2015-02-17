@@ -20,8 +20,8 @@ class DefaultTest extends BaseContainerizableObject<DefaultTest> implements Test
 
     Closure afterTest = {}
 
-    DefaultTest(String testName, Project project) {
-        super(testName, project)
+    DefaultTest(String testName, Object parent) {
+        super(testName, parent)
     }
 
     /**

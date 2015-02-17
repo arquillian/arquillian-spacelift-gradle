@@ -40,10 +40,10 @@ class GitBasedInstallation extends BaseContainerizableObject<GitBasedInstallatio
     // tools provided by this installation
     InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
 
-    GitBasedInstallation(String name, Project project) {
-        super(name, project)
+    GitBasedInstallation(String name, Object parent) {
+        super(name, parent)
 
-        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
+        this.tools = new InheritanceAwareContainer(this, GradleTask, DefaultGradleTask)
     }
 
     GitBasedInstallation(String name, GitBasedInstallation other) {
@@ -87,7 +87,7 @@ class GitBasedInstallation extends BaseContainerizableObject<GitBasedInstallatio
     @Override
     File getHome() {
         String homeDir = DSLUtil.resolve(String.class, DSLUtil.deferredValue(home), this)
-        return new File((File)project['spacelift']['workspace'], homeDir)
+        return new File((File) parent['workspace'], homeDir)
     }
 
     @Override

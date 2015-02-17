@@ -4,57 +4,78 @@ import groovy.transform.CompileStatic
 
 import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.task.TaskRegistry
+import org.arquillian.spacelift.task.archive.UncompressTool;
 import org.arquillian.spacelift.task.archive.UntarTool
 import org.arquillian.spacelift.task.archive.UnzipTool
 import org.arquillian.spacelift.task.net.DownloadTool
 import org.gradle.api.Project
+import org.gradle.api.internal.GradleDistributionLocator;
 import org.slf4j.Logger
 
 @CompileStatic
 class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation> implements Installation {
 
     // version of the product installation belongs to
-    Closure version = {}
+    DelayedValue<String> version = DelayedValue.of(String.class).from("")
 
     // product name
-    Closure product = {}
+    DelayedValue<String> product = DelayedValue.of(String.class).from("")
 
-    // these two variables allow to directly specify fs path or remote url of the installation bits
-    Closure fsPath = {}
+    // location of installation cache
+    DelayedValue<File> fsPath = DelayedValue.of(File.class).from({
+        return new File((File) parent['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+    })
 
     // url to download from
-    Closure remoteUrl = {}
+    DelayedValue<URL> remoteUrl = DelayedValue.of(URL.class)
 
     // zip file name
-    Closure fileName = {}
+    DelayedValue<String> fileName = DelayedValue.of(String.class).from({
+        URL url = getRemoteUrl()
+        if(url!=null) {
+            return guessFileNameFromUrl(url)
+        }
+        return ""
+    })
 
     // represents directory where installation is extracted to
-    Closure home = {}
+    DelayedValue<File> home = DelayedValue.of(File.class).from({
+        URL url = getRemoteUrl()
+        if(url!=null) {
+            return new File((File) parent['workspace'], guessDirNameFromUrl(url))
+        }
+        else {
+            return (File) parent['workspace'] //project.spacelift.workspace
+        }
+    })
+
 
     // automatically extract archive
-    Closure autoExtract =  { true }
+    DelayedValue<Boolean> autoExtract = DelayedValue.of(Boolean.class).from(true)
 
-    // application of Ant mapper during extraction
-    Closure extractMapper = {}
+    // application of additional uncompress tool calls 3during extraction
+    DelayedValue<UncompressTool> extractMapper = DelayedValue.of(UncompressTool.class).from({
+        return delegate
+    })
 
-    Closure isInstalled = {
+    DelayedValue<Boolean> isInstalled = DelayedValue.of(Boolean.class).from({
         return getHome().exists()
-    }
+    })
 
     // actions to be invoked after installation is done
-    Closure postActions = {}
+    DelayedValue<Void> postActions = DelayedValue.of(Void.class)
 
     // precondition closure returning boolean
     // if true, installation will be installed, if false, skipped
-    Closure preconditions = { true }
+    DelayedValue<Boolean> preconditions = DelayedValue.of(Boolean.class).from(true)
 
     // tools provided by this installation
     InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
 
-    DefaultInstallation(String productName, Project project) {
-        super(productName, project)
-        this.product = { productName }
-        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
+    DefaultInstallation(String productName, Object parent) {
+        super(productName, parent)
+        this.product.from(productName)
+        this.tools = new InheritanceAwareContainer(this, GradleTask, DefaultGradleTask)
     }
 
     /**
@@ -64,17 +85,17 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     DefaultInstallation(String installationName, DefaultInstallation other) {
         super(installationName, other)
         // use direct access to skip call of getter
-        this.version = (Closure) other.@version.clone()
-        this.product = (Closure) other.@product.clone()
-        this.fsPath = (Closure) other.@fsPath.clone()
-        this.remoteUrl = (Closure) other.@remoteUrl.clone()
-        this.fileName = (Closure) other.@fileName.clone()
-        this.home = (Closure) other.@home.clone()
-        this.isInstalled = (Closure) other.@isInstalled.clone()
-        this.autoExtract = (Closure) other.@autoExtract.clone()
-        this.extractMapper = (Closure) other.@extractMapper.clone()
-        this.preconditions = (Closure) other.@preconditions.clone()
-        this.postActions = (Closure) other.@postActions.clone()
+        this.version = other.@version.copy()
+        this.product = other.@product.copy()
+        this.fsPath = other.@fsPath.copy()
+        this.remoteUrl = other.@remoteUrl.copy()
+        this.fileName = other.@fileName.copy()
+        this.home = other.@home.copy()
+        this.isInstalled = other.@isInstalled.copy()
+        this.autoExtract = other.@autoExtract.copy()
+        this.extractMapper = other.@extractMapper.copy()
+        this.preconditions = other.@preconditions.copy()
+        this.postActions = other.@postActions.copy()
         this.tools =  (InheritanceAwareContainer<GradleTask, DefaultGradleTask>) other.@tools.clone()
     }
 
@@ -85,43 +106,22 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
     @Override
     File getHome() {
-        String homeDir = DSLUtil.resolve(String.class, home, this)
-        if(homeDir==null) {
-            URL url = getRemoteUrl()
-            if(url!=null) {
-                homeDir = guessDirNameFromUrl(url)
-            }
-            else {
-                return (File) project['spacelift']['workspace'] //project.spacelift.workspace
-            }
-        }
-
-        new File((File) project['spacelift']['workspace'], homeDir)
+        return home.resolveWith(this)
     }
 
     @Override
     String getVersion() {
-        String versionString = DSLUtil.resolve(String.class, version, this)
-        if(versionString==null) {
-            return ""
-        }
-
-        return versionString
+        return version.resolveWith(this)
     }
 
     @Override
     String getProduct() {
-        String productName = DSLUtil.resolve(String.class, product, this)
-        if(productName==null) {
-            return ""
-        }
-
-        return productName
+        return product.resolveWith(this)
     }
 
     @Override
     public boolean isInstalled() {
-        return DSLUtil.resolve(Boolean.class, isInstalled, this)
+        return isInstalled.resolveWith(this)
     }
 
     @Override
@@ -136,7 +136,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     @Override
     void install(Logger logger) {
 
-        if (!DSLUtil.resolve(Boolean.class, preconditions, this)) {
+        if (!preconditions.resolveWith(this)) {
             // if closure returns false, we did not meet preconditions
             // so we return from installation process
             logger.info(":install:${name} Skipping, did not meet preconditions.")
@@ -160,44 +160,50 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         if(getAutoExtract() && getFileName() != "") {
             if(getHome().exists()) {
                 logger.info(":install:${name} Deleting previous installation at ${getHome()}")
-                project.getAnt().invokeMethod("delete", [dir: getHome()])
+                // FIXME
+                new GradleSpaceliftDelegate().project().getAnt().invokeMethod("delete", [dir: getHome()])
             }
-
-            def remap = extractMapper.rehydrate(new GradleSpaceliftDelegate(), this, this)
 
             logger.info(":install:${name} Extracting installation from ${getFileName()}")
 
+            File dest = null
             // based on installation type, we might want to unzip/untar/something else
             switch(getFileName()) {
                 case ~/.*jar/:
-                    ((UnzipTool)project.configure(Spacelift.task(getFsPath(),UnzipTool).toDir(new File((File) project['spacelift']['workspace'], getFileName())), remap))
-                    .execute().await()
+                    UnzipTool tool = (UnzipTool) Spacelift.task(getFsPath(), UnzipTool).toDir(new File((File) parent['workspace'], getFileName()))
+                    dest = extractMapper.apply(tool).execute().await()
                     break
                 case ~/.*zip/:
-                    ((UnzipTool)project.configure(Spacelift.task(getFsPath(),UnzipTool).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
+                    UnzipTool tool = (UnzipTool) Spacelift.task(getFsPath(), UnzipTool).toDir((File) parent['workspace'])
+                    dest = extractMapper.apply(tool).execute().await()
                     break
                 case ~/.*tgz/:
                 case ~/.*tar\.gz/:
-                    ((UntarTool)project.configure(Spacelift.task(getFsPath(),UntarTool).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
+                    UntarTool tool = (UntarTool) Spacelift.task(getFsPath(), UntarTool).toDir((File) parent['workspace'])
+                    dest = extractMapper.apply(tool).execute().await()
                     break
                 case ~/.*tbz/:
                 case ~/.*tar\.bz2/:
-                    ((UntarTool)project.configure(Spacelift.task(getFsPath(),UntarTool).bzip2(true).toDir((File) project['spacelift']['workspace']), remap)).execute().await()
+                    UntarTool tool = (UntarTool) Spacelift.task(getFsPath(), UntarTool).bzip2(true).toDir((File) parent['workspace'])
+                    dest = extractMapper.apply(tool).execute().await()
                     break
                 default:
                     logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
             }
+            logger.info(":install:${name} was extracted into ${dest}")
         }
         else {
             if(new File(getHome(), getFileName()).exists()) {
                 logger.info(":install:${name} Deleting previous installation at ${new File(getHome(), getFileName())}")
-                project.getAnt().invokeMethod("delete", [file: new File(getHome(), getFileName())])
+                // FIXME
+                new GradleSpaceliftDelegate().project().getAnt().invokeMethod("delete", [file: new File(getHome(), getFileName())])
 
                 logger.info(":install:${name} Reusing existing installation ${new File(getHome(), getFileName())}")
             }
             else {
-                logger.info(":install:${name} Copying installation to ${(File) project['spacelift']['workspace']}")
-                project.getAnt().invokeMethod("copy", [file: getFsPath(), tofile: new File(getHome(), getFileName())])
+                logger.info(":install:${name} Copying installation to ${(File) parent['workspace']}")
+                // FIXME
+                new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: getFsPath(), tofile: new File(getHome(), getFileName())])
             }
         }
 
@@ -205,40 +211,23 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         registerTools(Spacelift.registry())
 
         // execute post actions
-        DSLUtil.resolve(postActions, this)
+        postActions.resolveWith(this);
     }
 
     String getFileName() {
-        String fileNameString = DSLUtil.resolve(String.class, fileName, this)
-        if(fileNameString==null) {
-            URL url = getRemoteUrl()
-            if(url!=null) {
-                return guessFileNameFromUrl(url)
-            }
-            return ""
-        }
-
-        return fileNameString.toString()
+        fileName.resolveWith(this)
     }
 
     boolean getAutoExtract() {
-        return DSLUtil.resolve(Boolean.class, autoExtract, this)
+        return autoExtract.resolveWith(this)
     }
 
     File getFsPath() {
-        String filePath = DSLUtil.resolve(String.class, fsPath, this)
-        if(filePath==null) {
-            filePath = "${(File) project['spacelift']['installationsDir']}/${getProduct()}/${getVersion()}/${getFileName()}"
-        }
-        return new File(filePath.toString());
+        return fsPath.resolveWith(this)
     }
 
     URL getRemoteUrl() {
-        String remoteUrlString = DSLUtil.resolve(String.class, remoteUrl, this)
-        if(remoteUrlString==null) {
-            return null;
-        }
-        return new URL(remoteUrlString)
+        return remoteUrl.resolveWith(this)
     }
 
     private String guessFileNameFromUrl(URL url) {

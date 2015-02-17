@@ -18,8 +18,8 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
     // list of tests to exclude
     Closure excludedTests = { []}
 
-    Profile(String profileName, Project project) {
-        super(profileName, project)
+    Profile(String profileName, Object parent) {
+        super(profileName, parent)
     }
 
     /**

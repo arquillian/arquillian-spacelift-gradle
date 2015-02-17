@@ -1,8 +1,11 @@
 package org.arquillian.spacelift.gradle
 
 import java.lang.reflect.Field
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 
 import org.apache.commons.lang3.SystemUtils
+
 
 
 class DSLUtil {
@@ -32,6 +35,14 @@ class DSLUtil {
         }
     }
 
+    static List<Field> availableDelayedValues(Object object) {
+        // using fields here on purpose, MetaProperty will use getter if available, changing type
+        return object.class.declaredFields.findAll { Field field ->
+            // find all properties that are of type DelayedValue
+            DelayedValue.class.isAssignableFrom(field.type)
+        }
+    }
+
     static List<Field> undefinedClosurePropertyMethods(Object object) {
         return availableClosureProperties(object).findAll { Field field ->
             // find all properties that don't have DSL setter defined
@@ -43,6 +54,13 @@ class DSLUtil {
         return availableContainerFields(object).findAll { Field field ->
             // find all properties that don't have DSL setter defined
             !object.metaClass.respondsTo(object, field.name, Closure.class)
+        }
+    }
+
+    static List<Field> undefinedDelayedValueMethods(Object object) {
+        return availableDelayedValues(object).findAll { Field field ->
+            // find all properties that don't have DSL setter defined
+            !object.metaClass.respondsTo(object, field.name, Object[].class)
         }
     }
 
@@ -60,6 +78,39 @@ class DSLUtil {
                 //println "Calling ${field.name}(Object...) at ${delegate.class.simpleName} ${delegate.name}"
                 delegate.@"${field.name}" = deferredValue(lazyClosure).dehydrate()
                 return delegate
+            }
+        }
+    }
+
+    static void generateDelayedValueMethods(Object object) {
+        availableDelayedValues(object).each { Field field ->
+
+            // setup name of all delayed values
+            object.@"${field.name}".name = field.name
+            // setup parent of all delayed values
+            object.@"${field.name}".parent = object
+
+            // define all DSL setters, note delegate will become this object
+            if(!object.metaClass.respondsTo(object, field.name, Object[].class)) {
+                object.metaClass."${field.name}" = { Object... lazyClosure ->
+
+                    ((DelayedValue) delegate.@"${field.name}").from(lazyClosure)
+                }
+            }
+
+            //println "Will generate getter for ${field.name} at ${delegate.getClass().simpleName} ${delegate.name}"
+            String getterName = "get"
+            Type retValType = field.getGenericType()
+            if(retValType instanceof ParameterizedType && Boolean.class.isAssignableFrom(retValType.getActualTypeArguments()[0])) {
+                getterName = "is"
+            }
+            getterName += field.name.substring(0, 1).toUpperCase() +  field.name.substring(1)
+
+            // define all DSL getters, note delegate will become this object
+            if(!object.metaClass.respondsTo(object, getterName, null)) {
+                object.metaClass."${getterName}" = {
+                    delegate.@"${field.name}".resolveWith(delegate)
+                }
             }
         }
     }
