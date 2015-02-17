@@ -4,13 +4,12 @@ import groovy.transform.CompileStatic
 
 import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.BaseContainerizableObject
-import org.arquillian.spacelift.gradle.DSLUtil
 import org.arquillian.spacelift.gradle.DefaultGradleTask
+import org.arquillian.spacelift.gradle.DeferredValue
 import org.arquillian.spacelift.gradle.GradleTask
 import org.arquillian.spacelift.gradle.InheritanceAwareContainer
 import org.arquillian.spacelift.gradle.Installation
 import org.arquillian.spacelift.task.TaskRegistry
-import org.gradle.api.Project
 import org.slf4j.Logger
 
 /**
@@ -21,40 +20,42 @@ import org.slf4j.Logger
 @CompileStatic
 class GitBasedInstallation extends BaseContainerizableObject<GitBasedInstallation> implements Installation {
 
-    Closure product = { "unused" }
+    DeferredValue<String> product = DeferredValue.of(String.class).from("unused")
 
-    Closure version = { "unused" }
+    DeferredValue<String> version = DeferredValue.of(String.class).from("unused")
 
-    Closure repository = { }
+    DeferredValue<String> repository = DeferredValue.of(String.class)
 
-    Closure commit = { "master" }
+    DeferredValue<String> commit = DeferredValue.of(String.class).from("master")
 
-    Closure home = {}
+    // represents directory where installation is extracted to
+    DeferredValue<File> home = DeferredValue.of(File.class)
 
-    Closure isInstalled = {
+    DeferredValue<Boolean> isInstalled = DeferredValue.of(Boolean.class).from({
         return getHome().exists()
-    }
+    })
 
-    Closure postActions = {}
+    // actions to be invoked after installation is done
+    DeferredValue<Void> postActions = DeferredValue.of(Void.class)
 
     // tools provided by this installation
     InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
 
-    GitBasedInstallation(String name, Project project) {
-        super(name, project)
+    GitBasedInstallation(String name, Object parent) {
+        super(name, parent)
 
-        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
+        this.tools = new InheritanceAwareContainer(this, GradleTask, DefaultGradleTask)
     }
 
     GitBasedInstallation(String name, GitBasedInstallation other) {
         super(name, other)
 
-        this.product = (Closure) other.@product.clone()
-        this.version = (Closure) other.@product.clone()
-        this.repository = (Closure) other.@repository.clone()
-        this.commit = (Closure) other.@commit.clone()
-        this.isInstalled = (Closure) other.@isInstalled.clone()
-        this.postActions = (Closure) other.@postActions.clone()
+        this.product = other.@product.copy()
+        this.version = other.@product.copy()
+        this.repository = other.@repository.copy()
+        this.commit = other.@commit.copy()
+        this.isInstalled = other.@isInstalled.copy()
+        this.postActions = other.@postActions.copy()
         this.tools = (InheritanceAwareContainer<GradleTask, DefaultGradleTask>) other.@tools.clone()
 
     }
@@ -66,45 +67,28 @@ class GitBasedInstallation extends BaseContainerizableObject<GitBasedInstallatio
 
     @Override
     String getVersion() {
-        def versionString = DSLUtil.resolve(String.class, version, this)
-        if(versionString==null) {
-            return ""
-        }
-
-        return versionString.toString();
+        return version.resolve()
     }
 
     @Override
     String getProduct() {
-        def productName = DSLUtil.resolve(String.class, product, this)
-        if(productName==null) {
-            return ""
-        }
-
-        return productName.toString()
+        return product.resolve()
     }
 
     @Override
     File getHome() {
-        String homeDir = DSLUtil.resolve(String.class, DSLUtil.deferredValue(home), this)
-        return new File((File)project['spacelift']['workspace'], homeDir)
+        return home.resolve()
     }
 
     @Override
     public boolean isInstalled() {
-        return DSLUtil.resolve(Boolean.class, isInstalled, this)
+        return isInstalled.resolve()
     }
 
     @Override
     void install(Logger logger) {
-
-        String repository = DSLUtil.resolve(String.class, repository, this)
-
-        File location = Spacelift.task(repository, GitCloneTool.class).destination(getHome()).execute().await()
-
-        String commit = DSLUtil.resolve(String.class, commit, this)
-
-        Spacelift.task(location, GitCheckoutTool.class).checkout(commit).execute().await()
+        File location = Spacelift.task(repository.resolve(), GitCloneTool.class).destination(getHome()).execute().await()
+        Spacelift.task(location, GitCheckoutTool.class).checkout(commit.resolve()).execute().await()
     }
 
     @Override

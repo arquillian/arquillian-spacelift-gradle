@@ -1,27 +1,25 @@
 package org.arquillian.spacelift.gradle
 
-import groovy.lang.Closure;
-import groovy.transform.CompileStatic;
+import groovy.transform.CompileStatic
 
-import java.lang.reflect.Field
-
-import org.gradle.api.Project
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 @CompileStatic
 abstract class BaseContainerizableObject<TYPE extends BaseContainerizableObject<TYPE>> implements ContainerizableObject<TYPE> {
+    private static final Logger logger = LoggerFactory.getLogger(BaseContainerizableObject)
 
     final String name
-    final Project project
+    final Object parent
 
-    BaseContainerizableObject(String name, Project project) {
-        this.name = name;
-        this.project = project;
+    BaseContainerizableObject(String name, Object parent) {
+        this.name = name
+        this.parent = parent
     }
 
     BaseContainerizableObject(String name, TYPE template) {
-        this.name = name;
-        // project is always copied as shallow object
-        this.project = template.project;
+        this.name = name
+        this.parent = template.parent
     }
 
     @Override
@@ -29,23 +27,29 @@ abstract class BaseContainerizableObject<TYPE extends BaseContainerizableObject<
         return name;
     }
 
-    /**
-     * This method allows to provide nice warning if user is trying to specify closure
-     * that is not supported by given object
-     *
-     * @param name name of the field
-     * @param args
-     * @return
-     */
-    // FIXME, same as propertyMissing, this is causing issues trying to resolve closures we do not control
-    /*
-    def methodMissing(String name, args) {
-
-        println "In method: ${name} as ${this}"
-
-        List<String> availableDSL = DSLUtil.availableClosurePropertyNames(this).collect { "${it}(Object...objects)"} + DSLUtil.availableContainerNames(this).collect { "${it}(Closure closure)"};
-        throw new GroovyRuntimeException("${this.class} named ${this.name}, unable to call method ${name}(" +
-        args.collect { it.class }.join(', ')+"), have you meant one of: ${availableDSL.join(', ')}?");
+    @Override
+    public String toString() {
+        return "${this.getClass().simpleName} ${name}"
     }
-    */
+
+    def propertyMissing(String name) {
+
+        GroovyObject ancestor = (GroovyObject) parent
+        while(ancestor) {
+            try {
+                Object val = ancestor.getProperty(name)
+                logger.debug("Retrieved property \"${name}\"a from ${ancestor}")
+                return val
+            }
+            // if property was not found, try to get it from parent of parent
+            catch(MissingPropertyException e) {
+                if(ancestor.hasProperty("parent")) {
+                    ancestor = (GroovyObject) ancestor.getProperty("parent")
+                }
+                else {
+                    throw new MissingPropertyException("Unable to resolve property \"${name}\" in ${this.getClass().simpleName} ${this.name}. Failed with: ${e.getMessage()}")
+                }
+            }
+        }
+    }
 }
