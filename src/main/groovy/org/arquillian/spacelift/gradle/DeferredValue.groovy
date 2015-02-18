@@ -18,9 +18,9 @@ class DeferredValue<TYPE> {
     final Class<TYPE> type
     Closure valueBlock = {}
 
-    // both parent and name are set later on via Metaclass
+    // both owner and name are set later on via Metaclass
     String name
-    Object parent
+    Object owner
 
     public static <T> DeferredValue<T> of(Class<T> type) {
         return new DeferredValue<TYPE>(type)
@@ -28,6 +28,16 @@ class DeferredValue<TYPE> {
 
     private DeferredValue(Class<TYPE> type) {
         this.type = type
+    }
+
+    DeferredValue<TYPE> named(String name) {
+        this.name = name
+        return this
+    }
+
+    DeferredValue<TYPE> ownedBy(Object owner) {
+        this.owner = owner
+        return this
     }
 
     DeferredValue<TYPE> from(Object... data) {
@@ -41,7 +51,7 @@ class DeferredValue<TYPE> {
     }
 
     TYPE resolve() {
-        return resolveWith(parent, null)
+        return resolveWith(owner, null)
     }
 
     TYPE resolveWith(Object delegate) {
@@ -49,12 +59,17 @@ class DeferredValue<TYPE> {
     }
 
     TYPE resolveWith(Object delegate, Object arguments) {
+
+        if(owner==null) {
+            throw new IllegalStateException("DeferredValue was not correctly initialized, owner object was not set")
+        }
+
         Object retVal = null;
         if(valueBlock.maximumNumberOfParameters==0) {
-            retVal = valueBlock.rehydrate(delegate, parent, parent).call()
+            retVal = valueBlock.rehydrate(delegate, owner, owner).call()
         }
         else {
-            retVal = valueBlock.rehydrate(delegate, parent, parent).call(arguments)
+            retVal = valueBlock.rehydrate(delegate, owner, owner).call(arguments)
         }
 
         if(retVal!=null && type.isAssignableFrom(retVal.getClass())) {
@@ -98,7 +113,7 @@ class DeferredValue<TYPE> {
     DeferredValue<TYPE> copy() {
         DeferredValue copy = new DeferredValue(type)
         copy.valueBlock = (Closure) valueBlock.clone()
-        copy.parent = this.parent
+        copy.owner = this.owner
         copy.name = this.name
         return copy
     }

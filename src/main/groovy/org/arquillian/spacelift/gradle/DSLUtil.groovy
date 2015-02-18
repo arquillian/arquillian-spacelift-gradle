@@ -85,10 +85,10 @@ class DSLUtil {
     static void generateDelayedValueMethods(Object object) {
         availableDelayedValues(object).each { Field field ->
 
-            // setup name of all delayed values
-            object.@"${field.name}".name = field.name
-            // setup parent of all delayed values
-            object.@"${field.name}".parent = object
+            // setup name of all deferred values
+            object.@"${field.name}".named(field.name)
+            // setup owner of all deferred values
+            object.@"${field.name}".ownedBy(object)
 
             // define all DSL setters, note delegate will become this object
             if(!object.metaClass.respondsTo(object, field.name, Object[].class)) {

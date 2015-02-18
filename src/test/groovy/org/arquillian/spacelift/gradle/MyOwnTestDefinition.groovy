@@ -9,7 +9,7 @@ import org.slf4j.Logger
 @CompileStatic
 class MyOwnTestDefinition extends BaseContainerizableObject<MyOwnTestDefinition> implements Test {
 
-    Closure myDSL = {}
+    DeferredValue<Object> myDSL = DeferredValue.of(Object.class)
 
     MyOwnTestDefinition(String name, Object parent) {
         super(name, parent)
@@ -17,7 +17,7 @@ class MyOwnTestDefinition extends BaseContainerizableObject<MyOwnTestDefinition>
 
     MyOwnTestDefinition(String name, MyOwnTestDefinition other) {
         super(name, other)
-        this.myDSL = (Closure) other.@myDSL.clone()
+        this.myDSL = other.@myDSL.copy()
     }
 
     @Override
@@ -27,7 +27,7 @@ class MyOwnTestDefinition extends BaseContainerizableObject<MyOwnTestDefinition>
 
     @Override
     public void executeTest(Logger logger) {
-        Object value = DSLUtil.resolve(myDSL, this)
+        Object value = myDSL.resolve()
         assert value != null
     }
 }

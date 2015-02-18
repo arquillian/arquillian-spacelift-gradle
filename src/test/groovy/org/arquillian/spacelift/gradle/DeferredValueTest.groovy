@@ -9,7 +9,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException;
 
-class DSLUtilTest {
+class DeferredValueTest {
 
     private Closure listValidator = { int size, List matches, Closure content ->
         assertThat content(), is(instanceOf(List))
@@ -111,8 +111,7 @@ class DSLUtilTest {
 
 
     def methodMissing(String name, args) {
-        //System.err.println("Called ${name}(" + args.collect { it.class?.simpleName}.join(', ') +")")
-        return DSLUtil.deferredValue(args)
+        return DeferredValue.of(Object.class).from(args).valueBlock
     }
 
     def propertyMissing(String name) {
