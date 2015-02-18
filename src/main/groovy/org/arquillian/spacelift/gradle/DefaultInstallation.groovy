@@ -16,21 +16,21 @@ import org.slf4j.Logger
 class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation> implements Installation {
 
     // version of the product installation belongs to
-    DelayedValue<String> version = DelayedValue.of(String.class).from("")
+    DeferredValue<String> version = DeferredValue.of(String.class).from("")
 
     // product name
-    DelayedValue<String> product = DelayedValue.of(String.class).from("")
+    DeferredValue<String> product = DeferredValue.of(String.class).from("")
 
     // location of installation cache
-    DelayedValue<File> fsPath = DelayedValue.of(File.class).from({
+    DeferredValue<File> fsPath = DeferredValue.of(File.class).from({
         return new File((File) parent['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     })
 
     // url to download from
-    DelayedValue<URL> remoteUrl = DelayedValue.of(URL.class)
+    DeferredValue<URL> remoteUrl = DeferredValue.of(URL.class)
 
     // zip file name
-    DelayedValue<String> fileName = DelayedValue.of(String.class).from({
+    DeferredValue<String> fileName = DeferredValue.of(String.class).from({
         URL url = getRemoteUrl()
         if(url!=null) {
             return guessFileNameFromUrl(url)
@@ -39,7 +39,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     })
 
     // represents directory where installation is extracted to
-    DelayedValue<File> home = DelayedValue.of(File.class).from({
+    DeferredValue<File> home = DeferredValue.of(File.class).from({
         URL url = getRemoteUrl()
         if(url!=null) {
             return new File((File) parent['workspace'], guessDirNameFromUrl(url))
@@ -51,23 +51,23 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
 
     // automatically extract archive
-    DelayedValue<Boolean> autoExtract = DelayedValue.of(Boolean.class).from(true)
+    DeferredValue<Boolean> autoExtract = DeferredValue.of(Boolean.class).from(true)
 
     // application of additional uncompress tool calls 3during extraction
-    DelayedValue<UncompressTool> extractMapper = DelayedValue.of(UncompressTool.class).from({
+    DeferredValue<UncompressTool> extractMapper = DeferredValue.of(UncompressTool.class).from({
         return delegate
     })
 
-    DelayedValue<Boolean> isInstalled = DelayedValue.of(Boolean.class).from({
+    DeferredValue<Boolean> isInstalled = DeferredValue.of(Boolean.class).from({
         return getHome().exists()
     })
 
     // actions to be invoked after installation is done
-    DelayedValue<Void> postActions = DelayedValue.of(Void.class)
+    DeferredValue<Void> postActions = DeferredValue.of(Void.class)
 
     // precondition closure returning boolean
     // if true, installation will be installed, if false, skipped
-    DelayedValue<Boolean> preconditions = DelayedValue.of(Boolean.class).from(true)
+    DeferredValue<Boolean> preconditions = DeferredValue.of(Boolean.class).from(true)
 
     // tools provided by this installation
     InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
@@ -106,22 +106,22 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
     @Override
     File getHome() {
-        return home.resolveWith(this)
+        return home.resolve()
     }
 
     @Override
     String getVersion() {
-        return version.resolveWith(this)
+        return version.resolve()
     }
 
     @Override
     String getProduct() {
-        return product.resolveWith(this)
+        return product.resolve()
     }
 
     @Override
     public boolean isInstalled() {
-        return isInstalled.resolveWith(this)
+        return isInstalled.resolve()
     }
 
     @Override
@@ -136,7 +136,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     @Override
     void install(Logger logger) {
 
-        if (!preconditions.resolveWith(this)) {
+        if (!preconditions.resolve()) {
             // if closure returns false, we did not meet preconditions
             // so we return from installation process
             logger.info(":install:${name} Skipping, did not meet preconditions.")
@@ -211,19 +211,19 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
         registerTools(Spacelift.registry())
 
         // execute post actions
-        postActions.resolveWith(this);
+        postActions.resolve();
     }
 
     String getFileName() {
-        fileName.resolveWith(this)
+        fileName.resolve()
     }
 
     boolean getAutoExtract() {
-        return autoExtract.resolveWith(this)
+        return autoExtract.resolve()
     }
 
     File getFsPath() {
-        return fsPath.resolveWith(this)
+        return fsPath.resolve()
     }
 
     URL getRemoteUrl() {

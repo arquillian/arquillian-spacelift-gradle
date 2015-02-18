@@ -1,15 +1,13 @@
 package org.arquillian.spacelift.gradle
 
-import groovy.lang.Closure;
-import groovy.transform.CompileStatic;
+import groovy.transform.CompileStatic
 
-import java.lang.reflect.Field
-import java.util.List;
-
-import org.gradle.api.Project
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 @CompileStatic
 abstract class BaseContainerizableObject<TYPE extends BaseContainerizableObject<TYPE>> implements ContainerizableObject<TYPE> {
+    private static final Logger logger = LoggerFactory.getLogger(BaseContainerizableObject)
 
     final String name
     final Object parent
@@ -35,12 +33,23 @@ abstract class BaseContainerizableObject<TYPE extends BaseContainerizableObject<
     }
 
     def propertyMissing(String name) {
-        try {
-            println "trying to get ${name} from ${parent}"
-            return ((GroovyObject)parent).getProperty(name)
-        }
-        catch(MissingPropertyException e) {
-            throw new MissingPropertyException("Unable to resolve property named ${name} in ${this.getClass().simpleName} ${this.name}, detailed message: ${e.getMessage()}");
+
+        GroovyObject ancestor = (GroovyObject) parent
+        while(ancestor) {
+            try {
+                Object val = ancestor.getProperty(name)
+                logger.debug("Retrieved property \"${name}\"a from ${ancestor}")
+                return val
+            }
+            // if property was not found, try to get it from parent of parent
+            catch(MissingPropertyException e) {
+                if(ancestor.hasProperty("parent")) {
+                    ancestor = (GroovyObject) ancestor.getProperty("parent")
+                }
+                else {
+                    throw new MissingPropertyException("Unable to resolve property \"${name}\" in ${this.getClass().simpleName} ${this.name}. Failed with: ${e.getMessage()}")
+                }
+            }
         }
     }
 }

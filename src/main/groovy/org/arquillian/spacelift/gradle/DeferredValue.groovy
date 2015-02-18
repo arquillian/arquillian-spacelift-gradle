@@ -2,7 +2,7 @@ package org.arquillian.spacelift.gradle
 
 import org.apache.commons.lang3.SystemUtils
 
-class DelayedValue<TYPE> {
+class DeferredValue<TYPE> {
 
     // mapping for OS system values
     private static final Map osMapping = [
@@ -22,15 +22,15 @@ class DelayedValue<TYPE> {
     String name
     Object parent
 
-    public static <T> DelayedValue<T> of(Class<T> type) {
-        return new DelayedValue<TYPE>(type)
+    public static <T> DeferredValue<T> of(Class<T> type) {
+        return new DeferredValue<TYPE>(type)
     }
 
-    private DelayedValue(Class<TYPE> type) {
+    private DeferredValue(Class<TYPE> type) {
         this.type = type
     }
 
-    DelayedValue<TYPE> from(Object... data) {
+    DeferredValue<TYPE> from(Object... data) {
         this.valueBlock = defer(data)
         return this
     }
@@ -60,6 +60,10 @@ class DelayedValue<TYPE> {
         if(retVal!=null && type.isAssignableFrom(retVal.getClass())) {
             return (TYPE) retVal
         }
+        // if type was void, we don't care about the result, drop it
+        else if(Void.class.isAssignableFrom(type)) {
+            return null
+        }
         // make it a collection if asked for
         else if(List.class.isAssignableFrom(type)) {
             if(retVal!=null) {
@@ -88,24 +92,22 @@ class DelayedValue<TYPE> {
             return null
         }
 
-        throw new IllegalArgumentException("Unable to evaluate ${name} " +
-        "of ${valueBlock.delegate.getClass().simpleName}, expected return value of ${type.simpleName} but was ${retVal.getClass().simpleName}")
-
+        throw new IllegalArgumentException("Unable to evaluate ${name} of ${valueBlock.delegate.getClass().simpleName}, expected return value of ${type.simpleName} but was ${retVal.getClass().simpleName}")
     }
 
-    DelayedValue<TYPE> copy() {
-        DelayedValue copy = new DelayedValue(type)
+    DeferredValue<TYPE> copy() {
+        DeferredValue copy = new DeferredValue(type)
         copy.valueBlock = (Closure) valueBlock.clone()
         copy.parent = this.parent
         copy.name = this.name
         return copy
     }
 
-    DelayedValue<TYPE> done(DoneCallback<TYPE> callback) {
+    DeferredValue<TYPE> done(DoneCallback<TYPE> callback) {
 
     }
 
-    DelayedValue<TYPE> fail(FailCallback<TYPE> callback) {
+    DeferredValue<TYPE> fail(FailCallback<TYPE> callback) {
 
     }
 
@@ -142,9 +144,16 @@ class DelayedValue<TYPE> {
                 return arg.dehydrate()
             }
             else if(arg instanceof Map) {
+
+                // are we dealing platform map? if not, return map
+                if(osMapping.inject(true) { value, os -> value &= !arg.containsKey(os.key)}) {
+                    return  { arg }
+                }
+
+                // return according to the platform
                 Closure platformValue = null
                 osMapping.each { platform, condition ->
-                    if (condition.call()) {
+                    if (condition.call() && arg[platform]) {
                         platformValue = defer(arg[platform])
                         return
                     }

@@ -39,7 +39,7 @@ class DSLUtil {
         // using fields here on purpose, MetaProperty will use getter if available, changing type
         return object.class.declaredFields.findAll { Field field ->
             // find all properties that are of type DelayedValue
-            DelayedValue.class.isAssignableFrom(field.type)
+            DeferredValue.class.isAssignableFrom(field.type)
         }
     }
 
@@ -94,7 +94,7 @@ class DSLUtil {
             if(!object.metaClass.respondsTo(object, field.name, Object[].class)) {
                 object.metaClass."${field.name}" = { Object... lazyClosure ->
 
-                    ((DelayedValue) delegate.@"${field.name}").from(lazyClosure)
+                    ((DeferredValue) delegate.@"${field.name}").from(lazyClosure)
                 }
             }
 

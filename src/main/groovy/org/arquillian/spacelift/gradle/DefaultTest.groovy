@@ -2,23 +2,22 @@ package org.arquillian.spacelift.gradle
 
 import groovy.transform.CompileStatic
 
-import org.gradle.api.Project
 import org.slf4j.Logger
 
 @CompileStatic
 class DefaultTest extends BaseContainerizableObject<DefaultTest> implements Test {
 
-    Closure execute = {}
+    DeferredValue<Void> execute = DeferredValue.of(Void.class)
 
-    Closure dataProvider = { [null]}
+    DeferredValue<List> dataProvider = DeferredValue.of(List.class).from([null])
 
-    Closure beforeSuite = {}
+    DeferredValue<Void> beforeSuite = DeferredValue.of(Void.class)
 
-    Closure beforeTest = {}
+    DeferredValue<Void> beforeTest = DeferredValue.of(Void.class)
 
-    Closure afterSuite = {}
+    DeferredValue<Void> afterSuite = DeferredValue.of(Void.class)
 
-    Closure afterTest = {}
+    DeferredValue<Void> afterTest = DeferredValue.of(Void.class)
 
     DefaultTest(String testName, Object parent) {
         super(testName, parent)
@@ -31,12 +30,12 @@ class DefaultTest extends BaseContainerizableObject<DefaultTest> implements Test
     DefaultTest(String testName, DefaultTest other) {
         super(testName, other)
         // use direct access to skip call of getter
-        this.execute = (Closure) other.@execute.clone()
-        this.dataProvider = (Closure) other.@dataProvider.clone()
-        this.beforeSuite = (Closure) other.@beforeSuite.clone()
-        this.beforeTest = (Closure) other.@beforeTest.clone()
-        this.afterSuite = (Closure) other.@afterSuite.clone()
-        this.afterTest = (Closure) other.@afterTest.clone()
+        this.execute = other.@execute.copy()
+        this.dataProvider = other.@dataProvider.copy()
+        this.beforeSuite = other.@beforeSuite.copy()
+        this.beforeTest = other.@beforeTest.copy()
+        this.afterSuite = other.@afterSuite.copy()
+        this.afterTest = other.@afterTest.copy()
     }
 
     @Override
@@ -49,44 +48,31 @@ class DefaultTest extends BaseContainerizableObject<DefaultTest> implements Test
 
         // before suite
         logger.info(":test:${name} before suite execution")
-        DSLUtil.resolve(beforeSuite, this)
+        beforeSuite.resolve()
 
         // in case anything in this try block fails, we will still run the `after suite` in the finally block
         try {
             // iterate through beforeTest, execute and afterTest based on data provider
-            DSLUtil.resolve(List.class, dataProvider, this).each { data ->
+            dataProvider.resolve().each { data ->
 
-                if (data == null) {
-                    logger.info(":test:${name} before test execution")
-                    DSLUtil.resolve(beforeTest, this)
-                } else {
-                    logger.info(":test:${name} before test execution (${data})")
-                    DSLUtil.resolve(Object.class, beforeTest, new GradleSpaceliftDelegate(), this, this, data)
-                }
+                String dataString =  data ? " (${data})" : ""
+
+                logger.info(":test:${name} before test execution${dataString}")
+                beforeTest.resolveWith(this, data)
 
                 // in case anything in this try block fails, we will still run the `after test` in the finally block
                 try {
-                    if (data == null) {
-                        logger.invokeMethod("lifecycle", ":test:${name}")
-                        DSLUtil.resolve(execute, this)
-                    } else {
-                        logger.invokeMethod("lifecycle", ":test:${name} (${data})")
-                        DSLUtil.resolve(Object.class, execute, new GradleSpaceliftDelegate(), this, this, data)
-                    }
+                    logger.invokeMethod("lifecycle", ":test:${name}${dataString}")
+                    execute.resolveWith(this, data)
                 } finally {
-                    if (data == null) {
-                        logger.info(":test:${name} after test execution")
-                        DSLUtil.resolve(afterTest, this)
-                    } else {
-                        logger.info(":test:${name} after test execution (${data})")
-                        DSLUtil.resolve(Object.class, afterTest, new GradleSpaceliftDelegate(), this, this, data)
-                    }
+                    logger.info(":test:${name} after test execution${dataString}")
+                    afterTest.resolveWith(this, data)
                 }
             }
         } finally {
             // after suite
             logger.info(":test:${name} after suite execution")
-            DSLUtil.resolve(afterSuite, this)
+            afterSuite.resolve()
         }
     }
 }

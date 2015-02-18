@@ -61,16 +61,12 @@ class SpaceliftExtension {
         this.tests = new InheritanceAwareContainer(this, Test, DefaultTest)
     }
 
-    def profiles(Closure closure) {
+    SpaceliftExtension profiles(Closure closure) {
         profiles.configure(closure)
-        this
+        return this
     }
 
-    InheritanceAwareContainer<Profile, Profile> getProfiles() {
-        profiles
-    }
-
-    def tools(Closure closure) {
+    SpaceliftExtension tools(Closure closure) {
         tools.configure(closure)
 
         // register existing tools
@@ -78,31 +74,18 @@ class SpaceliftExtension {
             Spacelift.registry().register(task.factory())
         }
 
-        this
+        return this
     }
 
-    InheritanceAwareContainer<GradleTask, DefaultGradleTask> getTools() {
-        tools
-    }
-
-    def installations(Closure closure) {
+    SpaceliftExtension installations(Closure closure) {
         installations.configure(closure)
-        this
+        return this
     }
 
-    InheritanceAwareContainer<Installation, DefaultInstallation> getInstallations() {
-        installations
-    }
-
-    def tests(Closure closure) {
+    SpaceliftExtension tests(Closure closure) {
         tests.configure(closure)
-        this
+        return this
     }
-
-    InheritanceAwareContainer<Test, DefaultTest> getTests() {
-        tests
-    }
-
 
     def setWorkspace(workspace) {
         // update also dependant repositories when workspace is updated
@@ -117,21 +100,18 @@ class SpaceliftExtension {
         this.workspace = workspace
     }
 
+    @Override
+    public String toString() {
+        return "SpaceliftExtension" + (project.buildFile ? "(${project.buildFile.canonicalPath})" : "")
+    }
+
 
     /**
-     * Modification of getProperty method that traverses also content of containers
-     * @param name
+     * If property was not found, try to check content of container for resolution
+     * @param name Name of the property, can be any object defined in DSL
      * @return
      */
      def propertyMissing(String name) {
-        Field property = this.getClass().declaredFields.find { Field f ->
-            return f.name == name
-        }
-        if(property!=null) {
-            Object value = this.@"${property.name}"
-            logger.debug("Resolved Spacelift property ${name} of value ${value}")
-            return value
-        }
 
         // try all containers to find resolution in particular order
         //order here defines order of reference in case reference to the same object is found, laters are ignored
@@ -151,8 +131,6 @@ class SpaceliftExtension {
         if(object!=null) {
             return object
         }
-
-        println "Object ${name} was not resolved"
 
         // pass resolution to parent
         throw new MissingPropertyException("Unable to resolve property named ${name} in Spacelift DSL")
