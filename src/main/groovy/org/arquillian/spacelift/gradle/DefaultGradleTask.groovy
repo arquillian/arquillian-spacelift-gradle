@@ -8,40 +8,35 @@ import org.arquillian.spacelift.process.ProcessInteraction
 import org.arquillian.spacelift.task.Task
 import org.arquillian.spacelift.task.TaskFactory
 import org.arquillian.spacelift.task.os.CommandTool
-import org.gradle.api.Project
 
 @CompileStatic
 class DefaultGradleTask extends BaseContainerizableObject<DefaultGradleTask> implements GradleTask {
 
-    Closure command = {}
+    DeferredValue<Object> command = DeferredValue.of(Object.class)
 
-    Closure allowedExitCodes = {
-        new ArrayList<Integer> ()
-    }
+    DeferredValue<List> allowedExitCodes = DeferredValue.of(List.class).from([])
 
-    Closure workingDirectory = { CommandTool.CURRENT_USER_DIR }
+    DeferredValue<File> workingDirectory = DeferredValue.of(File.class).from(CommandTool.CURRENT_USER_DIR)
 
-    Closure interaction = { GradleSpaceliftDelegate.ECHO_OUTPUT }
+    DeferredValue<ProcessInteraction> interaction = DeferredValue.of(ProcessInteraction.class).from( GradleSpaceliftDelegate.ECHO_OUTPUT )
 
-    Closure isDaemon = { false }
+    DeferredValue<Boolean> isDaemon = DeferredValue.of(Boolean.class).from(false)
 
-    Closure environment = {
-        new HashMap<String, String>()
-    }
+    DeferredValue<Map> environment = DeferredValue.of(Map.class).from([:])
 
-    DefaultGradleTask(String name, Project project) {
-        super(name, project)
+    DefaultGradleTask(String name, Object parent) {
+        super(name, parent)
     }
 
     DefaultGradleTask(String name, DefaultGradleTask other) {
         super(name, other)
 
-        this.command = (Closure) other.@command.clone()
-        this.allowedExitCodes = (Closure) other.@allowedExitCodes.clone()
-        this.workingDirectory = (Closure) other.@workingDirectory.clone()
-        this.interaction = (Closure) other.@interaction.clone()
-        this.isDaemon = (Closure) other.@isDaemon.clone()
-        this.environment = (Closure) other.@environment.clone()
+        this.command = other.@command.copy()
+        this.allowedExitCodes = other.@allowedExitCodes.copy()
+        this.workingDirectory = other.@workingDirectory.copy()
+        this.interaction = other.@interaction.copy()
+        this.isDaemon = other.@isDaemon.copy()
+        this.environment = other.@environment.copy()
     }
 
     @Override
@@ -56,18 +51,20 @@ class DefaultGradleTask extends BaseContainerizableObject<DefaultGradleTask> imp
 
         return new TaskFactory() {
                     Task create() {
-                        Task task = (Task) new CommandTool() { {
-                                        this.allowedExitCodes = DSLUtil.resolve(List.class, allowedExitCodes, parent)
-                                        this.workingDirectory = DSLUtil.resolve(File.class, workingDirectory, parent)
-                                        this.interaction = DSLUtil.resolve(ProcessInteraction.class, interaction, parent)
-                                        this.isDaemon = DSLUtil.resolve(Boolean.class, isDaemon, parent)
-                                        this.environment = DSLUtil.resolve(Map.class, environment, parent)
-                                            // FIXME transform to Map<String,String>, this should be handled by Spacelift
-                                            .collectEntries(new HashMap<String, String>()) {  key, value ->
-                                                [ (key.toString()):value.toString()]
-                                            }
+                        Task task = (Task) new CommandTool() {
+                                    {
+                                        this.allowedExitCodes = allowedExitCodes.resolveWith(parent)
+                                        this.workingDirectory = workingDirectory.resolveWith(parent)
+                                        this.interaction = interaction.resolveWith(parent)
+                                        this.isDaemon = isDaemon.resolveWith(parent)
+                                        // FIXME transform to Map<String,String>, this should be handled by Spacelift
+                                        this.environment = environment.resolveWith(parent)
+                                        .collectEntries(new HashMap<String, String>()) {  key, value ->
+                                            [ (key.toString()):value.toString()]
+                                        }
 
-                                        Object commandBuilder = DSLUtil.resolve(command, parent)
+
+                                        Object commandBuilder = command.resolveWith(parent)
 
                                         if(commandBuilder instanceof CommandBuilder) {
                                             this.commandBuilder = (CommandBuilder) commandBuilder

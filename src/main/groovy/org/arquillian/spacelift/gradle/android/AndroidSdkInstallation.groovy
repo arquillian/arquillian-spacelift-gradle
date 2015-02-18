@@ -4,8 +4,8 @@ import groovy.transform.CompileStatic
 
 import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.BaseContainerizableObject
-import org.arquillian.spacelift.gradle.DSLUtil
 import org.arquillian.spacelift.gradle.DefaultGradleTask
+import org.arquillian.spacelift.gradle.DeferredValue
 import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
 import org.arquillian.spacelift.gradle.GradleTask
 import org.arquillian.spacelift.gradle.InheritanceAwareContainer
@@ -18,68 +18,71 @@ import org.arquillian.spacelift.task.archive.UntarTool
 import org.arquillian.spacelift.task.archive.UnzipTool
 import org.arquillian.spacelift.task.net.DownloadTool
 import org.arquillian.spacelift.task.os.CommandTool
-import org.gradle.api.Project
 import org.slf4j.Logger
 
 @CompileStatic
 class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstallation> implements Installation {
 
-    Closure product = { "android" }
+    DeferredValue<String> product = DeferredValue.of(String.class).from("android")
 
-    Closure version = { "24.0.2" }
+    DeferredValue<String> version = DeferredValue.of(String.class).from("24.0.2")
 
-    Closure androidTargets = {}
+    DeferredValue<String> buildTools = DeferredValue.of(String.class).from("21.1.2")
 
-    Closure updateSdk = { true }
+    DeferredValue<List> androidTargets = DeferredValue.of(List.class).from([])
 
-    Closure isInstalled = {
+    DeferredValue<Boolean> updateSdk = DeferredValue.of(Boolean.class).from(true)
+
+    DeferredValue<Boolean> isInstalled = DeferredValue.of(Boolean.class).from({
         return getHome().exists()
-    }
+    })
 
-    Closure createAvds = { false }
+    DeferredValue<Boolean> createAvds = DeferredValue.of(Boolean.class).from(true)
 
-    Closure postActions = {}
+    // actions to be invoked after installation is done
+    DeferredValue<Void> postActions = DeferredValue.of(Void.class)
 
-    Closure buildTools = { "21.1.2" }
-    
-    Map remoteUrl = [
+    DeferredValue<String> remoteUrl = DeferredValue.of(String.class).from([
         linux: { "http://dl.google.com/android/android-sdk_r${version}-linux.tgz" },
         windows: { "http://dl.google.com/android/android-sdk_r${version}-windows.zip" },
         mac: { "http://dl.google.com/android/android-sdk_r${version}-macosx.zip" },
         solaris: { "http://dl.google.com/android/android-sdk_r${version}-linux.tgz" }
-    ]
+    ])
 
-    Map home = [
+    DeferredValue<File> home = DeferredValue.of(File.class).from([
         linux: "android-sdk-linux",
         windows:"android-sdk-windows",
         mac: "android-sdk-macosx",
         solaris: "android-sdk-linux"
-    ]
+    ])
 
-    Map fileName = [
+    DeferredValue<String> fileName = DeferredValue.of(String.class).from([
         linux: { "android-sdk_r${version}-linux.tgz" },
         windows: { "android-sdk_r${version}-windows.zip" },
         mac: { "android-sdk_r${version}-macosx.zip" },
         solaris: { "android-sdk_r${version}-linux.tgz" }
-    ]
+    ])
 
     // tools provided by this installation
     InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
 
-    AndroidSdkInstallation(String name, Project project) {
-        super(name, project)
-        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
+    AndroidSdkInstallation(String name, Object parent) {
+        super(name, parent)
+        this.tools = new InheritanceAwareContainer(this, GradleTask, DefaultGradleTask)
     }
 
     AndroidSdkInstallation(String name, AndroidSdkInstallation other) {
         super(name, other)
 
-        this.version = (Closure) other.@version.clone()
-        this.product = (Closure) other.@product.clone()
-        this.androidTargets = (Closure) other.@androidTargets.clone()
-        this.isInstalled = (Closure)other.@isInstalled.clone()
-        this.createAvds = (Closure)other.@createAvds.clone()
-        this.postActions = (Closure) other.@postActions.clone()
+        this.version = other.@version.copy()
+        this.product = other.@product.copy()
+        this.androidTargets = other.@androidTargets.copy()
+        this.isInstalled = other.@isInstalled.copy()
+        this.createAvds = other.@createAvds.copy()
+        this.postActions = other.@postActions.copy()
+        this.remoteUrl = other.@remoteUrl.copy()
+        this.home = other.@home.copy()
+        this.fileName = other.@fileName.copy()
         this.tools = (InheritanceAwareContainer<GradleTask, DefaultGradleTask>) other.@tools.clone()
     }
 
@@ -90,27 +93,17 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
     @Override
     String getVersion() {
-        def versionString = DSLUtil.resolve(String.class, version, this)
-        if(versionString==null) {
-            return ""
-        }
-
-        return versionString.toString();
+        return version.resolve()
     }
 
     @Override
     String getProduct() {
-        def productName = DSLUtil.resolve(String.class, product, this)
-        if(productName==null) {
-            return ""
-        }
-
-        return productName.toString()
+        return product.resolve()
     }
 
     @Override
     public boolean isInstalled() {
-        return DSLUtil.resolve(Boolean.class, isInstalled, this)
+        return isInstalled.resolve()
     }
 
     @Override
@@ -150,8 +143,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
     @Override
     public File getHome() {
-        String homeDir = DSLUtil.resolve(String.class, DSLUtil.deferredValue(home), this)
-        return new File((File)project['spacelift']['workspace'], homeDir)
+        return home.resolve()
     }
 
     @Override
@@ -181,11 +173,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         // based on installation type, we might want to unzip/untar/something else
         switch(getFileName()) {
             case ~/.*zip/:
-                Spacelift.task(getFsPath(),UnzipTool).toDir((File)project['spacelift']['workspace']).execute().await()
+                Spacelift.task(getFsPath(),UnzipTool).toDir((File)parent['workspace']).execute().await()
                 break
             case ~/.*tgz/:
             case ~/.*tar\.gz/:
-                Spacelift.task(getFsPath(),UntarTool).toDir((File)project['spacelift']['workspace']).execute().await()
+                Spacelift.task(getFsPath(),UntarTool).toDir((File)parent['workspace']).execute().await()
                 break
             default:
                 logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
@@ -193,7 +185,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
 
         // we need to fix executable flags as Java Unzip does not preserve them
-        project.getAnt().invokeMethod("chmod", [dir: "${getHome()}/tools", perm:"a+x", includes:"*", excludes:"*.txt"])
+        // FIXME
+        new GradleSpaceliftDelegate().project().getAnt().invokeMethod("chmod", [dir: "${getHome()}/tools", perm:"a+x", includes:"*", excludes:"*.txt"])
 
         // register tools from installation
         registerTools(Spacelift.registry())
@@ -224,37 +217,36 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         }
 
         // execute post actions
-        DSLUtil.resolve(postActions, this)
+        postActions.resolve()
     }
 
     public String getRemoteUrl() {
-        return DSLUtil.resolve(String.class, DSLUtil.deferredValue(remoteUrl), this)
+        return remoteUrl.resolve()
     }
 
     public String getFileName() {
-        return DSLUtil.resolve(String.class, DSLUtil.deferredValue(fileName), this)
+        return fileName.resolve()
     }
 
     public List<AndroidTarget> getAndroidTargets() {
-        List<Object> targets = DSLUtil.resolve(List.class, androidTargets, this)
-
+        List<Object> targets = androidTargets.resolve()
         return targets.collect { Object it -> new AndroidTarget(it) }
     }
 
     public boolean getCreateAvds() {
-        return DSLUtil.resolve(Boolean.class, createAvds, this)
+        return createAvds.resolve()
     }
 
     public String getBuildTools() {
-        return DSLUtil.resolve(String.class, buildTools, this)
+        return buildTools.resolve()
     }
-    
+
     public Boolean getUpdateSdk() {
-        return DSLUtil.resolve(Boolean.class, updateSdk, this)
+        return updateSdk.resolve()
     }
 
     private File getFsPath() {
-        return new File((File) project['spacelift']['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+        return new File((File) parent['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
     private Map<String, String> getAndroidEnvironmentProperties() {
@@ -263,16 +255,17 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         File androidHome = getHome()
 
         envProperties.put("ANDROID_HOME", androidHome.canonicalPath)
-        envProperties.put("ANDROID_SDK_HOME", new File((File) project['spacelift']['workspace'],"").canonicalPath)
+        envProperties.put("ANDROID_SDK_HOME", ((File) parent['workspace']).canonicalPath)
         envProperties.put("ANDROID_TOOLS", new File(androidHome, "tools").canonicalPath)
         envProperties.put("ANDROID_PLATFORM_TOOLS", new File(androidHome, "platform-tools").canonicalPath)
-        
+
         return envProperties
     }
-    
+
     class AndroidAdbTool extends CommandTool {
 
-        Map nativeCommand = [
+        // set owner via API
+        DeferredValue<List> nativeCommand = DeferredValue.of(List).ownedBy(this).from([
             linux: { ["${home}/platform-tools/adb"]},
             mac: { ["${home}/platform-tools/adb"]},
             windows: {
@@ -284,11 +277,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             solaris: {[
                     "${home}/platform-tools/adb"
                 ]}
-        ]
+        ])
 
         AndroidAdbTool() {
             super()
-            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
+            List command = nativeCommand.resolve()
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
             this.environment.putAll(AndroidSdkInstallation.this.getAndroidEnvironmentProperties())
@@ -296,13 +289,14 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
         @Override
         public String toString() {
-            return "AndroidAdbTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
+            return "AndroidAdbTool (${commandBuilder})"
         }
     }
 
     class AndroidEmulatorTool extends CommandTool {
 
-        Map nativeCommand = [
+        // set owner via API
+        DeferredValue<List> nativeCommand = DeferredValue.of(List).ownedBy(this).from([
             linux: { ["${home}/tools/emulator"]},
             mac: { ["${home}/tools/emulator"]},
             windows: {
@@ -312,11 +306,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                     "${home}/tools/emulator.exe"
                 ]},
             solaris: {["${home}/tools/emulator"]}
-        ]
+        ])
 
         AndroidEmulatorTool() {
             super()
-            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
+            List command = nativeCommand.resolve()
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
             this.environment.putAll(AndroidSdkInstallation.this.getAndroidEnvironmentProperties())
@@ -324,14 +318,15 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
         @Override
         public String toString() {
-            return "AndroidEmulatorTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
+            return "AndroidEmulatorTool (${commandBuilder})"
         }
     }
 
     class AndroidTool extends CommandTool {
 
-        Map nativeCommand = [
-            linux: { ["${home}/tools/android"]},
+        // set owner via API
+        DeferredValue<List> nativeCommand = DeferredValue.of(List).ownedBy(this).from([
+            linux: { ["${home}/tools/android"] },
             mac: { ["${home}/tools/android"]},
             windows: {
                 [
@@ -341,11 +336,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                 ]},
             solaris: {[
                     "${home}/tools/android" ]}
-        ]
+        ])
 
         AndroidTool() {
             super()
-            List command = DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
+            List command = nativeCommand.resolve()
             this.commandBuilder = new CommandBuilder(command as CharSequence[])
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
             this.environment.putAll(AndroidSdkInstallation.this.getAndroidEnvironmentProperties())
@@ -353,7 +348,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
         @Override
         public String toString() {
-            return "AndroidTool" + DSLUtil.resolve(List.class, DSLUtil.deferredValue(nativeCommand), this, this)
+            return "AndroidTool (${commandBuilder})"
         }
     }
 
@@ -380,5 +375,4 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             return "AndroidTarget: ${name}" + ((abi)? " - ${abi}" :"")
         }
     }
-
 }

@@ -1,11 +1,8 @@
 package org.arquillian.spacelift.gradle
 
-
-import java.util.concurrent.ConcurrentHashMap
-
-import org.apache.commons.lang3.SystemUtils
-import org.gradle.api.Project
 import org.gradle.util.Configurable
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Object container that allows additional behavoirs to be used for DSL definition.
@@ -17,6 +14,7 @@ import org.gradle.util.Configurable
  * @param <T>
  */
 class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAULT_TYPE extends TYPE> implements Iterable<TYPE>, Configurable<TYPE>, Collection<TYPE>, Cloneable {
+    private static final Logger logger = LoggerFactory.getLogger(InheritanceAwareContainer)
 
     Class<TYPE> type
 
@@ -24,12 +22,9 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
 
     Set<TYPE> objects
 
-    Project project
-
     Object parent
 
-    InheritanceAwareContainer(Project project, Object parent, Class<TYPE> type, Class<DEFAULT_TYPE> defaultType) {
-        this.project = project
+    InheritanceAwareContainer(Object parent, Class<TYPE> type, Class<DEFAULT_TYPE> defaultType) {
         this.type = type
         this.defaultType = defaultType
         this.parent = parent
@@ -37,7 +32,6 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
     }
 
     InheritanceAwareContainer(InheritanceAwareContainer<TYPE, DEFAULT_TYPE> other) {
-        this.project = other.project
         this.type = other.type
         this.parent = other.parent
         this.objects = new LinkedHashSet<TYPE>(other.objects)
@@ -50,18 +44,21 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
 
     /**
      * This method dynamically creates an object of type <T>.
-     * Object must define a constructor of type (name, project)
+     * Object must define a constructor of type (name, parent)
      * @param name name of object to be created
      * @param args
      * @return
      */
     def methodMissing(String name, args) {
-        Map behavior = DSLUtil.getBehaviors(args)
-        Closure configureClosure = DSLUtil.deferredValue(args).dehydrate()
-        create(name, behavior, configureClosure)
+        Map behavior = DeferredValue.getBehaviors(args)
+        DeferredValue<Void> configurator = DeferredValue.of(Void.class).ownedBy(this).from(args)
+        create(name, behavior, configurator)
     }
 
-    TYPE create(String name, Map behavior, Closure closure) {
+    TYPE create(String name, Map behavior, DeferredValue configurator) {
+
+        logger.debug("Creating ${type.simpleName} ${name} with behavior ${behavior}")
+
 
         ContainerizableObject<?> object
 
@@ -77,25 +74,26 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
             from = defaultType
         }
 
-        // FIXME we need to unwrap reference, but it is not clear why this happens
-        //if(from instanceof List && from.size()==1) {
-        //    from = from[0]
-        //}
+        // FIXME we need to unwrap reference but it is not clear why this happens
+        // it looks this is related to missingProperty call
+        if(from instanceof List && from.size()==1) {
+            logger.warn("Reference to ${from[0]} was unwrapped")
+            from = from[0]
+        }
 
         if(from instanceof Class && type.isAssignableFrom(from)) {
-            object = from.newInstance(name, project)
+            logger.debug("${name} will be instantiated from ${from.simpleName} class")
+            object = from.newInstance(name, parent)
         }
         else {
-            object = resolveParent(from).clone(name)
+            Object parent = resolveParent(from)
+            logger.debug("${name} will be inherited from ${parent} reference")
+            object = parent.clone(name)
         }
 
-        DSLUtil.generateClosurePropertyMethods(object)
-        DSLUtil.generateContainerMethods(object)
-        closure = closure.rehydrate(new GradleSpaceliftDelegate(), parent, object)
-
-        // configure and store object
-        object = project.configure(object, closure)
-        // store configured object in the container
+        // instrument and configure and store object
+        DSLInstrumenter.instrument(object)
+        configurator.apply(object)
         objects << object
 
         return object
@@ -103,8 +101,8 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
 
     @Override
     public TYPE configure(Closure configuration) {
-        Closure config = DSLUtil.deferredValue(configuration).dehydrate()
-        config.rehydrate(new GradleSpaceliftDelegate(), this, this).call()
+        DeferredValue<Void> config = DeferredValue.of(Void.class).ownedBy(this).from(configuration)
+        config.resolveWith(parent)
     }
 
     @Override
@@ -190,20 +188,26 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
         objects.toArray(a)
     }
 
+    @Override
+    public String toString() {
+        return "Container(${type.simpleName}): ${objects.toArray()}"
+    }
+
     /**
      * Resolves reference by either string. If it gets direct reference, checks whether type is compatible
      * @param reference reference to be resolved
      * @return
      */
-    private TYPE resolveParent(def reference) {
+    private TYPE resolveParent(Object reference) {
 
         if(reference instanceof CharSequence) {
             getAt(reference.toString())
         }
-        else if(reference!=null && type.isAssignableFrom(reference.class)) {
+        else if(reference!=null && type.isAssignableFrom(reference.getClass())) {
             (TYPE) reference
         }
-        else if(reference!=null && !type.isAssignableFrom(reference.class)) {
+        else if(reference!=null && !type.isAssignableFrom(reference.getClass())) {
+            println "Reference was not null, ${reference.getClass().simpleName}"
             throw new MissingPropertyException("Reference ${reference} is not compatible with type ${type.getSimpleName()}")
         }
         else {

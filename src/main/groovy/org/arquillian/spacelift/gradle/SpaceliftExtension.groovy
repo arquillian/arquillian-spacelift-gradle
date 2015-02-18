@@ -1,7 +1,11 @@
 package org.arquillian.spacelift.gradle
 
+import java.lang.reflect.Field
+
 import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 
 /**
@@ -9,6 +13,7 @@ import org.gradle.api.Project
  *
  */
 class SpaceliftExtension {
+    private static final Logger logger = LoggerFactory.getLogger(SpaceliftExtension)
 
     // workspace configuration
     File workspace
@@ -50,22 +55,18 @@ class SpaceliftExtension {
         this.enableStaging = false
         this.enableSnapshots = false
         this.project = project
-        this.profiles = new InheritanceAwareContainer(project, this, Profile, Profile)
-        this.tools = new InheritanceAwareContainer(project, this, GradleTask, DefaultGradleTask)
-        this.installations = new InheritanceAwareContainer(project, this, Installation, DefaultInstallation)
-        this.tests = new InheritanceAwareContainer(project, this, Test, DefaultTest)
+        this.profiles = new InheritanceAwareContainer(this, Profile, Profile)
+        this.tools = new InheritanceAwareContainer(this, GradleTask, DefaultGradleTask)
+        this.installations = new InheritanceAwareContainer(this, Installation, DefaultInstallation)
+        this.tests = new InheritanceAwareContainer(this, Test, DefaultTest)
     }
 
-    def profiles(Closure closure) {
+    SpaceliftExtension profiles(Closure closure) {
         profiles.configure(closure)
-        this
+        return this
     }
 
-    InheritanceAwareContainer<Profile, Profile> getProfiles() {
-        profiles
-    }
-
-    def tools(Closure closure) {
+    SpaceliftExtension tools(Closure closure) {
         tools.configure(closure)
 
         // register existing tools
@@ -73,31 +74,18 @@ class SpaceliftExtension {
             Spacelift.registry().register(task.factory())
         }
 
-        this
+        return this
     }
 
-    InheritanceAwareContainer<GradleTask, DefaultGradleTask> getTools() {
-        tools
-    }
-
-    def installations(Closure closure) {
+    SpaceliftExtension installations(Closure closure) {
         installations.configure(closure)
-        this
+        return this
     }
 
-    InheritanceAwareContainer<Installation, DefaultInstallation> getInstallations() {
-        installations
-    }
-
-    def tests(Closure closure) {
+    SpaceliftExtension tests(Closure closure) {
         tests.configure(closure)
-        this
+        return this
     }
-
-    InheritanceAwareContainer<Test, DefaultTest> getTests() {
-        tests
-    }
-
 
     def setWorkspace(workspace) {
         // update also dependant repositories when workspace is updated
@@ -110,5 +98,51 @@ class SpaceliftExtension {
         }
 
         this.workspace = workspace
+    }
+
+    @Override
+    public String toString() {
+        return "SpaceliftExtension" + (project.buildFile ? "(${project.buildFile.canonicalPath})" : "")
+    }
+
+
+    /**
+     * If property was not found, try to check content of container for resolution
+     * @param name Name of the property, can be any object defined in DSL
+     * @return
+     */
+     def propertyMissing(String name) {
+
+        // try all containers to find resolution in particular order
+        //order here defines order of reference in case reference to the same object is found, laters are ignored
+        def object, objectType
+        for(def container : ([installations, tests, tools, profiles])) {
+            def resolved = resolve(container, name)
+            if(object==null && resolved != null) {
+                logger.debug("Resolved ${container.type.getSimpleName()} named ${name}")
+                object = resolved
+                objectType = container.type
+            }
+            else if(object!=null && resolved != null) {
+                logger.warn("Detected ambiguous reference ${name}, using ${objectType.getSimpleName()}, ignoring ${container.type.getSimpleName()}")
+            }
+        }
+
+        if(object!=null) {
+            return object
+        }
+
+        // pass resolution to parent
+        throw new MissingPropertyException("Unable to resolve property named ${name} in Spacelift DSL")
+    }
+
+    private <TYPE extends ContainerizableObject<TYPE>, DEFAULT_TYPE extends TYPE> TYPE resolve(InheritanceAwareContainer<TYPE, DEFAULT_TYPE> container, String name) {
+        try {
+            return container.getAt(name)
+        }
+        catch(MissingPropertyException e) {
+            logger.debug("Unable to resolve ${container.type.getSimpleName()} named ${name}")
+            return null
+        }
     }
 }

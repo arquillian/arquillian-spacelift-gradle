@@ -33,8 +33,8 @@ class ClosureEvaluationTest {
                             assertThat project.spacelift, is(notNullValue())
                             assertThat project.spacelift.installationsDir, is(notNullValue())
                             assertThat fsPath, is(new File(project.spacelift.installationsDir, "test/1/index.html"))
-                            assertThat tool('java'), is(notNullValue())
-                            assertThat tool(AndroidSdkUpdater), is(notNullValue())
+                            assertThat Spacelift.task('java'), is(notNullValue())
+                            assertThat Spacelift.task(AndroidSdkUpdater), is(notNullValue())
                         }
                     }
                 },
@@ -143,11 +143,11 @@ class ClosureEvaluationTest {
     @Test
     void "property syntax installation reference"() {
 
-        exception.expect(MissingPropertyException)
-        exception.expectMessage("fooReferenced")
+        //exception.expect(MissingPropertyException)
+        //exception.expectMessage("fooReferenced")
 
 
-        def project = defineProject(installations:{
+        def project = defineProject(profiles:{ fooInvalid {} }, installations:{
             fooReferenced {
                 product "test"
                 version "1"
@@ -156,7 +156,9 @@ class ClosureEvaluationTest {
                 product "test"
                 version "1"
                 postActions {
+                    // FIXME, this is now working but question is whether this call is safe
                     assertThat project.spacelift.installations.fooReferenced, is(notNullValue())
+                    println project.spacelift.installations.fooReferenced
                 }
             }
         })

@@ -10,16 +10,16 @@ import org.gradle.api.Project
 class Profile extends BaseContainerizableObject<Profile> implements ContainerizableObject<Profile> {
 
     // list of enabled installations
-    Closure enabledInstallations = { []}
+    DeferredValue<List> enabledInstallations = DeferredValue.of(List.class).from([])
 
     // list of tests to execute
-    Closure tests = { []}
+    DeferredValue<List> tests = DeferredValue.of(List.class).from([])
 
     // list of tests to exclude
-    Closure excludedTests = { []}
+    DeferredValue<List> excludedTests = DeferredValue.of(List.class).from([])
 
-    Profile(String profileName, Project project) {
-        super(profileName, project)
+    Profile(String profileName, Object parent) {
+        super(profileName, parent)
     }
 
     /**
@@ -30,9 +30,9 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
         super(profileName, other)
 
         // use direct access to skip call of getter
-        this.enabledInstallations = (Closure) other.@enabledInstallations.clone()
-        this.tests = (Closure) other.@tests.clone()
-        this.excludedTests = (Closure) other.@excludedTests.clone()
+        this.enabledInstallations = other.@enabledInstallations.copy()
+        this.tests = other.@tests.copy()
+        this.excludedTests = other.@excludedTests.copy()
     }
 
     @Override
@@ -41,26 +41,16 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
     }
 
     List<String> getEnabledInstallations() {
-        return DSLUtil.resolve(List.class, enabledInstallations, this)
+        return enabledInstallations.resolve()
     }
 
     List<String> getTests() {
-        return DSLUtil.resolve(List.class, tests, this)
+        return tests.resolve()
     }
 
     List<String> getExcludedTests() {
-        return DSLUtil.resolve(List.class, excludedTests, this)
+        return excludedTests.resolve()
     }
-
-    /**
-     * Allows us to reference profiles and test without quoting
-     * @param name installation or test name
-     * @return string value of the property
-     */
-    // FIXME this is causing issues with DSL, likely it should rather be defined in Profiles container
-    //def propertyMissing(String name) {
-    //    return name
-    //}
 
     @Override
     public String toString() {

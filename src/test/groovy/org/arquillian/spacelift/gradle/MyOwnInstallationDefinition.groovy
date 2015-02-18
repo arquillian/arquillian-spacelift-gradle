@@ -12,8 +12,8 @@ import org.slf4j.Logger
 @CompileStatic
 class MyOwnInstallationDefinition extends BaseContainerizableObject<MyOwnInstallationDefinition> implements Installation {
 
-    MyOwnInstallationDefinition(String name, Project project) {
-        super(name, project)
+    MyOwnInstallationDefinition(String name, Object parent) {
+        super(name, parent)
     }
 
     MyOwnInstallationDefinition(String name, MyOwnInstallationDefinition other) {
@@ -37,7 +37,7 @@ class MyOwnInstallationDefinition extends BaseContainerizableObject<MyOwnInstall
 
     @Override
     public File getHome() {
-        return (File) project['spacelift']['workspace']
+        return (File) parent['workspace']
     }
 
     @Override
