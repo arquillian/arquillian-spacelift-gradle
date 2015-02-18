@@ -1,6 +1,5 @@
 package org.arquillian.spacelift.gradle
 
-
 import org.gradle.util.Configurable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -45,18 +44,18 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
 
     /**
      * This method dynamically creates an object of type <T>.
-     * Object must define a constructor of type (name, project)
+     * Object must define a constructor of type (name, parent)
      * @param name name of object to be created
      * @param args
      * @return
      */
     def methodMissing(String name, args) {
-        Map behavior = DSLUtil.getBehaviors(args)
-        Closure configureClosure = DSLUtil.deferredValue(args).dehydrate()
-        create(name, behavior, configureClosure)
+        Map behavior = DeferredValue.getBehaviors(args)
+        DeferredValue<Void> configurator = DeferredValue.of(Void.class).ownedBy(this).from(args)
+        create(name, behavior, configurator)
     }
 
-    TYPE create(String name, Map behavior, Closure closure) {
+    TYPE create(String name, Map behavior, DeferredValue configurator) {
 
         logger.debug("Creating ${type.simpleName} ${name} with behavior ${behavior}")
 
@@ -92,27 +91,18 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
             object = parent.clone(name)
         }
 
-        DSLUtil.generateClosurePropertyMethods(object)
-        DSLUtil.generateContainerMethods(object)
-        DSLUtil.generateDelayedValueMethods(object)
-        //closure = closure.rehydrate(new GradleSpaceliftDelegate(), parent, object)
-        closure = closure.rehydrate(parent, object, object)
-
-        // configure and store object
-        // FIXME Project reference
-        object = new GradleSpaceliftDelegate().project().configure(object, closure)
-        // store configured object in the container
+        // instrument and configure and store object
+        DSLInstrumenter.instrument(object)
+        configurator.apply(object)
         objects << object
-
-        println "Done"
 
         return object
     }
 
     @Override
     public TYPE configure(Closure configuration) {
-        Closure config = DSLUtil.deferredValue(configuration).dehydrate()
-        config.rehydrate(parent, this, this).call()
+        DeferredValue<Void> config = DeferredValue.of(Void.class).ownedBy(this).from(configuration)
+        config.resolveWith(parent)
     }
 
     @Override
