@@ -4,7 +4,7 @@ import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.process.ProcessResult
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.arquillian.spacelift.gradle.openshift.CreateOpenshiftCartridge;
+import org.arquillian.spacelift.gradle.openshift.CreateOpenShiftCartridge;
 import org.arquillian.spacelift.gradle.utils.KillJavas
 import org.junit.Ignore;
 import org.junit.Test
@@ -18,7 +18,7 @@ import static org.junit.Assert.assertThat
  *
  */
 @Ignore
-public class CreateOpenshiftCartridgeTest {
+public class CreateOpenShiftCartridgeTest {
 
     @Test
     public void createCart() {
@@ -37,7 +37,7 @@ public class CreateOpenshiftCartridgeTest {
         }
 
         // kill servers
-        Spacelift.task(CreateOpenshiftCartridge)
+        Spacelift.task(CreateOpenShiftCartridge)
                 .named('foobar')
                 .at('mobileqa')
                 .sized("small")
