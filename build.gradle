@@ -36,7 +36,7 @@ buildscript {
 
 dependencies {
     compile gradleApi()
-    compile 'org.codehaus.groovy:groovy-all:2.3.6'
+    compile 'org.codehaus.groovy:groovy-all:2.3.9'
 
     // commons lang is used to do platform checks
     compile 'org.apache.commons:commons-lang3:3.1'
