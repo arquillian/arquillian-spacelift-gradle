@@ -33,12 +33,11 @@ abstract class BaseContainerizableObject<TYPE extends BaseContainerizableObject<
     }
 
     def propertyMissing(String name) {
-
         GroovyObject ancestor = (GroovyObject) parent
         while(ancestor) {
             try {
                 Object val = ancestor.getProperty(name)
-                logger.debug("Retrieved property \"${name}\"a from ${ancestor}")
+                logger.debug("Resolved property \"${name}\" (${val.getClass().simpleName}) at ${ancestor}")
                 return val
             }
             // if property was not found, try to get it from parent of parent

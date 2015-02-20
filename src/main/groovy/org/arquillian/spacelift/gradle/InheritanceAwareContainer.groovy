@@ -52,7 +52,7 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
     def methodMissing(String name, args) {
         Map behavior = DeferredValue.getBehaviors(args)
         DeferredValue<Void> configurator = DeferredValue.of(Void.class).ownedBy(this).from(args)
-        create(name, behavior, configurator)
+        return create(name, behavior, configurator)
     }
 
     TYPE create(String name, Map behavior, DeferredValue configurator) {
@@ -74,21 +74,14 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
             from = defaultType
         }
 
-        // FIXME we need to unwrap reference but it is not clear why this happens
-        // it looks this is related to missingProperty call
-        if(from instanceof List && from.size()==1) {
-            logger.warn("Reference to ${from[0]} was unwrapped")
-            from = from[0]
-        }
-
         if(from instanceof Class && type.isAssignableFrom(from)) {
             logger.debug("${name} will be instantiated from ${from.simpleName} class")
             object = from.newInstance(name, parent)
         }
         else {
-            Object parent = resolveParent(from)
+            Object ancestor = resolveAncestor(from)
             logger.debug("${name} will be inherited from ${parent} reference")
-            object = parent.clone(name)
+            object = ancestor.clone(name)
         }
 
         // instrument and configure and store object
@@ -101,8 +94,8 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
 
     @Override
     public TYPE configure(Closure configuration) {
-        DeferredValue<Void> config = DeferredValue.of(Void.class).ownedBy(this).from(configuration)
-        config.resolveWith(parent)
+        DeferredValue<Void> config = DeferredValue.of(Void.class).ownedBy(parent).from(configuration)
+        config.resolveWith(this)
     }
 
     @Override
@@ -198,7 +191,7 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
      * @param reference reference to be resolved
      * @return
      */
-    private TYPE resolveParent(Object reference) {
+    private TYPE resolveAncestor(Object reference) {
 
         if(reference instanceof CharSequence) {
             getAt(reference.toString())
@@ -207,8 +200,7 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
             (TYPE) reference
         }
         else if(reference!=null && !type.isAssignableFrom(reference.getClass())) {
-            println "Reference was not null, ${reference.getClass().simpleName}"
-            throw new MissingPropertyException("Reference ${reference} is not compatible with type ${type.getSimpleName()}")
+            throw new MissingPropertyException("Reference ${reference} of type ${reference.getClass().simpleName} is not compatible with type ${type.getSimpleName()}")
         }
         else {
             throw new MissingPropertyException("Reference ${reference} of type${type.getSimpleName()} was not found.")

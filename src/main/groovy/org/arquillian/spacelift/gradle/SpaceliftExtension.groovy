@@ -131,7 +131,6 @@ class SpaceliftExtension {
         if(object!=null) {
             return object
         }
-
         // pass resolution to parent
         throw new MissingPropertyException("Unable to resolve property named ${name} in Spacelift DSL")
     }

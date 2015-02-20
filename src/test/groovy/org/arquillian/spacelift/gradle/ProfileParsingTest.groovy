@@ -50,6 +50,7 @@ public class ProfileParsingTest {
 
     @Test
     @Ignore
+    // FIXME this does not work
     void "single profile with multiple installations and tests unquoted"() {
         Project project = initWithProfile {
             enabledInstallations eap, ews
