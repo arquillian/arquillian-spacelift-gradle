@@ -12,6 +12,10 @@ class AndroidSdkUpdater extends Task<Object, Void>{
 
     private String target
 
+    private String image
+
+    private boolean updatePlatform = false
+
     //
     // The version of build-tools is statically set to 21.1.1 - the latest one by 23/11/2014.
     // Investigate, how to get the latest build-tools version programmatically.
@@ -27,6 +31,23 @@ class AndroidSdkUpdater extends Task<Object, Void>{
         this
     }
 
+    AndroidSdkUpdater image(String image) {
+        if (image && !image.isEmpty()) {
+            this.image = image
+        }
+        this
+    }
+
+    AndroidSdkUpdater updatePlatform(boolean updatePlatform) {
+        this.updatePlatform = updatePlatform
+        this
+    }
+
+    AndroidSdkUpdater updateImages(boolean updateImages) {
+        this.updateImages = updateImages
+        this
+    }
+
     AndroidSdkUpdater buildTools(String buildToolsVersion) {
         if (buildToolsVersion && !buildToolsVersion.isEmpty()) {
             this.buildToolsVersion = buildToolsVersion
@@ -37,61 +58,89 @@ class AndroidSdkUpdater extends Task<Object, Void>{
     @Override
     protected Void process(Object ignored) throws Exception {
 
-        log.info("Checking installed Android target: ${target}")
+        // update just core platform and build tools
+        if (updatePlatform) {
 
-        // first, check whether Android version is already installed
-        def availableTargets = Spacelift.task('android').parameters([
-            "list",
-            "target",
-            "-c"
-        ])
-        .interaction(new ProcessInteractionBuilder()
-        .when('^(?!Error).*$').printToErr())
-        .execute().await().output()
+            log.info("Updating platform tools and build tools: platform-tools,build-tools-" + buildToolsVersion
+                    + ",extra-google-google_play_services,extra-android-support")
 
-        if(availableTargets.find { "${it}" == "${target}"}) {
-            log.info("There was already Android ${target} installed, skipping update")
-            return
+            Spacelift.task('android').parameters([
+                "update",
+                "sdk",
+                "--filter",
+                "platform-tools," +
+                "build-tools-" + buildToolsVersion + "," +
+                "extra-google-google_play_services,extra-android-support",
+                "--all",
+                "--no-ui"]
+            ).interaction(new ProcessInteractionBuilder()
+            .outputPrefix("")
+            .when('^Do you accept the license.*: ').replyWith('y')
+            .when('^\\s*Done.*installed\\.$').terminate()
+            .when('^(?!Error).*$').printToOut()
+            .when('^!Error.*$').printToErr())
+            .shouldExitWith((0..255).toArray(new Integer[0]))
+            .execute().await()
         }
 
-        log.info("Updating Android SDK to contain version ${target}")
+        // update tool and platform tool for some target
+        if (target) {
 
-        // android version we need was not installed, let's install it
-        // use "android list sdk --all --extended" to get what should be installed
-        def androidVersion = androidVersionInteger(target)
+            log.info("Checking installed Android target: ${target}")
 
-        def exitCodes = 0..255
+            // first, check whether Android version is already installed
+            def availableTargets = Spacelift.task('android').parameters([
+                "list",
+                "target",
+                "-c"
+            ])
+            .interaction(new ProcessInteractionBuilder()
+            .when('^(?!Error).*$').printToErr())
+            .execute().await().output()
 
-        // additional packages to be update based on Android version selected externally
-        def androidVersionSpecificPackages = "android-${androidVersion},addon-google_apis-google-${androidVersion},addon-google_apis_x86-google-${androidVersion}";
-        // handle system images, installing only x86 platform
-        if(target.contains("Google APIs")) {
-            androidVersionSpecificPackages += ",sys-img-x86-addon-google_apis-google-${androidVersion}"
+            if(availableTargets.find { "${it}" == "${target}"}) {
+                log.info("There was already Android ${target} installed, skipping update")
+                return
+            }
+
+            log.info("Updating platform tool and platform-tool for target android-" + androidVersionInteger(target))
+
+            Spacelift.task('android').parameters([
+                "update",
+                "sdk",
+                "--filter",
+                "android-" + androidVersionInteger(target) + ",platform-tool,tool",
+                "--all",
+                "--no-ui"]
+            ).interaction(new ProcessInteractionBuilder()
+            .outputPrefix("")
+            .when('^Do you accept the license.*: ').replyWith('y')
+            .when('^\\s*Done.*installed\\.$').terminate()
+            .when('^(?!Error).*$').printToOut()
+            .when('^!Error.*$').printToErr())
+            .shouldExitWith((0..255).toArray(new Integer[0]))
+            .execute().await()
         }
-        else {
-            androidVersionSpecificPackages += ",sys-img-x86-android-${androidVersion}"
-        }
 
-        Spacelift.task('android').parameters([
-            "update",
-            "sdk",
-            "--filter",
-            "platform-tools," +
-            "build-tools-" + buildToolsVersion + "," +
-            "extra-google-google_play_services," +
-            "extra-android-support," +
-            androidVersionSpecificPackages,
-            "--all",
-            "--no-ui"]
-        ).interaction(new ProcessInteractionBuilder()
-        .outputPrefix("")
-        .when('^Do you accept the license.*: ').replyWith('y')
-        .when('^\\s*Done.*installed\\.$').terminate()
-        .when('^(?!Error).*$').printToOut()
-        .when('^!Error.*$').printToErr()
-        )
-        .shouldExitWith(exitCodes.toArray(new Integer[0]))
-        .execute().await()
+        // update / download images
+        if (image) {
+            log.info("AndroidSdkUpdater downloads " + image)
+            Spacelift.task('android').parameters([
+                "update",
+                "sdk",
+                "--filter",
+                image,
+                "--all",
+                "--no-ui"]
+            ).interaction(new ProcessInteractionBuilder()
+            .outputPrefix("")
+            .when('^Do you accept the license.*: ').replyWith('y')
+            .when('^\\s*Done.*installed\\.$').terminate()
+            .when('^(?!Error).*$').printToOut()
+            .when('^!Error.*$').printToErr())
+            .shouldExitWith((0..255).toArray(new Integer[0]))
+            .execute().await()
+        }
 
         log.info("Android SDK was updated.")
     }

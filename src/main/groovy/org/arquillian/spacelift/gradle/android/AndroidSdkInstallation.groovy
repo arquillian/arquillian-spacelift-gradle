@@ -39,6 +39,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
     DeferredValue<Boolean> createAvds = DeferredValue.of(Boolean.class).from(true)
 
+    DeferredValue<Boolean> updateImages = DeferredValue.of(Boolean.class).from(false)
+
     // actions to be invoked after installation is done
     DeferredValue<Void> postActions = DeferredValue.of(Void.class)
 
@@ -76,13 +78,17 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
         this.version = other.@version.copy()
         this.product = other.@product.copy()
-        this.androidTargets = other.@androidTargets.copy()
         this.isInstalled = other.@isInstalled.copy()
-        this.createAvds = other.@createAvds.copy()
         this.postActions = other.@postActions.copy()
         this.remoteUrl = other.@remoteUrl.copy()
         this.home = other.@home.copy()
         this.fileName = other.@fileName.copy()
+
+        this.androidTargets = other.@androidTargets.copy()
+        this.createAvds = other.@createAvds.copy()
+        this.updateSdk = other.@updateSdk.copy()
+        this.updateImages = other.@updateImages.copy()
+
         this.tools = (InheritanceAwareContainer<GradleTask, DefaultGradleTask>) other.@tools.clone()
     }
 
@@ -113,19 +119,19 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                         Task task = new AndroidAdbTool()
                         // FIXME inject execution service via private field
                         task.executionService = Spacelift.service()
-                        return task;
+                        return task
                     }
                     Collection aliases() { ["adb"]}
                 })
         registry.register(AndroidTool, new TaskFactory(){
-            Task create() {
-                Task task = new AndroidTool()
-                // FIXME inject execution service via private field
-                task.executionService = Spacelift.service()
-                return task;
-            }
-            Collection aliases() { ["android"]}
-        })
+                    Task create() {
+                        Task task = new AndroidTool()
+                        // FIXME inject execution service via private field
+                        task.executionService = Spacelift.service()
+                        return task
+                    }
+                    Collection aliases() { ["android"]}
+                })
         registry.register(AndroidEmulatorTool, new TaskFactory() {
                     Task create() {
                         Task task = new AndroidEmulatorTool()
@@ -193,31 +199,60 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
         // update Android SDK, download / update each specified Android SDK version
         if(getUpdateSdk()) {
-            getAndroidTargets().each { AndroidTarget androidTarget ->
-                Spacelift.task(AndroidSdkUpdater).buildTools(getBuildTools()).target(androidTarget.name).execute().await()
-            }
-        }
 
-        // opt out for stats
-        Spacelift.task(AndroidSdkOptForStats).execute().await()
+            // update platform first
+            logger.info("Updating platform.")
+            Spacelift.task(AndroidSdkUpdater)
+                .updatePlatform(true)
+                .buildTools(getBuildTools())
+                .execute().await()
 
-        if (getCreateAvds()) {
-            // create AVDs
-            getAndroidTargets().each { AndroidTarget androidTarget ->
-                String avdName = androidTarget.name
-                AVDCreator avdcreator = Spacelift.task(AVDCreator).target(avdName).name(avdName.replaceAll("\\W", "")).force()
-
-                // set abi if it was defined
-                if(androidTarget.abi) {
-                    avdcreator.abi(androidTarget.abi)
+            // then update tools and platform for every target
+            getAndroidTargets()
+                .collect(new HashSet<String>(), { AndroidTarget androidTarget -> "android-" + androidTarget.getApiLevel().toString()})
+                .each { String target ->
+                    logger.info("Updating platform for target: " + target)
+                    Spacelift.task(AndroidSdkUpdater)
+                        .target(target)
+                        .buildTools(getBuildTools())
+                        .execute().await()
                 }
 
-                avdcreator.execute().await()
+            // and then update unique system images
+            if (getUpdateImages()) {
+                getAndroidTargets()
+                    .collect(new HashSet<String>(), { AndroidTarget target -> target.images })
+                    .flatten()
+                    .unique()
+                    .each { image ->
+                        logger.info("Updating system images for target: " + image)
+                        Spacelift.task(AndroidSdkUpdater)
+                            .image((String) image)
+                            .execute().await()
+                    }
             }
-        }
 
-        // execute post actions
-        postActions.resolve()
+            // opt out for stats
+            Spacelift.task(AndroidSdkOptForStats).execute().await()
+
+            if (getCreateAvds()) {
+                // create AVDs
+                getAndroidTargets().each { AndroidTarget androidTarget ->
+                    String avdName = androidTarget.name
+                    AVDCreator avdcreator = Spacelift.task(AVDCreator).target(avdName).name(avdName.replaceAll("\\W", "")).force()
+
+                    // set abi if it was defined
+                    if(androidTarget.abi) {
+                        avdcreator.abi(androidTarget.abi)
+                    }
+
+                    avdcreator.execute().await()
+                }
+            }
+
+            // execute post actions
+            postActions.resolve()
+        }
     }
 
     public String getRemoteUrl() {
@@ -245,17 +280,22 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return updateSdk.resolve()
     }
 
+    public boolean getUpdateImages() {
+        return updateImages.resolve()
+    }
+
     private File getFsPath() {
         return new File((File) parent['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
     private Map<String, String> getAndroidEnvironmentProperties() {
-        Map<String, String> envProperties = new HashMap<String, String>();
+        Map<String, String> envProperties = new HashMap<String, String>()
 
         File androidHome = getHome()
 
         envProperties.put("ANDROID_HOME", androidHome.canonicalPath)
         envProperties.put("ANDROID_SDK_HOME", ((File) parent['workspace']).canonicalPath)
+        envProperties.put("ANDROID_SDK_ROOT", androidHome.canonicalPath)
         envProperties.put("ANDROID_TOOLS", new File(androidHome, "tools").canonicalPath)
         envProperties.put("ANDROID_PLATFORM_TOOLS", new File(androidHome, "platform-tools").canonicalPath)
 
@@ -274,9 +314,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                     "/C",
                     "${home}/platform-tools/adb.exe"
                 ]},
-            solaris: {[
-                    "${home}/platform-tools/adb"
-                ]}
+            solaris: {[ "${home}/platform-tools/adb" ]}
         ])
 
         AndroidAdbTool() {
@@ -326,7 +364,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
         // set owner via API
         DeferredValue<List> nativeCommand = DeferredValue.of(List).ownedBy(this).from([
-            linux: { ["${home}/tools/android"] },
+            linux: { ["${home}/tools/android"]},
             mac: { ["${home}/tools/android"]},
             windows: {
                 [
@@ -334,8 +372,8 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                     "/C",
                     "${home}/tools/android.bat"
                 ]},
-            solaris: {[
-                    "${home}/tools/android" ]}
+            solaris: {[ "${home}/tools/android"
+                ]}
         ])
 
         AndroidTool() {
@@ -355,6 +393,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     private static class AndroidTarget {
         final String name
         final String abi
+        final List<String> images = new ArrayList<String>()
 
         AndroidTarget(Object object) {
             if(object instanceof Map) {
@@ -364,15 +403,45 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                 }
                 this.name = map.name
                 this.abi = map.abi
+
+                List<String> images = map.images as List<String>
+
+                if (images) {
+                    this.images.addAll(images)
+                }
             }
             else {
                 this.name = object.toString()
             }
         }
 
+        public Integer getApiLevel() {
+            if(name.isInteger()) {
+                return name.toInteger()
+            }
+
+            def androidVersionCandidates = name.tokenize('-')
+            if(androidVersionCandidates.last().isInteger()) {
+                return androidVersionCandidates.last().toInteger()
+            }
+
+            androidVersionCandidates = name.tokenize(':')
+            if(androidVersionCandidates.last().isInteger()) {
+                return androidVersionCandidates.last().toInteger()
+            }
+        }
+
+        public String getAbi() {
+            abi
+        }
+
+        public List<String> images() {
+            return images
+        }
+
         @Override
         public String toString() {
-            return "AndroidTarget: ${name}" + ((abi)? " - ${abi}" :"")
+            return "AndroidTarget: ${name}" + ((abi)? " - ${abi}" :"" ) + ((images)? "- ${images}" : "")
         }
     }
 }
