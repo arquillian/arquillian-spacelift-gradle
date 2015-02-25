@@ -60,6 +60,98 @@ class DefaultTestExecutionLifecycleTest {
         }
     }
 
+    @Test
+    void "dataProvider with ext: ext before spacelift is applied"() {
+        Project project = ProjectBuilder.builder().build()
+
+        project.ext {
+            defaultArray = ["first"]
+        }
+
+        project.apply plugin: 'spacelift'
+
+        project.spacelift {
+            tests {
+                foo {
+                    def counter = 0
+                    def value = { if(counter<3) { counter++; return "first" } else return "second" }
+
+                    project.array = ["first", "second"]
+
+                    dataProvider { project.array }
+                    beforeSuite { }
+                    beforeTest { data ->
+                        assertThat data, is(value())
+                    }
+                    execute { data ->
+                        assertThat data, is(value())
+                    }
+                    afterTest { data ->
+                        assertThat data, is(value())
+                    }
+                    afterSuite { }
+                }
+            }
+        }
+
+        project.ext.exception = exception
+
+        project.spacelift.tests.each { test ->
+            test.executeTest(project.logger)
+        }
+    }
+
+    @Test
+    void "dataProvider with ext: ext after spacelift is applied"() {
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'spacelift'
+
+        project.ext {
+            defaultArray = ["first", "second"]
+
+            array = "first,second"
+        }
+
+        project.spacelift {
+            profiles {
+                "default" {
+                    tests '*'
+                }
+            }
+
+            tests {
+                foo {
+                    def counter = 0
+                    def value = { if(counter<3) { counter++; return "first" } else return "second" }
+
+
+
+                    dataProvider { project.array }
+                    beforeSuite { }
+                    beforeTest { data ->
+                        assertThat data, is(value())
+                    }
+                    execute { data ->
+                        assertThat data, is(value())
+                    }
+                    afterTest { data ->
+                        assertThat data, is(value())
+                    }
+                    afterSuite { }
+                }
+            }
+        }
+
+        project.tasks['init'].execute()
+
+
+        project.ext.exception = exception
+
+        project.spacelift.tests.each { test ->
+            test.executeTest(project.logger)
+        }
+    }
 
     @Test
     void "all phases should execute once when no dataProvider is specified"() {
