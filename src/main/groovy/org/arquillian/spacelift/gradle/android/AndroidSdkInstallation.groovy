@@ -27,14 +27,27 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
 
     DeferredValue<String> version = DeferredValue.of(String.class).from("24.0.2")
 
-    DeferredValue<String> buildTools = DeferredValue.of(String.class).from("21.1.2")
+    DeferredValue<List> buildTools = DeferredValue.of(List.class).from(["21.1.2"])
 
     DeferredValue<List> androidTargets = DeferredValue.of(List.class).from([])
 
     DeferredValue<Boolean> updateSdk = DeferredValue.of(Boolean.class).from(true)
 
     DeferredValue<Boolean> isInstalled = DeferredValue.of(Boolean.class).from({
-        return getHome().exists()
+        if (!getHome().exists()) {
+            return false
+        }
+        
+        boolean buildToolsExist = true
+
+        for (String buildToolsVersion : getBuildTools()) {
+            if (!new File(getHome(), "build-tools/" + buildToolsVersion).exists()) {
+                buildToolsExist = false;
+                break;
+            }
+        }
+        
+        return buildToolsExist
     })
 
     DeferredValue<Boolean> createAvds = DeferredValue.of(Boolean.class).from(true)
@@ -85,6 +98,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         this.fileName = other.@fileName.copy()
 
         this.androidTargets = other.@androidTargets.copy()
+        this.buildTools = other.@buildTools.copy()
         this.createAvds = other.@createAvds.copy()
         this.updateSdk = other.@updateSdk.copy()
         this.updateImages = other.@updateImages.copy()
@@ -156,10 +170,10 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     public void install(Logger logger) {
 
         File targetFile = getFsPath()
+
         if(targetFile.exists()) {
             logger.info(":install:${name} Grabbing ${getFileName()} from file system cache")
-        }
-        else if(getRemoteUrl()!=null){
+        } else if(getRemoteUrl() != null){
             // ensure parent directory exists
             targetFile.getParentFile().mkdirs()
 
@@ -168,27 +182,21 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             Spacelift.task(DownloadTool).from(getRemoteUrl()).timeout(60000).to(targetFile).execute().await()
         }
 
-        // extract file if set to and at the same time file is defined
-        if(getHome().exists()) {
-            logger.info(":install:${name} Deleting previous installation at ${getHome()}")
-            //project.ant.delete(dir: getHome())
+        if (!getHome().exists()) {
+            logger.info(":install:${name} Extracting installation from ${getFileName()}")
+            // based on installation type, we might want to unzip/untar/something else
+            switch(getFileName()) {
+                case ~/.*zip/:
+                    Spacelift.task(getFsPath(),UnzipTool).toDir((File)parent['workspace']).execute().await()
+                    break
+                case ~/.*tgz/:
+                case ~/.*tar\.gz/:
+                    Spacelift.task(getFsPath(),UntarTool).toDir((File)parent['workspace']).execute().await()
+                    break
+                default:
+                    logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
+            }
         }
-
-        logger.info(":install:${name} Extracting installation from ${getFileName()}")
-
-        // based on installation type, we might want to unzip/untar/something else
-        switch(getFileName()) {
-            case ~/.*zip/:
-                Spacelift.task(getFsPath(),UnzipTool).toDir((File)parent['workspace']).execute().await()
-                break
-            case ~/.*tgz/:
-            case ~/.*tar\.gz/:
-                Spacelift.task(getFsPath(),UntarTool).toDir((File)parent['workspace']).execute().await()
-                break
-            default:
-                logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
-        }
-
 
         // we need to fix executable flags as Java Unzip does not preserve them
         // FIXME
@@ -200,11 +208,19 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         // update Android SDK, download / update each specified Android SDK version
         if(getUpdateSdk()) {
 
+            List<String> buildToolsToUpdate = []
+            
+            for (String buildToolsVersion : getBuildTools()) {
+                if (!new File(getHome(), "build-tools/" + buildToolsVersion).exists()) {
+                    buildToolsToUpdate.add(buildToolsVersion)
+                }
+            }
+            
             // update platform first
             logger.info("Updating platform.")
             Spacelift.task(AndroidSdkUpdater)
                 .updatePlatform(true)
-                .buildTools(getBuildTools())
+                .buildTools(buildToolsToUpdate)
                 .execute().await()
 
             // then update tools and platform for every target
@@ -214,7 +230,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
                     logger.info("Updating platform for target: " + target)
                     Spacelift.task(AndroidSdkUpdater)
                         .target(target)
-                        .buildTools(getBuildTools())
+                        .buildTools(buildToolsToUpdate)
                         .execute().await()
                 }
 
@@ -272,7 +288,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         return createAvds.resolve()
     }
 
-    public String getBuildTools() {
+    public List<String> getBuildTools() {
         return buildTools.resolve()
     }
 

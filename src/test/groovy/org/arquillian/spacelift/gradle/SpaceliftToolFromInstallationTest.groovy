@@ -166,7 +166,8 @@ public class SpaceliftToolFromInstallationTest {
             installations {
                 androidSdk(from:AndroidSdkInstallation) {
                     // define AndroidTargets
-                    androidTargets "19"
+                    androidTargets ( [ [name: "19", abi:"default/x86"] ] )
+                    createAvds { false }
                 }
             }
         }
