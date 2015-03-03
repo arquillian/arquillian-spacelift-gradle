@@ -22,7 +22,7 @@ class AndroidSdkUpdater extends Task<Object, Void>{
     //
     // Backed by JIRA: https://issues.jboss.org/browse/MP-209
     //
-    private String buildToolsVersion = "21.1.2"
+    private List buildToolsVersions = [ "21.1.2" ]
 
     AndroidSdkUpdater target(String target) {
         if (target && !target.isEmpty()) {
@@ -48,9 +48,9 @@ class AndroidSdkUpdater extends Task<Object, Void>{
         this
     }
 
-    AndroidSdkUpdater buildTools(String buildToolsVersion) {
-        if (buildToolsVersion && !buildToolsVersion.isEmpty()) {
-            this.buildToolsVersion = buildToolsVersion
+    AndroidSdkUpdater buildTools(List<String> buildToolsVersions) {
+        if (buildToolsVersions) {
+            this.buildToolsVersions = buildToolsVersions
         }
         this
     }
@@ -60,17 +60,33 @@ class AndroidSdkUpdater extends Task<Object, Void>{
 
         // update just core platform and build tools
         if (updatePlatform) {
+            String buildToolsString = constructBuildToolsString(buildToolsVersions)
 
-            log.info("Updating platform tools and build tools: platform-tools,build-tools-" + buildToolsVersion
-                    + ",extra-google-google_play_services,extra-android-support")
+            log.info("Updating platform tools and build tools:" + buildToolsString)
+
+            if (!buildToolsVersions.isEmpty()) {    
+                Spacelift.task('android').parameters([
+                    "update",
+                    "sdk",
+                    "--filter",
+                    buildToolsString,
+                    "--all",
+                    "--no-ui"]
+                ).interaction(new ProcessInteractionBuilder()
+                .outputPrefix("")
+                .when('^Do you accept the license.*: ').replyWith('y')
+                .when('^\\s*Done.*installed\\.$').terminate()
+                .when('^(?!Error).*$').printToOut()
+                .when('^!Error.*$').printToErr())
+                .shouldExitWith((0..255).toArray(new Integer[0]))
+                .execute().await()
+            }
 
             Spacelift.task('android').parameters([
                 "update",
                 "sdk",
                 "--filter",
-                "platform-tools," +
-                "build-tools-" + buildToolsVersion + "," +
-                "extra-google-google_play_services,extra-android-support",
+                "platform-tools,extra-google-google_play_services,extra-android-support",
                 "--all",
                 "--no-ui"]
             ).interaction(new ProcessInteractionBuilder()
@@ -162,5 +178,16 @@ class AndroidSdkUpdater extends Task<Object, Void>{
         }
 
         throw new IllegalArgumentException("Android target expected in form android-XYZ or Google Inc.:Google APIs:XYZ")
+    }
+    
+    private String constructBuildToolsString(List<String> buildToolsVersions) {
+        StringBuilder sb = new StringBuilder()
+
+        buildToolsVersions.each { version ->
+            sb.append("build-tools-").append(version).append(",")
+        }
+
+        String tools = sb.toString()
+        return tools.substring(0, tools.length()-1)
     }
 }
