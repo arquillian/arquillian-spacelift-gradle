@@ -18,7 +18,7 @@ import static org.junit.Assert.assertThat
 public class SpaceliftToolFromInstallationTest {
 
     @Test
-    void "android android sdk and provide adroid tool"() {
+    void "install android sdk and provide android tool"() {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'spacelift'
@@ -116,6 +116,7 @@ public class SpaceliftToolFromInstallationTest {
                         }
                     }
                     createAvds { false }
+                    updateSdk { false }
                 }
             }
         }
@@ -168,6 +169,7 @@ public class SpaceliftToolFromInstallationTest {
                     // define AndroidTargets
                     androidTargets ( [ [name: "19", abi:"default/x86"] ] )
                     createAvds { false }
+                    updateSdk { false }
                 }
             }
         }
