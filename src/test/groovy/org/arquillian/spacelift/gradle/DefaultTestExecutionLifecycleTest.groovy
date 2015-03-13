@@ -92,7 +92,7 @@ class DefaultTestExecutionLifecycleTest {
                 }
             }
         }
-        
+
         project.spacelift.tests.each { test ->
             test.executeTest(project.logger)
         }
@@ -165,6 +165,24 @@ class DefaultTestExecutionLifecycleTest {
                 project.exception.expectMessage("Random test error.")
             }
         }
+    }
+
+    @Test
+    void "original exception should be propagated"() {
+
+        exception.expect(IllegalStateException)
+        exception.expectMessage("Random test error.")
+
+        runAsSpaceliftTest {
+            execute {
+                throw new IllegalStateException("Random test error.")
+            }
+            afterTest {
+                throw new IllegalArgumentException("Random test error.")
+            }
+        }
+
+
     }
 
     @Test
