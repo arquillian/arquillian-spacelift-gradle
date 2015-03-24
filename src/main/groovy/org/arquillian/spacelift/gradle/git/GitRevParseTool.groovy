@@ -7,7 +7,7 @@ import org.arquillian.spacelift.task.Task
 import org.arquillian.spacelift.task.os.CommandTool
 
 /**
- * Finds SHA1 of a given reference
+ * Finds SHA1 of a given revision. Returns {@code null} if no such revision was found.
  * @author kpiwko
  *
  */
@@ -15,6 +15,12 @@ class GitRevParseTool extends Task<File, String> {
 
     String rev
 
+    /**
+     * Revision to search for. Can be commit sha1, 'HEAD', 'master', in short
+     * any format supported by git rev-parse tool
+     * @param rev
+     * @return
+     */
     GitRevParseTool rev(String rev) {
         this.rev = rev
         return this

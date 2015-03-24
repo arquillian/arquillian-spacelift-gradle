@@ -44,7 +44,7 @@ class GitBasedInstallation extends BaseContainerizableObject<GitBasedInstallatio
 
         // if we checked out a commit, this should work
         String repositorySha = Spacelift.task(home, GitRevParseTool).rev("HEAD").execute().await()
-        if(repositorySha == commitSha) {
+        if(repositorySha != null && repositorySha == commitSha) {
             return true
         }
 
@@ -52,7 +52,7 @@ class GitBasedInstallation extends BaseContainerizableObject<GitBasedInstallatio
         Spacelift.task(home, GitFetchTool).execute().await()
         def originRepositorySha = Spacelift.task(home, GitRevParseTool).rev("origin/${commitSha}").execute().await()
         // ensure that content is the same
-        if(repositorySha == originRepositorySha) {
+        if(repositorySha != null && originRepositorySha != null && repositorySha == originRepositorySha) {
             return true
         }
 

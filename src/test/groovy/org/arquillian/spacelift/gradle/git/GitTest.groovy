@@ -85,7 +85,8 @@ class GitTest {
     }
 
     /**
-     * Ignored since it needs specific repository to clone from and push to which is not guaranteed always exists.
+     * Ignored since it needs specific repository to clone from and push to and this would require
+     * private SSH key
      *
      * @throws IOException
      */
