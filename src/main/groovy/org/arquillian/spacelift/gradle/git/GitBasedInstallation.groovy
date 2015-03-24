@@ -32,7 +32,32 @@ class GitBasedInstallation extends BaseContainerizableObject<GitBasedInstallatio
     DeferredValue<File> home = DeferredValue.of(File.class)
 
     DeferredValue<Boolean> isInstalled = DeferredValue.of(Boolean.class).from({
-        return getHome().exists()
+
+        File home = getHome()
+
+        if(!home.exists()) {
+            return false
+        }
+
+        // get commit sha
+        String commitSha = commit.resolve();
+
+        // if we checked out a commit, this should work
+        String repositorySha = Spacelift.task(home, GitRevParseTool).rev("HEAD").execute().await()
+        if(repositorySha == commitSha) {
+            return true
+        }
+
+        // if we checkout out master or a reference, make sure that we fetch latest first
+        Spacelift.task(home, GitFetchTool).execute().await()
+        def originRepositorySha = Spacelift.task(home, GitRevParseTool).rev("origin/${commitSha}").execute().await()
+        // ensure that content is the same
+        if(repositorySha == originRepositorySha) {
+            return true
+        }
+
+        // not installed
+        return false
     })
 
     // actions to be invoked after installation is done
@@ -87,8 +112,32 @@ class GitBasedInstallation extends BaseContainerizableObject<GitBasedInstallatio
 
     @Override
     void install(Logger logger) {
-        File location = Spacelift.task(repository.resolve(), GitCloneTool.class).destination(getHome()).execute().await()
-        Spacelift.task(location, GitCheckoutTool.class).checkout(commit.resolve()).execute().await()
+
+        File home = getHome()
+        String commitId = commit.resolve()
+
+        // if home exist already, assume that we want just to update
+        if(home.exists()) {
+            logger.info(":install:${name} Identified existing git installation at ${home}, will fetch latest content")
+            Spacelift.task(home, GitFetchTool).execute().await()
+
+            // checkout commit
+            logger.info(":install:${name} Force checking out ${commitId} at ${home}")
+            Spacelift.task(home, GitCheckoutTool.class).checkout(commitId).force().execute().await()
+        }
+        // otherwise, clone the repository
+        else {
+            String repositoryPath = repository.resolve()
+            logger.info(":install:${name} Cloning git repository from ${repositoryPath} to ${home}")
+            home = Spacelift.task(repositoryPath, GitCloneTool.class).destination(home).execute().await()
+
+            // checkout commit
+            logger.info(":install:${name} Checking out ${commitId} at ${home}")
+            Spacelift.task(home, GitCheckoutTool.class).checkout(commitId).execute().await()
+        }
+
+
+
     }
 
     @Override

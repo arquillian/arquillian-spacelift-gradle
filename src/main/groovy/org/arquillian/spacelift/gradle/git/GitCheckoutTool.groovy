@@ -17,9 +17,10 @@ import org.arquillian.spacelift.task.os.CommandTool
  */
 class GitCheckoutTool extends Task<File, File> {
 
-    private Logger logger = Logger.getLogger(GitCheckoutTool.class.getName())
+    private static Logger logger = Logger.getLogger(GitCheckoutTool.class.getName())
 
-    private String branch = "master"
+    String branch = "master"
+    boolean force = false
 
     /**
      *
@@ -30,15 +31,24 @@ class GitCheckoutTool extends Task<File, File> {
         if (notNullAndNotEmpty(branch)) {
             this.branch = branch
         }
-        this
+        return this
+    }
+
+    GitCheckoutTool force() {
+        this.force = true
+        return this
     }
 
     @Override
     protected File process(File repositoryDir) throws Exception {
 
-        Command command = new CommandBuilder("git")
+        CommandBuilder command = new CommandBuilder("git")
                 .parameter("checkout")
-                .parameter(branch).build()
+                .parameter(branch)
+
+        if(force) {
+            command.parameter('--force')
+        }
 
         logger.info(command.toString())
 

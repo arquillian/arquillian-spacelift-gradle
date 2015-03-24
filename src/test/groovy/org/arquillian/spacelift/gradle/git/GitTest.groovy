@@ -1,10 +1,9 @@
-package org.arquillian.spacelift.gradle
+package org.arquillian.spacelift.gradle.git
 
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
 
 import org.arquillian.spacelift.Spacelift
-import org.arquillian.spacelift.gradle.git.*
 import org.arquillian.spacelift.task.os.CommandTool
 import org.junit.Ignore
 import org.junit.Test
