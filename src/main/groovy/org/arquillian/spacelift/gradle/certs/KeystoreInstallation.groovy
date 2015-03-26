@@ -32,7 +32,7 @@ class KeystoreInstallation extends BaseContainerizableObject<KeystoreInstallatio
     DeferredValue<File> keystoreSource = DeferredValue.of(File.class).from({
         logger.info(":install:${name} copying Spacelift reference keystore")
         File keystore =  File.createTempFile("keystore", "-spacelift")
-        KeystoreInstallation.getClass().getResource("/certs/aerogear.keystore").withInputStream { InputStream ris ->
+        KeystoreInstallation.class.getResource("/certs/aerogear.keystore").withInputStream { InputStream ris ->
             keystore.withOutputStream { OutputStream fos -> fos << ris }
         }
         return keystore
@@ -50,7 +50,7 @@ class KeystoreInstallation extends BaseContainerizableObject<KeystoreInstallatio
     DeferredValue<File> truststoreSource = DeferredValue.of(File.class).from({
         logger.info(":install:${name} copying Spacelift reference truststore")
         File truststore =  File.createTempFile("keystore", "-spacelift")
-        KeystoreInstallation.getClass().getResource("/certs/aerogear.truststore").withInputStream { InputStream ris ->
+        KeystoreInstallation.class.getResource("/certs/aerogear.truststore").withInputStream { InputStream ris ->
             truststore.withOutputStream { OutputStream fos -> fos << ris }
         }
         return truststore
