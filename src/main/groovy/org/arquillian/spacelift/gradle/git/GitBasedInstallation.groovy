@@ -136,7 +136,8 @@ class GitBasedInstallation extends BaseContainerizableObject<GitBasedInstallatio
             Spacelift.task(home, GitCheckoutTool.class).checkout(commitId).execute().await()
         }
 
-
+        // execute post actions
+        postActions.resolve()
 
     }
 

@@ -17,7 +17,7 @@ class GitBasedInstallationTest {
     public ExpectedException exception = ExpectedException.none();
 
     @Test
-    void "install from commit and from master"() {
+    void "install from commit and master"() {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'spacelift'
@@ -25,26 +25,41 @@ class GitBasedInstallationTest {
         project.spacelift {
             workspace = new File(System.getProperty("user.dir"), "workspace")
             installations {
+
+                def counter = 0
+
                 theCommit(from:GitBasedInstallation) {
                     repository "https://github.com/smiklosovic/test.git"
                     commit '15b1d748935a58ea0f583a4d21531e854e6c382a'
                     home "smikloso-test"
+                    postActions {
+                        counter++
+                    }
                 }
                 theMaster(from:GitBasedInstallation) {
                     repository "https://github.com/smiklosovic/test.git"
                     commit 'master'
                     home "smikloso-test"
+                    postActions {
+                        counter++
+                    }
                 }
                 theCommitAgain(from:GitBasedInstallation) {
                     repository "https://github.com/smiklosovic/test.git"
                     commit '15b1d748935a58ea0f583a4d21531e854e6c382a'
                     home "smikloso-test"
+                    postActions {
+                        counter++
+                    }
                 }
                 // we need to end up with different commit than we've started
                 theMasterAgain(from:GitBasedInstallation) {
                     repository "https://github.com/smiklosovic/test.git"
                     commit 'master'
                     home "smikloso-test"
+                    postActions {
+                        assertThat counter, is(3)
+                    }
                 }
             }
         }
@@ -88,5 +103,4 @@ class GitBasedInstallationTest {
             assertThat installation.isInstalled(), is(true)
         }
     }
-
 }
