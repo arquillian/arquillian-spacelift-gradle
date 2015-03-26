@@ -35,6 +35,11 @@ class KeystoreInstallationTest {
             installations {
                 defaultKeystore(from:KeystoreInstallation) {
                 }
+                // this certificate won't modify truststore hence no chance to create it by mistake
+                defaultKeystoreWithNoGen(from:KeystoreInstallation) {
+                    generateLocalCert false
+                    home "othercerts"
+                }
             }
         }
 

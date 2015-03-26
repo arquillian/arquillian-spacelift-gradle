@@ -49,7 +49,7 @@ class KeystoreInstallation extends BaseContainerizableObject<KeystoreInstallatio
     // a file whereof truststore is copied. Spacelift embeds its own keystore based on JDK7 content
     DeferredValue<File> truststoreSource = DeferredValue.of(File.class).from({
         logger.info(":install:${name} copying Spacelift reference truststore")
-        File truststore =  File.createTempFile("keystore", "-spacelift")
+        File truststore =  File.createTempFile("truststore", "-spacelift")
         KeystoreInstallation.class.getResource("/certs/aerogear.truststore").withInputStream { InputStream ris ->
             truststore.withOutputStream { OutputStream fos -> fos << ris }
         }
@@ -161,8 +161,8 @@ class KeystoreInstallation extends BaseContainerizableObject<KeystoreInstallatio
         new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: keystoreSource, tofile: keystore.resolve()])
 
         File truststoreSource = truststoreSource.resolve()
-        logger.info(":install:${name} Copying keystore from ${truststoreSource} to ${getTruststore()}")
-        new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: truststoreSource, tofile: keystore.resolve()])
+        logger.info(":install:${name} Copying truststore from ${truststoreSource} to ${getTruststore()}")
+        new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: truststoreSource, tofile: truststore.resolve()])
 
         if(generateLocalCert.resolve()) {
             localCertIps.resolve().each { Object hostName ->
