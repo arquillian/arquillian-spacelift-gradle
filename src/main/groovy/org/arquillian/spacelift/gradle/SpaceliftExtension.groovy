@@ -15,27 +15,31 @@ import org.slf4j.LoggerFactory
 class SpaceliftExtension {
     private static final Logger logger = LoggerFactory.getLogger(SpaceliftExtension)
 
+    // FIXME, workspace and installationDir should be provided by Arquillian Spacelift itself
     // workspace configuration
     File workspace
 
     // base path to get local binaries
     File installationsDir
 
+    // FIXME this should be better defined
     // flag to kill already running servers
     boolean killServers
 
+    // FIXME, this should be moved to Maven related Installation
     // local Maven repository
     File localRepository
-
-    // keystore and truststore files
-    File keystoreFile
-    File truststoreFile
 
     // staging JBoss repository
     boolean enableStaging
 
     // snapshots JBoss repository
     boolean enableSnapshots
+
+    // FIXME, deprecated these properties, you should install KeystoreInstallation if you need these values
+    // keystore and truststore files
+    File keystoreFile
+    File truststoreFile
 
     // internal DSL
     InheritanceAwareContainer<Profile, Profile> profiles
