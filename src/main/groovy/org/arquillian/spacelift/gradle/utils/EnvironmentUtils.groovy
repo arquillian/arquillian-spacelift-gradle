@@ -8,16 +8,16 @@ import org.apache.commons.lang3.SystemUtils
  */
 class EnvironmentUtils {
 
-    static def runsOnWindows() {
-        SystemUtils.IS_OS_WINDOWS
+    static boolean runsOnWindows() {
+        return SystemUtils.IS_OS_WINDOWS
     }
 
-    static def runsOnLinux() {
-        SystemUtils.IS_OS_LINUX
+    static boolean runsOnLinux() {
+        return SystemUtils.IS_OS_LINUX
     }
     
-    static runsOnHudson() {
-        System.getProperty("user.name") ==~ /hudson/
+    static boolean runsOnHudson() {
+        return System.getProperty("user.name") ==~ /hudson/
     }
 
     static enum IP {
@@ -27,12 +27,12 @@ class EnvironmentUtils {
     /**
     * The map of loopback ip adresses for IPv4/v6
     */
-    static def lo = [(IP.v6):"::1", (IP.v4):"127.0.0.1"]
+    static Map<IP, String> lo = [(IP.v6):"::1", (IP.v4):"127.0.0.1"]
 
     /**
     * The map of all the environments to search for IPv4/v6 adresses
     */
-    static def ip_envs = [
+    static Map<IP, List<String>> ip_envs = [
        (IP.v4):["MYTESTIP_1","MYTESTIP_2"],
        (IP.v6):["MYTESTIPV6_1","MYTESTIPV6_2"]
     ];
@@ -45,7 +45,7 @@ class EnvironmentUtils {
     * Formerly, try searching environment variables in ``ip_envs``,
     * disabled due to cert issues
     */
-    static def getIp (IP v) {
+    static String getIp (IP v) {
         def preset_ips = ip_envs[v].collect({System.getenv(it)}).findAll()
         /* Disabling nonlocalhost ips due to cert issues
         if(preset_ips){
@@ -65,8 +65,8 @@ class EnvironmentUtils {
     * It will return either both IPv4 and IPv6 adresses
     * or either of those, or none, id none works
     */
-    static def ipVersionsToTest() {
-        [IP.v4,IP.v6]
+    static List<List<Object>> ipVersionsToTest() {
+        [IP.v4, IP.v6]
             .collect({[it, getIp(it)]})
             .findAll({k,v -> v!=null})
     }

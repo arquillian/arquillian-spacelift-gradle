@@ -14,17 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.arquillian.spacelift.gradle.keytool
+package org.arquillian.spacelift.gradle.certs
 import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.execution.Execution
 import org.arquillian.spacelift.execution.ExecutionException
-import org.arquillian.spacelift.gradle.utils.*
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.process.ProcessResult
 import org.arquillian.spacelift.task.os.CommandTool
 
 /**
- * Keytool
+ * Wrapper on top of keytool binary. Requires {@code keytool} tool registered in Spacelift
  *
  * @author <a href="asaleh@redhat.com">Adam Saleh</a>
  *
@@ -34,27 +33,31 @@ public class KeyTool extends CommandTool {
     protected String command;
     protected HashMap<String,String> opts = new HashMap<String,String>();
 
-    KeyTool setAlias(String alias){
+    KeyTool alias(String alias){
         this.opts.put("alias", alias)
         this
     }
 
-    KeyTool setKeystore(String keystore){
+    KeyTool keystore(String keystore){
         this.opts.put("keystore", keystore)
         this
     }
 
-    KeyTool setKeypass(String keypass){
+    KeyTool keystore(File keystoreFile) {
+        return keystore(keystoreFile.canonicalPath)
+    }
+
+    KeyTool keypass(String keypass){
         this.opts.put("keypass", keypass)
         this
     }
 
-    KeyTool setTrustcacerts(){
+    KeyTool trustcacerts(){
         this.opts.put("trustcacerts","")
         this
     }
 
-    KeyTool setStorepass (String storepass){
+    KeyTool storepass (String storepass){
         this.opts.put("storepass", storepass)
         this
     }
@@ -77,11 +80,19 @@ public class KeyTool extends CommandTool {
         this
     }
 
+    KeyTool cmdExport(File file) {
+        return cmdExport(file.canonicalPath)
+    }
+
     KeyTool cmdImport(String filepath){
         command = "import"
         this.opts.put("file", filepath)
         this.opts.put("noprompt", "")
         this
+    }
+
+    KeyTool cmdImport(File file) {
+        return cmdImport(file.canonicalPath)
     }
 
     KeyTool cmdGenKeyPair(String keyalg, String validity, String dname){
