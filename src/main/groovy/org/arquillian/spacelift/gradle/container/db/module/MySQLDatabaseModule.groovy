@@ -5,7 +5,7 @@ import org.arquillian.spacelift.gradle.container.db.DatabaseModule
 import org.jboss.aerogear.test.container.spacelift.JBossCLI
 import org.jboss.shrinkwrap.resolver.api.maven.Maven
 
-class MySQLDatabaseModule extends DatabaseModule {
+class MySQLDatabaseModule extends DatabaseModule<MySQLDatabaseModule> {
 
     protected String version = "5.1.28"
 
@@ -22,7 +22,7 @@ class MySQLDatabaseModule extends DatabaseModule {
 
         // path to the module
         String path = name.replaceAll("\\.","/")
-        File driver = Maven.resolver().resolve("mysql.mysql-connector-java:${version}").withoutTransitivity().asSingleFile()
+        File driver = Maven.resolver().resolve("mysql:mysql-connector-java:${version}").withoutTransitivity().asSingleFile()
         if (! new File(jbossHome, "/modules/${path}").exists()) {
 
             startContainer()
