@@ -35,14 +35,14 @@ class MySQLDatabaseModule extends DatabaseModule {
                     .await()
         }
 
-        if (! new File(jbossHome + "/modules/com/mysql").exists()) {
+        if (! new File(jbossHome + "/modules/com/mysql/jdbc").exists()) {
 
             startContainer()
 
             Spacelift.task(JBossCLI)
                     .environment("JBOSS_HOME", jbossHome)
                     .connect()
-                    .cliCommand("module add --name=com.mysql --resources=${destination}/mysql-connector-java-${resolvedVersion}.jar --dependencies=javax.api,javax.transaction.api")
+                    .cliCommand("module add --name=com.mysql.jdbc --resources=${destination}/mysql-connector-java-${resolvedVersion}.jar --dependencies=javax.api,javax.transaction.api")
                     .execute()
                     .await()
 
@@ -54,7 +54,7 @@ class MySQLDatabaseModule extends DatabaseModule {
     def uninstall() {
         startContainer()
 
-        Spacelift.task(JBossCLI).environment("JBOSS_HOME", jbossHome).connect().cliCommand("module remove --name=com.mysql").execute().await()
+        Spacelift.task(JBossCLI).environment("JBOSS_HOME", jbossHome).connect().cliCommand("module remove --name=com.mysql.jdbc").execute().await()
 
         stopContainer()
     }
