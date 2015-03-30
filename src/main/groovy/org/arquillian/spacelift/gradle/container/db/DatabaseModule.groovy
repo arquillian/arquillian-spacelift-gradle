@@ -6,15 +6,13 @@ import org.jboss.aerogear.test.container.manager.JBossManagerConfiguration
 import org.jboss.aerogear.test.container.spacelift.JBossStarter
 import org.jboss.aerogear.test.container.spacelift.JBossStopper
 
-abstract class DatabaseModule {
+abstract class DatabaseModule<DBM extends DatabaseModule<DBM>> {
 
     String jbossHome
 
     String name
 
-    String destination
-
-    String version
+    protected String version
 
     boolean startContainer = false
 
@@ -22,39 +20,51 @@ abstract class DatabaseModule {
 
     /**
      *
-     * @param name just some identifier
+     * @param name name of the module (see module add --name)
      * @param jbossHome location of container you want to add this module to
-     * @param destination where to download / save resolved artifact
      */
-    DatabaseModule(String name, String jbossHome, String destination) {
+    DatabaseModule(String name, String jbossHome) {
         this.name = name
         this.jbossHome = jbossHome
-        this.destination = destination
     }
 
-    def version(String version) {
+    DatabaseModule(String name, File jbossHome) {
+        this(name, jbossHome.canonicalPath)
+    }
+
+    DBM version(String version) {
         this.version = version
-        this
+        return this
     }
 
-    def shouldStartContainer() {
+    DBM shouldStartContainer() {
         startContainer = true
-        this
+        return this
     }
 
-    def startContainer() {
+    DBM startContainer() {
         if (startContainer) {
             manager = Spacelift.task(JBossStarter).configuration(new JBossManagerConfiguration().setJBossHome(jbossHome)).execute().await()
         }
+        return this
     }
 
-    def stopContainer() {
+    DBM stopContainer() {
         if (startContainer && manager) {
             Spacelift.task(manager, JBossStopper).execute().await()
         }
+        return this
     }
 
-    abstract def install()
+    /**
+     * Installs module into container
+     * @return
+     */
+    abstract DBM install()
 
-    abstract def uninstall()
+    /**
+     * Uninstalls module from container
+     * @return
+     */
+    abstract DBM uninstall()
 }

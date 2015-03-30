@@ -5,52 +5,53 @@ class DatabaseModulesManager {
 
     def databaseModules = []
 
-    def add(DatabaseModule module) {
+    DatabaseModulesManager add(DatabaseModule module) {
         databaseModules.add(module)
-        this
+        return this
     }
 
-    def install(String name) {
+    DatabaseModulesManager install(String name) {
         databaseModules.each { module ->
             if (module.name == name) {
                 module.install()
             }
         }
-        this
+        return this
     }
 
-    def install(names) {
+    DatabaseModulesManager install(names) {
         databaseModules.each { module ->
             if (names.contains(module.name)) {
                 module.install()
             }
         }
+        return this
     }
     
-    def installAll() {
+    DatabaseModulesManager installAll() {
         databaseModules.each { module ->
             module.install()
         }
-        this
+        return this
     }
 
-    def uninstall(String name) {
+    DatabaseModulesManager uninstall(String name) {
         databaseModules.each { module ->
             if (module.name == name) {
                 module.uninstall()
             }
         }
-        this
+        return this
     }
 
     def uninstallAll() {
         databaseModules.each { module ->
             module.uninstall()
         }
-        this
+        return this
     }
 
-    def size() {
-        databaseModules.size()
+    int size() {
+        return databaseModules.size()
     }
 }

@@ -1,4 +1,4 @@
-package org.arquillian.spacelift.gradle.db
+package org.arquillian.spacelift.gradle.container.db
 
 import org.arquillian.spacelift.Spacelift
 import org.jboss.aerogear.test.container.manager.JBossManager
