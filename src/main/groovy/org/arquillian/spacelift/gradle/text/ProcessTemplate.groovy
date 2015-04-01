@@ -51,7 +51,7 @@ class ProcessTemplate extends Task<File, File> {
     protected File process(File input) throws Exception {
 
         if(input==null || !input.exists() || !input.canRead()) {
-            throw new IllegalArgumentException("Input file must exists and be readable")
+            throw new IllegalArgumentException("Input file (${input ? input.canonicalPath : 'null'}) must exists and be readable")
         }
 
         def template = engine.createTemplate(input).make(bindings)
