@@ -132,6 +132,18 @@ class KeystoreInstallation extends BaseContainerizableObject<KeystoreInstallatio
         return truststore.resolve()
     }
 
+    String getKeystorePass() {
+        return keystorePass.resolve()
+    }
+
+    String getTruststorePass() {
+        return truststorePass.resolve()
+    }
+
+    String getAlias() {
+        return alias.resolve()
+    }
+
     @Override
     String getProduct() {
         return product.resolve()
@@ -158,15 +170,15 @@ class KeystoreInstallation extends BaseContainerizableObject<KeystoreInstallatio
         // FIXME copy should be done a different way, via Spacelift tasks
         File keystoreSource = keystoreSource.resolve()
         logger.info(":install:${name} Copying keystore from ${keystoreSource} to ${getKeystore()}")
-        new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: keystoreSource, tofile: keystore.resolve()])
+        new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: keystoreSource, tofile: getKeystore()])
 
         File truststoreSource = truststoreSource.resolve()
         logger.info(":install:${name} Copying truststore from ${truststoreSource} to ${getTruststore()}")
-        new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: truststoreSource, tofile: truststore.resolve()])
+        new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: truststoreSource, tofile: getTruststore()])
 
         if(generateLocalCert.resolve()) {
             localCertIps.resolve().each { Object hostName ->
-                logger.info("install:${name} Generating local certificate with alias ${alias.resolve()} for host ${hostName}")
+                logger.info("install:${name} Generating local certificate with alias ${getAlias()} for host ${hostName}")
                 addHostNameToKeystore(hostName.toString())
             }
         }
@@ -178,16 +190,15 @@ class KeystoreInstallation extends BaseContainerizableObject<KeystoreInstallatio
 
     private void addHostNameToKeystore(String ip) {
         // magic from Adam Saleh
-        String canonical = ip.replace('.',' ').split().collect {
-            "CN=${it}, "}.join('')
+        String canonical = ip.split('.').collect { "CN=${it},"}.join(' ')
         def preset = Spacelift.task(KeyTool)
-                .keystore(keystore.resolve())
-                .alias(alias.resolve())
-                .keypass(keystorePass.resolve())
-                .storepass(truststorePass.resolve())
+                .keystore(getKeystore())
+                .alias(getAlias())
+                .keypass(getKeystorePass())
+                .storepass(getTruststorePass())
 
         def trustPreset = Spacelift.task(KeyTool).keytoolAsPreset(preset)
-                .keystore(truststore.resolve())
+                .keystore(getTruststore())
                 .trustcacerts()
 
         Spacelift.task(KeyTool).keytoolAsPreset(trustPreset)
