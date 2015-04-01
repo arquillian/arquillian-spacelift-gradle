@@ -14,8 +14,8 @@ class UpdateJBossConfig extends Task<File, Void> {
 
     boolean shouldStartContainer = false
 
-    UpdateJBossConfig jbossHome(File jbossHome) {
-        jbossHome(jbossHome.getCanonicalPath())
+    UpdateJBossConfig jbossHome(File jbossHomePath) {
+        return jbossHome(jbossHomePath.getCanonicalPath())
     }
 
     UpdateJBossConfig jbossHome(String jbossHomePath) {
