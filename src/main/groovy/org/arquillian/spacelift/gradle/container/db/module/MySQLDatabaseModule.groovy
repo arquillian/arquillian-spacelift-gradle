@@ -7,7 +7,6 @@ import org.jboss.shrinkwrap.resolver.api.maven.Maven
 
 class MySQLDatabaseModule extends DatabaseModule<MySQLDatabaseModule> {
 
-    protected String version = "5.1.28"
 
     MySQLDatabaseModule(String name, String jbossHome) {
         super(name, jbossHome)
@@ -15,6 +14,8 @@ class MySQLDatabaseModule extends DatabaseModule<MySQLDatabaseModule> {
 
     MySQLDatabaseModule(String name, File jbossHome) {
         super(name, jbossHome)
+        // default version
+        this.version = "5.1.28"
     }
 
     @Override

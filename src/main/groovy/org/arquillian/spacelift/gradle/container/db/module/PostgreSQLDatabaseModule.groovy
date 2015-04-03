@@ -8,14 +8,14 @@ import org.jboss.shrinkwrap.resolver.api.maven.Maven
 
 class PostgreSQLDatabaseModule extends DatabaseModule<PostgreSQLDatabaseModule> {
 
-    protected String version = "9.3-1100-jbdc41"
-
     PostgreSQLDatabaseModule(String name, String jbossHome) {
         super(name, jbossHome)
     }
 
     PostgreSQLDatabaseModule(String name, File jbossHome) {
         super(name, jbossHome)
+        // default version
+        this.version = '9.3-1103-jdbc41'
     }
 
     @Override
