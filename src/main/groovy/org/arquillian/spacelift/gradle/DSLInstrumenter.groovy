@@ -46,7 +46,8 @@ class DSLInstrumenter {
 
             String getterName = "get"
             Type retValType = field.getGenericType()
-            if(retValType instanceof ParameterizedType && Boolean.class.isAssignableFrom(retValType.getActualTypeArguments()[0])) {
+            // FIXME this does not work for nested-generic parameters!
+            if(retValType instanceof ParameterizedType && Boolean.class == retValType.getActualTypeArguments()[0]) {
                 getterName = "is"
             }
             // camel case

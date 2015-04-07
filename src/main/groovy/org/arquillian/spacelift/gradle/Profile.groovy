@@ -1,13 +1,16 @@
 package org.arquillian.spacelift.gradle
 
 import groovy.transform.CompileStatic
-
+import org.arquillian.spacelift.gradle.configuration.ConfigurationContainer
+import org.arquillian.spacelift.gradle.configuration.ConfigurationItem
 import org.gradle.api.Project
 
 // this class represents a profile enumerating installations to be installed
 
 @CompileStatic
 class Profile extends BaseContainerizableObject<Profile> implements ContainerizableObject<Profile> {
+
+    ConfigurationContainer configuration
 
     // list of enabled installations
     DeferredValue<List> enabledInstallations = DeferredValue.of(List.class).from([])
@@ -20,6 +23,8 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
 
     Profile(String profileName, Object parent) {
         super(profileName, parent)
+
+        configuration = new ConfigurationContainer(this)
     }
 
     /**
@@ -30,6 +35,7 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
         super(profileName, other)
 
         // use direct access to skip call of getter
+        this.configuration = other.@configuration.clone() as ConfigurationContainer
         this.enabledInstallations = other.@enabledInstallations.copy()
         this.tests = other.@tests.copy()
         this.excludedTests = other.@excludedTests.copy()
@@ -57,6 +63,8 @@ class Profile extends BaseContainerizableObject<Profile> implements Containeriza
 
         StringBuilder sb = new StringBuilder()
         sb.append("Profile: ").append(name).append("\n")
+
+        sb.append("\tConfiguration: \n${configuration.toString()}")
 
         // installations
         sb.append("\tInstallations: ")
