@@ -28,7 +28,7 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
         this.type = type
         this.defaultType = defaultType
         this.parent = parent
-        this.objects = new LinkedHashSet<String, TYPE>()
+        this.objects = new LinkedHashSet<TYPE>()
     }
 
     InheritanceAwareContainer(InheritanceAwareContainer<TYPE, DEFAULT_TYPE> other) {

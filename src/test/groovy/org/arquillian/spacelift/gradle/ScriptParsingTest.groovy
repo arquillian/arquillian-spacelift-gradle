@@ -35,6 +35,13 @@ public class ScriptParsingTest {
         project.ext.set("eap6", "true")
 
         project.spacelift {
+            properties {
+                jbossHome {
+                    type File
+                    defaultValue 'yello'
+                    description 'Where the jboss as is located.'
+                }
+            }
             tests {
                 openshiftIntegrationTests {
                     execute {
@@ -43,7 +50,7 @@ public class ScriptParsingTest {
                 }
                 localIntegrationTests {
                     execute {
-                        printn "localIntegrationTests"
+                        println "localIntegrationTests, jbossHome: $jbossHome"
                     }
                 }
             }
@@ -70,6 +77,8 @@ public class ScriptParsingTest {
             }
         }
 
+        project.extensions.add('profile', 'eap6')
         project.getTasks()['init'].execute()
+        project.getTasks()['test'].execute()
     }
 }

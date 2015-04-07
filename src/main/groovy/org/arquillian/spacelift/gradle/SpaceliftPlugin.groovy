@@ -1,7 +1,10 @@
 package org.arquillian.spacelift.gradle
 
 import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.configuration.ConfigurationItem
+import org.arquillian.spacelift.gradle.configuration.IllegalConfigurationException
 import org.arquillian.spacelift.gradle.maven.SettingsXmlUpdater
+import org.arquillian.spacelift.gradle.configuration.BuiltinConfigurationItemConverters
 import org.arquillian.spacelift.gradle.utils.KillJavas
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -62,6 +65,9 @@ class SpaceliftPlugin implements Plugin<Project> {
                 // make selected profile global
                 logger.lifecycle(":init:profile-" + profile.name)
                 project.ext.set("selectedProfile", profile)
+
+                logger.lifecycle(":init:configuration")
+                loadConfiguration(project, logger)
 
                 // find installations that were specified by profile or enabled manually from command line
                 def installations = []
@@ -142,6 +148,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             task << {
                 println "Spacelift Workspace:          ${project.spacelift.workspace}"
                 println "Spacelift Installations Cache Dir:  ${project.spacelift.installationsDir}"
+                println "Spacelift configuration: \n${project.spacelift.configuration.toString()}"
                 println "Spacelift Profiles: "
 
                 project.spacelift.profiles.each { println it }
@@ -303,6 +310,44 @@ class SpaceliftPlugin implements Plugin<Project> {
                 //project.setProperty(overrideKey, value)
                 project.ext.set(overrideKey, value)
                 logger.lifecycle(":init:default ${overrideKey} was set to ${value} from defaults")
+            }
+        }
+    }
+
+    private void loadConfiguration(Project project, Object logger) {
+        List<ConfigurationItem<?>> configurationItems = new ArrayList<>()
+
+        configurationItems.addAll(project.selectedProfile.configuration)
+
+        project.spacelift.configuration.each { ConfigurationItem<?> item ->
+            def profileItem = configurationItems.find { ConfigurationItem<?> profileItem ->
+                profileItem.name.equals(item.name)
+            }
+            if(profileItem == null) {
+                configurationItems.add(item);
+            } else if(!item.type.resolve().isAssignableFrom(profileItem.type.resolve())) {
+                throw IllegalConfigurationException.incompatibleOverride(item, profileItem)
+            }
+        }
+
+        configurationItems.sort(false) { ConfigurationItem<?> a, ConfigurationItem<?> b ->
+            a.name.compareTo(b.name)
+        }.each { ConfigurationItem<?> item ->
+            if(project.hasProperty(item.name)) {
+                def stringValue = project.property(item.name) as String
+
+                if(item.isSet()) {
+                    throw new IllegalStateException("Value was already set in build.gradle file. You cannot override it.")
+                } else {
+                    if(!item.isConverterSet()) {
+                        item.converter.from(BuiltinConfigurationItemConverters.getConverter(item.type.resolve()))
+                    }
+
+                    def value = item.converter.resolve().fromString(stringValue)
+
+                    item.value(value)
+                    logger.lifecycle(":init:config ${item.name} was set to ${stringValue} from command line")
+                }
             }
         }
     }

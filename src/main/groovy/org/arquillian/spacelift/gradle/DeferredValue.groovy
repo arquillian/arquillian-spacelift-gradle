@@ -32,6 +32,8 @@ class DeferredValue<TYPE> {
     // holder of deferred value
     Closure valueBlock = {}
 
+    List<Callback<DeferredValue<TYPE>>> valueBlockSetCallbacks = []
+
     // name of deferred value
     String name
 
@@ -119,6 +121,9 @@ class DeferredValue<TYPE> {
      */
     DeferredValue<TYPE> from(Object... data) {
         this.valueBlock = defer(data)
+        this.valueBlockSetCallbacks.each { callback ->
+            callback.call(this)
+        }
         return this
     }
 
@@ -219,6 +224,11 @@ class DeferredValue<TYPE> {
         return copy
     }
 
+    DeferredValue<TYPE> valueBlockSet(Callback<DeferredValue<TYPE>> callback) {
+        valueBlockSetCallbacks << callback
+        return this
+    }
+
     /**
      * NOT YET IMPLEMENTED
      * @param callback
@@ -235,6 +245,10 @@ class DeferredValue<TYPE> {
      */
     DeferredValue<TYPE> fail(FailCallback<TYPE> callback) {
 
+    }
+
+    public static interface Callback<T> {
+        void call(T value);
     }
 
     public static interface DoneCallback<X> {

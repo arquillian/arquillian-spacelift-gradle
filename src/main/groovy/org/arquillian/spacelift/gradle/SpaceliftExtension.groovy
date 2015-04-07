@@ -1,7 +1,7 @@
 package org.arquillian.spacelift.gradle
 
-import java.lang.reflect.Field
-
+import org.arquillian.spacelift.gradle.configuration.ConfigurationContainer
+import org.arquillian.spacelift.gradle.configuration.ConfigurationItem
 import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
 import org.slf4j.Logger
@@ -42,6 +42,7 @@ class SpaceliftExtension {
     File truststoreFile
 
     // internal DSL
+    ConfigurationContainer configuration
     InheritanceAwareContainer<Profile, Profile> profiles
     InheritanceAwareContainer<GradleTask, DefaultGradleTask> tools
     InheritanceAwareContainer<Installation, DefaultInstallation> installations
@@ -59,10 +60,16 @@ class SpaceliftExtension {
         this.enableStaging = false
         this.enableSnapshots = false
         this.project = project
+        this.configuration = new ConfigurationContainer(this)
         this.profiles = new InheritanceAwareContainer(this, Profile, Profile)
         this.tools = new InheritanceAwareContainer(this, GradleTask, DefaultGradleTask)
         this.installations = new InheritanceAwareContainer(this, Installation, DefaultInstallation)
         this.tests = new InheritanceAwareContainer(this, Test, DefaultTest)
+    }
+
+    SpaceliftExtension configuration(Closure closure) {
+        configuration.configure(closure)
+        return this
     }
 
     SpaceliftExtension profiles(Closure closure) {
@@ -116,18 +123,24 @@ class SpaceliftExtension {
      * @return
      */
      def propertyMissing(String name) {
-
-        // try all containers to find resolution in particular order
+         // try all containers to find resolution in particular order
         //order here defines order of reference in case reference to the same object is found, laters are ignored
         def object, objectType
-        for(def container : ([installations, tests, tools, profiles])) {
+
+
+        for(def container : ([project.selectedProfile.configuration, configuration, installations, tests, tools, profiles])) {
             def resolved = resolve(container, name)
-            if(object==null && resolved != null) {
+            if(object == null && resolved != null) {
                 logger.debug("Resolved ${container.type.getSimpleName()} named ${name}")
-                object = resolved
-                objectType = container.type
+                if(resolved instanceof ConfigurationItem) {
+                    object = resolved.getValue()
+                    objectType = resolved.type.resolve()
+                } else {
+                    object = resolved
+                    objectType = container.type
+                }
             }
-            else if(object!=null && resolved != null) {
+            else if(object != null && resolved != null) {
                 logger.warn("Detected ambiguous reference ${name}, using ${objectType.getSimpleName()}, ignoring ${container.type.getSimpleName()}")
             }
         }
