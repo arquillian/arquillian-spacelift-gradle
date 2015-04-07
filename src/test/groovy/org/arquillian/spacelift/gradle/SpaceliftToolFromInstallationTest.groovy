@@ -52,6 +52,7 @@ public class SpaceliftToolFromInstallationTest {
                         android {
                             command ([
                                 linux: ["${home}/tools/android"],
+                                mac:["${home}/tools/android"],
                                 windows: [
                                     "cmd.exe",
                                     "/C",
