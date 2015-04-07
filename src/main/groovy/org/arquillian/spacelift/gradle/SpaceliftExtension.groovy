@@ -1,12 +1,11 @@
 package org.arquillian.spacelift.gradle
 
+import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.configuration.ConfigurationContainer
 import org.arquillian.spacelift.gradle.configuration.ConfigurationItem
-import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 
 /**
  * Defines a default configuration for Arquillian Spacelift Gradle Plugin
@@ -100,11 +99,11 @@ class SpaceliftExtension {
 
     def setWorkspace(workspace) {
         // update also dependant repositories when workspace is updated
-        if(localRepository.parentFile == this.workspace) {
+        if (localRepository.parentFile == this.workspace) {
             this.localRepository = new File(workspace, ".repository")
         }
         // update also dependant repositories when workspace is updated
-        if(installationsDir.parentFile == this.workspace) {
+        if (installationsDir.parentFile == this.workspace) {
             this.installationsDir = new File(workspace, "installations")
         }
 
@@ -116,36 +115,38 @@ class SpaceliftExtension {
         return "SpaceliftExtension" + (project.buildFile ? "(${project.buildFile.canonicalPath})" : "")
     }
 
-
     /**
      * If property was not found, try to check content of container for resolution
      * @param name Name of the property, can be any object defined in DSL
      * @return
      */
-     def propertyMissing(String name) {
-         // try all containers to find resolution in particular order
+    def propertyMissing(String name) {
+        // try all containers to find resolution in particular order
         //order here defines order of reference in case reference to the same object is found, laters are ignored
         def object, objectType
 
+        def containers = [configuration, installations, tests, tools, profiles]
+        if (project.hasProperty("selectedProfile")) {
+            containers.add(0, project.selectedProfile.configuration)
+        }
 
-        for(def container : ([project.selectedProfile.configuration, configuration, installations, tests, tools, profiles])) {
+        for (def container : containers) {
             def resolved = resolve(container, name)
-            if(object == null && resolved != null) {
+            if (object == null && resolved != null) {
                 logger.debug("Resolved ${container.type.getSimpleName()} named ${name}")
-                if(resolved instanceof ConfigurationItem) {
+                if (resolved instanceof ConfigurationItem) {
                     object = resolved.getValue()
                     objectType = resolved.type.resolve()
                 } else {
                     object = resolved
                     objectType = container.type
                 }
-            }
-            else if(object != null && resolved != null) {
+            } else if (object != null && resolved != null) {
                 logger.warn("Detected ambiguous reference ${name}, using ${objectType.getSimpleName()}, ignoring ${container.type.getSimpleName()}")
             }
         }
 
-        if(object!=null) {
+        if (object != null) {
             return object
         }
         // pass resolution to parent
@@ -156,7 +157,7 @@ class SpaceliftExtension {
         try {
             return container.getAt(name)
         }
-        catch(MissingPropertyException e) {
+        catch (MissingPropertyException e) {
             logger.debug("Unable to resolve ${container.type.getSimpleName()} named ${name}")
             return null
         }
