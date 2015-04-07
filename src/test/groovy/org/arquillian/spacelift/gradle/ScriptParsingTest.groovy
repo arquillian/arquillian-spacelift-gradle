@@ -35,7 +35,7 @@ public class ScriptParsingTest {
         project.ext.set("eap6", "true")
 
         project.spacelift {
-            properties {
+            configuration {
                 jbossHome {
                     type File
                     defaultValue 'yello'
