@@ -317,8 +317,10 @@ class SpaceliftPlugin implements Plugin<Project> {
     private void loadConfiguration(Project project, Object logger) {
         List<ConfigurationItem<?>> configurationItems = new ArrayList<>()
 
+        // We want all configuration items from the selected profile
         configurationItems.addAll(project.selectedProfile.configuration)
 
+        // We add properties that are not overridden in profile
         project.spacelift.configuration.each { ConfigurationItem<?> item ->
             def profileItem = configurationItems.find { ConfigurationItem<?> profileItem ->
                 profileItem.name.equals(item.name)
@@ -330,15 +332,17 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
         }
 
+        // Sorting alphabetically helps with log readability
         configurationItems.sort(false) { ConfigurationItem<?> a, ConfigurationItem<?> b ->
             a.name.compareTo(b.name)
         }.each { ConfigurationItem<?> item ->
+            // If the project has property with this name, it was probably an input from the command line
             if(project.hasProperty(item.name)) {
-                def stringValue = project.property(item.name) as String
-
                 if(item.isSet()) {
-                    throw new IllegalStateException("Value was already set in build.gradle file. You cannot override it.")
+                    throw new IllegalStateException("Value for property ${item.name} was already set in build.gradle file. You cannot override it.")
                 } else {
+                    def stringValue = project.property(item.name) as String
+
                     if(!item.isConverterSet()) {
                         item.converter.from(BuiltinConfigurationItemConverters.getConverter(item.type.resolve()))
                     }

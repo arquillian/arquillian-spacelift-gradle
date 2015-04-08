@@ -1,6 +1,15 @@
 package org.arquillian.spacelift.gradle.configuration
 
+import groovy.mock.interceptor.MockFor
+import groovy.mock.interceptor.StubFor
+import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
+import org.arquillian.spacelift.gradle.SpaceliftExtension
+import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Test
+
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 import static org.hamcrest.CoreMatchers.not
 import static org.hamcrest.CoreMatchers.nullValue
@@ -17,20 +26,20 @@ class BuiltinConfigurationItemConvertersTest {
     void "Test boolean converter"() {
         def converter = BuiltinConfigurationItemConverters.getConverter(Boolean)
 
-        assertThat(converter.toString(Boolean.FALSE), is('false'))
-        assertThat(converter.toString(Boolean.TRUE), is('true'))
+        assertThat converter.toString(Boolean.FALSE), is('false')
+        assertThat converter.toString(Boolean.TRUE), is('true')
 
-        assertThat(converter.toString(false), is('false'))
-        assertThat(converter.toString(true), is('true'))
+        assertThat converter.toString(false), is('false')
+        assertThat converter.toString(true), is('true')
 
-        assertThat(converter.fromString('true'), is(true))
-        assertThat(converter.fromString('false'), is(false))
+        assertThat converter.fromString('true'), is(true)
+        assertThat converter.fromString('false'), is(false)
 
-        assertThat(converter.fromString(converter.toString(true)), is(true))
-        assertThat(converter.fromString(converter.toString(false)), is(false))
+        assertThat converter.fromString(converter.toString(true)), is(true)
+        assertThat converter.fromString(converter.toString(false)), is(false)
 
-        assertThat(converter.toString(converter.fromString('true')), is('true'))
-        assertThat(converter.toString(converter.fromString('false')), is('false'))
+        assertThat converter.toString(converter.fromString('true')), is('true')
+        assertThat converter.toString(converter.fromString('false')), is('false')
     }
 
     @Test
@@ -38,7 +47,7 @@ class BuiltinConfigurationItemConvertersTest {
         def converter = BuiltinConfigurationItemConverters.getConverter(Byte)
 
         for(byte i = Byte.MIN_VALUE; i < Byte.MAX_VALUE; i++) {
-            assertThat(converter.fromString(converter.toString(i)), is(i))
+            assertThat converter.fromString(converter.toString(i)), is(i)
         }
     }
 
@@ -47,7 +56,7 @@ class BuiltinConfigurationItemConvertersTest {
         def converter = BuiltinConfigurationItemConverters.getConverter(Short)
 
         for(short i = Short.MIN_VALUE; i < Short.MAX_VALUE; i++) {
-            assertThat(converter.fromString(converter.toString(i)), is(i))
+            assertThat converter.fromString(converter.toString(i)), is(i)
         }
     }
 
@@ -56,7 +65,7 @@ class BuiltinConfigurationItemConvertersTest {
         def converter = BuiltinConfigurationItemConverters.getConverter(Integer)
 
         for(int i = Short.MIN_VALUE; i < Short.MAX_VALUE; i++) {
-            assertThat(converter.fromString(converter.toString(i)), is(i))
+            assertThat converter.fromString(converter.toString(i)), is(i)
         }
     }
 
@@ -66,7 +75,7 @@ class BuiltinConfigurationItemConvertersTest {
         def converter = BuiltinConfigurationItemConverters.getConverter(Long)
 
         for(long i = Short.MIN_VALUE; i < Short.MAX_VALUE; i++) {
-            assertThat(converter.fromString(converter.toString(i)), is(i))
+            assertThat converter.fromString(converter.toString(i)), is(i)
         }
     }
 
@@ -78,14 +87,14 @@ class BuiltinConfigurationItemConvertersTest {
         def stringRepresentationDefault = '["true","false","true","false"]'
         def stringRepresentationShort = '[true, false, true, false]'
 
-        assertThat(converter.fromString(stringRepresentationDefault), is(arrayRepresentation))
-        assertThat(converter.fromString(stringRepresentationShort), is(arrayRepresentation))
+        assertThat converter.fromString(stringRepresentationDefault), is(arrayRepresentation)
+        assertThat converter.fromString(stringRepresentationShort), is(arrayRepresentation)
 
-        assertThat(converter.toString(arrayRepresentation), is(stringRepresentationDefault))
+        assertThat converter.toString(arrayRepresentation), is(stringRepresentationDefault)
 
-        assertThat(converter.fromString(converter.toString(arrayRepresentation)), is(arrayRepresentation))
-        assertThat(converter.toString(converter.fromString(stringRepresentationDefault)), is(stringRepresentationDefault))
-        assertThat(converter.toString(converter.fromString(stringRepresentationShort)), is(stringRepresentationDefault))
+        assertThat converter.fromString(converter.toString(arrayRepresentation)), is(arrayRepresentation)
+        assertThat converter.toString(converter.fromString(stringRepresentationDefault)), is(stringRepresentationDefault)
+        assertThat converter.toString(converter.fromString(stringRepresentationShort)), is(stringRepresentationDefault)
     }
 
     @Test
@@ -96,14 +105,14 @@ class BuiltinConfigurationItemConvertersTest {
         def stringRepresentationDefault = '["-100","0","1","400"]'
         def stringRepresentationShort = '[-100, 0, 1, 400]'
 
-        assertThat(converter.fromString(stringRepresentationDefault), is(arrayRepresentation))
-        assertThat(converter.fromString(stringRepresentationShort), is(arrayRepresentation))
+        assertThat converter.fromString(stringRepresentationDefault), is(arrayRepresentation)
+        assertThat converter.fromString(stringRepresentationShort), is(arrayRepresentation)
 
-        assertThat(converter.toString(arrayRepresentation), is(stringRepresentationDefault))
+        assertThat converter.toString(arrayRepresentation), is(stringRepresentationDefault)
 
-        assertThat(converter.fromString(converter.toString(arrayRepresentation)), is(arrayRepresentation))
-        assertThat(converter.toString(converter.fromString(stringRepresentationDefault)), is(stringRepresentationDefault))
-        assertThat(converter.toString(converter.fromString(stringRepresentationShort)), is(stringRepresentationDefault))
+        assertThat converter.fromString(converter.toString(arrayRepresentation)), is(arrayRepresentation)
+        assertThat converter.toString(converter.fromString(stringRepresentationDefault)), is(stringRepresentationDefault)
+        assertThat converter.toString(converter.fromString(stringRepresentationShort)), is(stringRepresentationDefault)
     }
 
     @Test
@@ -113,11 +122,11 @@ class BuiltinConfigurationItemConvertersTest {
         def arrayRepresentation = ["Hello", "World", ", Peace"].toArray(new String[0])
         def stringRepresentation = '["Hello","World",", Peace"]'
 
-        assertThat(converter.toString(arrayRepresentation), is(stringRepresentation))
-        assertThat(converter.fromString(stringRepresentation), is(arrayRepresentation))
+        assertThat converter.toString(arrayRepresentation), is(stringRepresentation)
+        assertThat converter.fromString(stringRepresentation), is(arrayRepresentation)
 
-        assertThat(converter.fromString(converter.toString(arrayRepresentation)), is(arrayRepresentation))
-        assertThat(converter.toString(converter.fromString(stringRepresentation)), is(stringRepresentation))
+        assertThat converter.fromString(converter.toString(arrayRepresentation)), is(arrayRepresentation)
+        assertThat converter.toString(converter.fromString(stringRepresentation)), is(stringRepresentation)
     }
 
     @Test
@@ -127,48 +136,79 @@ class BuiltinConfigurationItemConvertersTest {
         def builtinConfigurationItemConvertersClassName = 'org.arquillian.spacelift.gradle.configuration.BuiltinConfigurationItemConverters'
         def classConfigurationItemConverterClassName = 'org.arquillian.spacelift.gradle.configuration.BuiltinConfigurationItemConverters$ClassConfigurationItemConverter'
 
-        assertThat(converter.toString(BuiltinConfigurationItemConverters), is(builtinConfigurationItemConvertersClassName))
-        assertThat(converter.toString(BuiltinConfigurationItemConverters.ClassConfigurationItemConverter),
-                is(classConfigurationItemConverterClassName))
+        assertThat converter.toString(BuiltinConfigurationItemConverters), is(builtinConfigurationItemConvertersClassName)
+        assertThat converter.toString(BuiltinConfigurationItemConverters.ClassConfigurationItemConverter),
+                is(classConfigurationItemConverterClassName)
 
-        assertThat(converter.fromString(builtinConfigurationItemConvertersClassName), sameInstance(BuiltinConfigurationItemConverters))
-        assertThat(converter.fromString(classConfigurationItemConverterClassName),
-                sameInstance(BuiltinConfigurationItemConverters.ClassConfigurationItemConverter))
+        assertThat converter.fromString(builtinConfigurationItemConvertersClassName),
+                sameInstance(BuiltinConfigurationItemConverters)
+        assertThat converter.fromString(classConfigurationItemConverterClassName),
+                sameInstance(BuiltinConfigurationItemConverters.ClassConfigurationItemConverter)
 
-        assertThat(converter.fromString(converter.toString(BuiltinConfigurationItemConverters)), sameInstance(BuiltinConfigurationItemConverters))
-        assertThat(converter.fromString(converter.toString(BuiltinConfigurationItemConverters.ClassConfigurationItemConverter)),
-                sameInstance(BuiltinConfigurationItemConverters.ClassConfigurationItemConverter))
+        assertThat converter.fromString(converter.toString(BuiltinConfigurationItemConverters)),
+                sameInstance(BuiltinConfigurationItemConverters)
+        assertThat converter.fromString(converter.toString(BuiltinConfigurationItemConverters.ClassConfigurationItemConverter)),
+                sameInstance(BuiltinConfigurationItemConverters.ClassConfigurationItemConverter)
 
-        assertThat(converter.toString(converter.fromString(builtinConfigurationItemConvertersClassName)),
-                is(builtinConfigurationItemConvertersClassName))
-        assertThat(converter.toString(converter.fromString(classConfigurationItemConverterClassName)),
-                is(classConfigurationItemConverterClassName))
+        assertThat converter.toString(converter.fromString(builtinConfigurationItemConvertersClassName)),
+                is(builtinConfigurationItemConvertersClassName)
+        assertThat converter.toString(converter.fromString(classConfigurationItemConverterClassName)),
+                is(classConfigurationItemConverterClassName)
+    }
+
+    @Test
+    void "Test file converter"() {
+        def converter = BuiltinConfigurationItemConverters.getConverter(File)
+
+        def absoluteFilePath = '/dev/null'
+        def relativeFilePath = './relative'
+        def relativeFilePath2 = '../relative2'
+
+        def absoluteFile = new File(absoluteFilePath)
+        def relativeFile = new File(relativeFilePath)
+        def relativeFile2 = new File(relativeFilePath2)
+
+        assertThat converter.toString(absoluteFile), is(absoluteFilePath)
+        assertThat converter.toString(relativeFile), is(relativeFilePath)
+        assertThat converter.toString(relativeFile2), is(relativeFilePath2)
+
+        assertThat converter.fromString(absoluteFilePath), is(absoluteFile)
+        assertThat converter.fromString(relativeFilePath), is(relativeFile)
+        assertThat converter.fromString(relativeFilePath2), is(relativeFile2)
+
+        assertThat converter.fromString(converter.toString(absoluteFile)), is(absoluteFile)
+        assertThat converter.fromString(converter.toString(relativeFile)), is(relativeFile)
+        assertThat converter.fromString(converter.toString(relativeFile2)), is(relativeFile2)
+
+        assertThat converter.toString(converter.fromString(absoluteFilePath)), is(absoluteFilePath)
+        assertThat converter.toString(converter.fromString(relativeFilePath)), is(relativeFilePath)
+        assertThat converter.toString(converter.fromString(relativeFilePath2)), is(relativeFilePath2)
     }
 
     @Test
     void "Test builtin converters can be resolved"() {
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Boolean), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Byte), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Short), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Integer), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Long), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(CharSequence), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(String), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Class), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(File), is(not(nullValue())))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Boolean), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Byte), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Short), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Integer), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Long), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(CharSequence), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(String), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Class), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(File), is(not(nullValue()))
     }
 
     @Test
     void "Test builtin array converters can be resolved"() {
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Boolean[].class), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Byte[].class), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Short[].class), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Integer[].class), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Long[].class), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(CharSequence[].class), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(String[].class), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(Class[].class), is(not(nullValue())))
-        assertThat(BuiltinConfigurationItemConverters.getConverter(File[].class), is(not(nullValue())))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Boolean[].class), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Byte[].class), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Short[].class), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Integer[].class), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Long[].class), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(CharSequence[].class), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(String[].class), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(Class[].class), is(not(nullValue()))
+        assertThat BuiltinConfigurationItemConverters.getConverter(File[].class), is(not(nullValue()))
     }
 
 }

@@ -3,16 +3,11 @@ package org.arquillian.spacelift.gradle.configuration
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskExecutionException
 import org.gradle.testfixtures.ProjectBuilder
-import org.hamcrest.BaseMatcher
-import org.hamcrest.Description
-import org.hamcrest.Matcher
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
 
-import static org.hamcrest.CoreMatchers.isA
-import static org.hamcrest.CoreMatchers.sameInstance
-import static org.hamcrest.CoreMatchers.is
+import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
 
 /**
@@ -50,9 +45,9 @@ class ConfigurationItemParseTest {
             tests {
                 test {
                     execute {
-                        assertThat(item1, is(false))
-                        assertThat(item2, sameInstance(Boolean))
-                        assertThat(item3, is("Hello world!"))
+                        assertThat item1, is(false)
+                        assertThat item2, sameInstance(Boolean)
+                        assertThat item3, is("Hello world!")
                     }
                 }
             }
@@ -92,9 +87,9 @@ class ConfigurationItemParseTest {
             tests {
                 test {
                     execute {
-                        assertThat(item1, is(false))
-                        assertThat(item2, sameInstance(Boolean))
-                        assertThat(item3, is("World!"))
+                        assertThat item1, is(false)
+                        assertThat item2, sameInstance(Boolean)
+                        assertThat item3, is("World!")
                     }
                 }
             }
@@ -137,9 +132,9 @@ class ConfigurationItemParseTest {
             tests {
                 test {
                     execute {
-                        assertThat(item1, is(false))
-                        assertThat(item2, sameInstance(Boolean))
-                        assertThat(item3, is("World!"))
+                        assertThat item1, is(false)
+                        assertThat item2, sameInstance(Boolean)
+                        assertThat item3, is("World!")
                     }
                 }
             }

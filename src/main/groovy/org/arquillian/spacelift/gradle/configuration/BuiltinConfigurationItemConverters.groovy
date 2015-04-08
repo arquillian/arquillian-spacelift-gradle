@@ -12,47 +12,48 @@ import groovy.transform.CompileStatic
 class BuiltinConfigurationItemConverters {
 
     private static
-    final Map<Class<?>, ConfigurationItemConverter<?>> BUILTIN_CONVERTERS = (Map<Class<?>, ConfigurationItemConverter<?>>) [
-            (Boolean)     : new SimpleConfigurationItemConverter<Boolean>() {
-                @Override
-                Boolean fromString(String value) throws ConversionException {
-                    return Boolean.valueOf(value)
-                }
-            },
-            (Byte)        : new SimpleConfigurationItemConverter<Byte>() {
-                @Override
-                Byte fromString(String value) throws ConversionException {
-                    return Byte.valueOf(value)
-                }
-            },
-            (Short)       : new SimpleConfigurationItemConverter<Short>() {
-                @Override
-                Short fromString(String value) throws ConversionException {
-                    return Short.valueOf(value)
-                }
-            },
-            (Integer)     : new SimpleConfigurationItemConverter<Integer>() {
-                @Override
-                Integer fromString(String value) throws ConversionException {
-                    return Integer.valueOf(value)
-                }
-            },
-            (Long)        : new SimpleConfigurationItemConverter<Long>() {
-                @Override
-                Long fromString(String value) throws ConversionException {
-                    return Long.valueOf(value)
-                }
-            },
-            (CharSequence): new SimpleConfigurationItemConverter<CharSequence>() {
-                @Override
-                CharSequence fromString(String value) throws ConversionException {
-                    return value
-                }
-            },
-            (String)      : new StringConfigurationItemConverter(),
-            (Class)       : new ClassConfigurationItemConverter(),
-            (File)        : new FileConfigurationItemConverter()
-    ]
+    final Map<Class<?>, ConfigurationItemConverter<?>> BUILTIN_CONVERTERS =
+            (Map<Class<?>, ConfigurationItemConverter<?>>) [
+                    (Boolean)     : new SimpleConfigurationItemConverter<Boolean>() {
+                        @Override
+                        Boolean fromString(String value) throws ConversionException {
+                            return Boolean.valueOf(value)
+                        }
+                    },
+                    (Byte)        : new SimpleConfigurationItemConverter<Byte>() {
+                        @Override
+                        Byte fromString(String value) throws ConversionException {
+                            return Byte.valueOf(value)
+                        }
+                    },
+                    (Short)       : new SimpleConfigurationItemConverter<Short>() {
+                        @Override
+                        Short fromString(String value) throws ConversionException {
+                            return Short.valueOf(value)
+                        }
+                    },
+                    (Integer)     : new SimpleConfigurationItemConverter<Integer>() {
+                        @Override
+                        Integer fromString(String value) throws ConversionException {
+                            return Integer.valueOf(value)
+                        }
+                    },
+                    (Long)        : new SimpleConfigurationItemConverter<Long>() {
+                        @Override
+                        Long fromString(String value) throws ConversionException {
+                            return Long.valueOf(value)
+                        }
+                    },
+                    (CharSequence): new SimpleConfigurationItemConverter<CharSequence>() {
+                        @Override
+                        CharSequence fromString(String value) throws ConversionException {
+                            return value
+                        }
+                    },
+                    (String)      : new StringConfigurationItemConverter(),
+                    (Class)       : new ClassConfigurationItemConverter(),
+                    (File)        : new FileConfigurationItemConverter()
+            ]
 
     static <T> ConfigurationItemConverter<T> getConverter(Class<T> type) {
         if (type.isArray()) {
@@ -69,7 +70,8 @@ class BuiltinConfigurationItemConverters {
         }
     }
 
-    static class ArrayConfigurationItemConverter<CONVERTED_TYPE> implements ConfigurationItemConverter<CONVERTED_TYPE[]> {
+    static class ArrayConfigurationItemConverter<CONVERTED_TYPE>
+            implements ConfigurationItemConverter<CONVERTED_TYPE[]> {
 
         private final ConfigurationItemConverter<CONVERTED_TYPE> valueConverter
 
@@ -97,7 +99,8 @@ class BuiltinConfigurationItemConverters {
         }
     }
 
-    static abstract class SimpleConfigurationItemConverter<CONVERTED_TYPE> implements ConfigurationItemConverter<CONVERTED_TYPE> {
+    static abstract class SimpleConfigurationItemConverter<CONVERTED_TYPE>
+            implements ConfigurationItemConverter<CONVERTED_TYPE> {
 
         @Override
         String toString(CONVERTED_TYPE value) {
@@ -139,7 +142,7 @@ class BuiltinConfigurationItemConverters {
 
         @Override
         String toString(File value) {
-            return value.absolutePath
+            return value.path
         }
     }
 
