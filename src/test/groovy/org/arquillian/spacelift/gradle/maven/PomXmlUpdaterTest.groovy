@@ -7,6 +7,8 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.junit.BeforeClass
 import org.junit.Test
 
+import org.arquillian.spacelift.gradle.SpaceliftPlugin
+
 class PomXmlUpdaterTest {
 
     @BeforeClass
@@ -30,7 +32,7 @@ class PomXmlUpdaterTest {
         }
 
         project.spacelift.installations.each { installation ->
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
         }
     }
 

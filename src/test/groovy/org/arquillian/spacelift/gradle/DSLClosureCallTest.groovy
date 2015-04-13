@@ -10,6 +10,8 @@ import org.junit.Test
 import org.junit.rules.ExpectedException
 import org.slf4j.Logger
 
+import org.arquillian.spacelift.gradle.SpaceliftPlugin
+
 class DSLClosureCallTest {
 
     @Rule
@@ -82,7 +84,7 @@ class DSLClosureCallTest {
         }
 
         project.spacelift.installations.each { installation ->
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
         }
     }
 

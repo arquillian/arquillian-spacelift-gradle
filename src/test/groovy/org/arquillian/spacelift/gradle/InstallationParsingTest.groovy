@@ -7,6 +7,8 @@ import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Test
 
+import org.arquillian.spacelift.gradle.SpaceliftPlugin
+
 /**
  * Asserts that installations can be specified without home
  * @author <a href="mailto:kpiwko@redhat.com">Karel Piwko</a>
@@ -60,7 +62,7 @@ public class InstallationParsingTest {
         }
 
         project.spacelift.installations.each { installation ->
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
         }
 
         assertThat new File(System.getProperty("java.io.tmpdir"), "preconditionTestFile.tmp").exists(), is(false)
@@ -99,7 +101,7 @@ public class InstallationParsingTest {
         }
 
         testProject.spacelift.installations.each { installation ->
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
         }
     }
 }

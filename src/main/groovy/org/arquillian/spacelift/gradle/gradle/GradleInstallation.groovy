@@ -124,9 +124,6 @@ class GradleInstallation extends BaseContainerizableObject<GradleInstallation> i
         Spacelift.task(getFsPath(),UnzipTool).toDir(((File)getHome()).parentFile.canonicalFile).execute().await()
 
         new GradleSpaceliftDelegate().project().getAnt().invokeMethod("chmod", [dir: "${getHome()}/bin", perm:"a+x", includes:"*"])
-
-        // register tools from installation
-        registerTools(Spacelift.registry())
     }
 
     @Override

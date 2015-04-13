@@ -9,8 +9,25 @@ import org.arquillian.spacelift.gradle.utils.KillJavas
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.logging.Logger
 
 class SpaceliftPlugin implements Plugin<Project> {
+
+    /**
+     * Static helper method to install an installation. It is used mainly to verify installation process in tests
+     */
+    static void installInstallation(Installation installation, Logger logger) {
+        if(installation.isInstalled()) {
+            logger.lifecycle(":install:${installation.name} was already installed, registering tools")
+        }
+        else {
+            logger.lifecycle(":install:${installation.name} will be installed")
+            installation.install(logger)
+            logger.lifecycle(":install:${installation.name} is now installed, registering tools")
+        }
+        installation.registerTools(Spacelift.registry())
+    }
+
 
     // this plugin prepares Arquillian Spacelift environment
     void apply(Project project) {
@@ -181,14 +198,7 @@ class SpaceliftPlugin implements Plugin<Project> {
                 }
 
                 project.selectedInstallations.each { Installation installation ->
-                    if(installation.isInstalled()) {
-                        logger.lifecycle(":install:${installation.name} was already installed, registering tools")
-                        installation.registerTools(Spacelift.registry())
-                    }
-                    else {
-                        logger.lifecycle(":install:${installation.name} will be installed")
-                        installation.install(logger)
-                    }
+                    installInstallation(installation, logger)
                 }
             }
         }

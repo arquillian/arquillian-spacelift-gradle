@@ -207,9 +207,6 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
             }
         }
 
-        // register tools
-        registerTools(Spacelift.registry())
-
         // execute post actions
         postActions.resolve();
     }

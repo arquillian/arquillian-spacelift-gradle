@@ -1,5 +1,6 @@
 package org.arquillian.spacelift.gradle.certs
 
+import org.arquillian.spacelift.gradle.SpaceliftPlugin
 import org.arquillian.spacelift.gradle.Installation
 import org.arquillian.spacelift.gradle.utils.EnvironmentUtils
 import org.gradle.api.Project
@@ -40,7 +41,7 @@ class KeystoreInstallationTest {
         }
 
         project.spacelift.installations.each { Installation installation ->
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
             assertThat installation.isInstalled(), is(true)
         }
     }

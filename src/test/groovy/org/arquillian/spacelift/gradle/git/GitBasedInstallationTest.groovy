@@ -1,5 +1,8 @@
 package org.arquillian.spacelift.gradle.git
 
+import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.SpaceliftPlugin
+
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
 
@@ -64,14 +67,56 @@ class GitBasedInstallationTest {
             }
         }
 
-        // on purpose, we are not installing here as this installation will download zillion of data
-        // from internet, just verify that previous manual definition installed the SDK and tools are
-        // properly registered
         project.spacelift.installations.each { Installation installation ->
             assertThat installation.isInstalled(), is(false)
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
             assertThat installation.isInstalled(), is(true)
         }
+    }
+
+    @Test
+    void "register tools for non-existing installation"() {
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'spacelift'
+
+        project.spacelift {
+            workspace = new File(System.getProperty("user.dir"), "workspace")
+            installations {
+
+                def counter = 0
+
+                installedInstallation(from:GitBasedInstallation) {
+                    repository "https://github.com/smiklosovic/test.git"
+                    commit 'master'
+                    home "whatever"
+                    isInstalled false
+                    tools {
+                        javaalias {
+                            command "java"
+                        }
+                    }
+                }
+                nonInstalledInstallation(from:GitBasedInstallation) {
+                    repository "https://github.com/smiklosovic/test.git"
+                    commit 'master'
+                    home "whatever2"
+                    isInstalled true
+                    tools {
+                        javaalias2 {
+                            command "java"
+                        }
+                    }
+                }
+            }
+        }
+
+        project.spacelift.installations.each { Installation installation ->
+            SpaceliftPlugin.installInstallation(installation, project.logger)
+        }
+
+        assertThat Spacelift.task('javaalias'), is(notNullValue())
+        assertThat Spacelift.task('javaalias2'), is(notNullValue())
     }
 
     @Test
@@ -99,7 +144,7 @@ class GitBasedInstallationTest {
         // properly registered
         project.spacelift.installations.each { Installation installation ->
             assertThat installation.isInstalled(), is(false)
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
             assertThat installation.isInstalled(), is(true)
         }
     }

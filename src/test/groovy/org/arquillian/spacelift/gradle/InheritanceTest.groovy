@@ -9,6 +9,8 @@ import org.junit.Rule;
 import org.junit.Test
 import org.junit.rules.ExpectedException;
 
+import org.arquillian.spacelift.gradle.SpaceliftPlugin
+
 class InheritanceTest {
 
     @Rule
@@ -52,7 +54,7 @@ class InheritanceTest {
         }
 
         project.spacelift.installations.each { installation ->
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
         }
     }
 
@@ -93,7 +95,7 @@ class InheritanceTest {
         }
 
         project.spacelift.installations.each { installation ->
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
         }
     }
 

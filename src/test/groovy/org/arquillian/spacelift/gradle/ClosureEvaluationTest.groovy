@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.*
 
 import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.SpaceliftPlugin
 import org.arquillian.spacelift.gradle.android.AndroidSdkUpdater
 import org.arquillian.spacelift.process.CommandBuilder
 import org.gradle.api.Project
@@ -221,7 +222,7 @@ class ClosureEvaluationTest {
         }
 
         project.spacelift.installations.each { installation ->
-            installation.install(project.logger)
+            SpaceliftPlugin.installInstallation(installation, project.logger)
         }
 
         project

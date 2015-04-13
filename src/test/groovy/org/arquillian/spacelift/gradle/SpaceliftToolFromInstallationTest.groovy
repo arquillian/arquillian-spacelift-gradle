@@ -5,6 +5,7 @@ import groovy.lang.Closure;
 import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
+import org.arquillian.spacelift.gradle.SpaceliftPlugin
 import org.arquillian.spacelift.gradle.android.AndroidSdkInstallation;
 import org.arquillian.spacelift.gradle.android.AndroidSdkOptForStats
 import org.arquillian.spacelift.gradle.android.AndroidSdkUpdater
@@ -85,7 +86,9 @@ public class SpaceliftToolFromInstallationTest {
             }
         }
 
-        project.spacelift.installations.each { installation ->  installation.install(project.logger) }
+        project.spacelift.installations.each { installation ->  
+            SpaceliftPlugin.installInstallation(installation, project.logger)
+        }
 
         // find android tool
         def androidTool = Spacelift.task("android")
@@ -122,16 +125,8 @@ public class SpaceliftToolFromInstallationTest {
             }
         }
 
-        // on purpose, we are not installing here as this installation will download zillion of data
-        // from internet, just verify that previous manual definition installed the SDK and tools are
-        // properly registered
         project.spacelift.installations.each { Installation installation ->
-            if(!installation.isInstalled()) {
-                installation.install(project.logger)
-            }
-            else {
-                installation.registerTools(Spacelift.registry())
-            }
+            SpaceliftPlugin.installInstallation(installation, project.logger)
         }
 
         assertThat project.spacelift.installations['androidSdk'].androidTargets, is(notNullValue())
@@ -175,16 +170,8 @@ public class SpaceliftToolFromInstallationTest {
             }
         }
 
-        // on purpose, we are not installing here as this installation will download zillion of data
-        // from internet, just verify that previous manual definition installed the SDK and tools are
-        // properly registered
         project.spacelift.installations.each { Installation installation ->
-            if(!installation.isInstalled()) {
-                installation.install(project.logger)
-            }
-            else {
-                installation.registerTools(Spacelift.registry())
-            }
+            SpaceliftPlugin.installInstallation(installation, project.logger)
         }
 
         assertThat project.spacelift.installations['androidSdk'].androidTargets, is(notNullValue())
