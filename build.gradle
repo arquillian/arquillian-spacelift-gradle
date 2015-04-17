@@ -1,9 +1,10 @@
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
+apply plugin: "com.gradle.plugin-publish"
 
 group 'org.arquillian.spacelift.gradle'
-version '1.0.0-alpha-14-SNAPSHOT'
+version '1.0.0-alpha-14'
 
 allprojects {
     tasks.withType(JavaCompile) { 
@@ -28,10 +29,16 @@ repositories {
 buildscript {
     repositories {
         mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
     dependencies {
+        // publishing to maven repository
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
-    }
+        // publishing to Gradle repository
+        classpath 'com.gradle.publish:plugin-publish-plugin:0.9.0'
+  }
 }
 
 dependencies {
@@ -69,6 +76,21 @@ configurations {
     // exclude pom typed import of ShrinkWrap Resolver Depchain
     compile.exclude(module: "shrinkwrap-resolver-depchain")
 }
+
+// publish plugin to Gradle repository
+pluginBundle {
+  website = 'http://www.arquillian.org/'
+  vcsUrl = 'https://github.com/arquillian/arquillian-spacelift-gradle-plugin'
+  description = 'Gradle Plugin for Arquillian Spacelift'
+  tags = ['test', 'automation', 'orchestration', 'process', 'arquillian']
+
+  plugins {
+    spaceliftPlugin {
+      id = 'org.arquillian.spacelift.gradle'
+      displayName = 'Gradle Plugin for Arquillian Spacelift'
+    }
+  }
+}   
 
 
 // publish plugin to Maven Repository

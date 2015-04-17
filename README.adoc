@@ -394,10 +394,12 @@ You can benefit from following tools and tasks, either from Spacelift itself or 
 Follow this process to release new version:
 
 1. Update version to release version in _build.gradle_
-2. Execute +gradle publish -Dmaven.settings=/path/to/settings.xml+. Note that your settings.xml need to contain JBoss Nexus repository configuration, according to
+2. Execute +gradle publish -Dmaven.settings=/path/to/settings.xml+. Note that your _settings.xml_ need to contain JBoss Nexus repository configuration, according to
     *Deploy to the JBoss Repository* section at https://developer.jboss.org/wiki/MavenGettingStarted-Developers
-3. Tag current commit via +git tag+
-4. Bump version to next development version
+3. Execute +gradle publishPlugins+ to publish plugin in Gradle Plugin Repository. Note that your _~/.gradle/gradle.properties_ should contain API key according to
+    https://plugins.gradle.org/docs/submit 
+4. Tag current commit via +git tag+
+5. Bump version to next development version
 
 == Releasing SNAPSHOT version to local Maven Repository
 
