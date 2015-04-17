@@ -28,10 +28,10 @@ repositories {
 
 buildscript {
     repositories {
-        mavenCentral()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        mavenCentral()
     }
     dependencies {
         // publishing to maven repository
@@ -80,13 +80,13 @@ configurations {
 // publish plugin to Gradle repository
 pluginBundle {
   website = 'http://www.arquillian.org/'
-  vcsUrl = 'https://github.com/arquillian/arquillian-spacelift-gradle-plugin'
+  vcsUrl = 'https://github.com/arquillian/arquillian-spacelift-gradle'
   description = 'Gradle Plugin for Arquillian Spacelift'
-  tags = ['test', 'automation', 'orchestration', 'process', 'arquillian']
+  tags = ['test', 'automation', 'orchestration', 'process', 'arquillian', 'native']
 
   plugins {
     spaceliftPlugin {
-      id = 'org.arquillian.spacelift.gradle'
+      id = 'org.arquillian.spacelift'
       displayName = 'Gradle Plugin for Arquillian Spacelift'
     }
   }
@@ -97,9 +97,6 @@ pluginBundle {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-
-            // redefine artifactId as it does not match directory name
-            artifactId 'arquillian-spacelift-gradle'
 
             from components.java
 
@@ -112,7 +109,7 @@ publishing {
 
                 root.appendNode('name', 'Gradle Plugin for Arquillian Spacelift')
                 root.appendNode('description', 'Gradle Plugin to provide test environment')
-                root.appendNode('url', 'https://github.com/arquillian/arquillian-spacelift-gradle-plugin')
+                root.appendNode('url', 'https://github.com/arquillian/arquillian-spacelift-gradle')
 
                 def org = root.appendNode( 'organization' )
                 org.appendNode( 'name', 'Arquillian.org' )
@@ -123,9 +120,9 @@ publishing {
                 issues.appendNode( 'url', 'https://issues.jboss.org/browse/ARQ' )
 
                 def scm = root.appendNode( 'scm' )
-                scm.appendNode( 'url', 'https://github.com/aerogear/aerogear-testing-tools' )
-                scm.appendNode( 'connection', 'scm:git:https://github.com/aerogear/aerogear-testing-tools.git' )
-                scm.appendNode( 'developerConnection', 'scm:git:git@github.com:aerogear/aerogear-testing-tools.git' )
+                scm.appendNode( 'url', 'https://github.com/arquillian/arquillian-spacelift-gradle' )
+                scm.appendNode( 'connection', 'scm:git:https://github.com/arquillian/arquillian-spacelift-gradle.git' )
+                scm.appendNode( 'developerConnection', 'scm:git:git@github.com:arquillian/arquillian-spacelift-gradle.git' )
 
                 def license = root.appendNode( 'licenses' ).appendNode( 'license' )
                 license.appendNode( 'name', 'Apache License, Version 2.0' )
