@@ -17,7 +17,7 @@ class CleanTaskTest {
     void "clean installations and workspace"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
         project.spacelift {
             profiles { 'default' { enabledInstallations 'someInstallation'
                 } }
@@ -51,7 +51,7 @@ class CleanTaskTest {
     void "clean installation without home"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
         project.spacelift {
             profiles { 'default' { enabledInstallations 'someInstallation'
                 } }

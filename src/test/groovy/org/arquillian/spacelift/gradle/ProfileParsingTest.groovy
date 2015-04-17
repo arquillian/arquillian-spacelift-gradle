@@ -162,7 +162,7 @@ public class ProfileParsingTest {
     Project initWithProfile(Closure profileDefinition) {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // enable foobar profile
         project.ext.set("foobar", "true")

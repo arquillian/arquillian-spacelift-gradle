@@ -148,7 +148,7 @@ class ConfigurationItemParseTest {
             project.extensions.add(key, value)
         }
 
-        project.apply(plugin: 'spacelift')
+        project.apply(plugin: 'org.arquillian.spacelift')
 
         project.spacelift buildScript
         project.getTasks()['describe'].execute()

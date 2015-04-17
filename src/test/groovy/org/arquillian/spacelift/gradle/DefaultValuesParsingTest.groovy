@@ -22,7 +22,7 @@ class DefaultValuesParsingTest {
 
         project.ext.set("defaultAndroidTargets", ["19", "18", "google-17"])
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // find android targets from default value
         def androidTargets = project.androidTargets
@@ -37,7 +37,7 @@ class DefaultValuesParsingTest {
 
         project.ext.set("defaultMyVersion", "1.2.3")
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // find default value if not an array
         def myVersion = project.myVersion
@@ -52,7 +52,7 @@ class DefaultValuesParsingTest {
 
         project.ext.set("defaultRhcVersion", "10")
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools {
@@ -78,7 +78,7 @@ class DefaultValuesParsingTest {
         project.ext.set("defaultAndroidTargets", ["19", "18", "google-17"])
         project.ext.androidTargets = "18"
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // find android targets from default value
         def androidTargets = project.androidTargets
@@ -94,7 +94,7 @@ class DefaultValuesParsingTest {
         project.ext.set("defaultAndroidTargets", ["19", "18", "google-17"])
         project.ext.androidTargets = "18, 19"
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // find android targets from default value
         def androidTargets = project.androidTargets
@@ -110,7 +110,7 @@ class DefaultValuesParsingTest {
         project.ext.set("defaultAndroidTarget", "19")
         project.ext.androidTarget = "18"
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // find android targets from default value
         def androidTarget = project.androidTarget
@@ -126,7 +126,7 @@ class DefaultValuesParsingTest {
         project.ext.set("defaultAndroidTarget", "19")
         project.ext.androidTarget = "18, 19"
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // find android targets from default value
         def androidTarget = project.androidTarget

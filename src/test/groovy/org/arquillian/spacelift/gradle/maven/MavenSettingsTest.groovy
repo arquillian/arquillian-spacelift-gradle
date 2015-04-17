@@ -25,7 +25,7 @@ class MavenSettingsTest {
     public void profilesWithoutTests() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools {

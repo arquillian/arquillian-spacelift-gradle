@@ -12,7 +12,7 @@ class TestReportTest {
 	public void executeTestReport() {
 		Project project = ProjectBuilder.builder().build()
 
-		project.apply plugin: 'spacelift'
+		project.apply plugin: 'org.arquillian.spacelift'
 
 		project.repositories {
 			mavenCentral()

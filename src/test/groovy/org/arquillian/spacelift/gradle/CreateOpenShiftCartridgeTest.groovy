@@ -24,7 +24,7 @@ public class CreateOpenShiftCartridgeTest {
     public void createCart() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools { rhc { command "rhc" } }

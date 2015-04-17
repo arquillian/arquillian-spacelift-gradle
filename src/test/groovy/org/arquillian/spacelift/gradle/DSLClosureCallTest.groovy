@@ -21,7 +21,7 @@ class DSLClosureCallTest {
     void "inherit local methods from closure is not allowed"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.ext.exception = exception
         // enable first profile
@@ -43,7 +43,7 @@ class DSLClosureCallTest {
     void "define own test workflow"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.ext.exception = exception
 
@@ -73,7 +73,7 @@ class DSLClosureCallTest {
     void "define own installation workflow"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.ext.exception = exception
 

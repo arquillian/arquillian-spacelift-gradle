@@ -23,7 +23,7 @@ class GitBasedInstallationTest {
     void "install from commit and master"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             workspace = new File(System.getProperty("user.dir"), "workspace")
@@ -78,7 +78,7 @@ class GitBasedInstallationTest {
     void "register tools for non-existing installation"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             workspace = new File(System.getProperty("user.dir"), "workspace")
@@ -123,7 +123,7 @@ class GitBasedInstallationTest {
     void "install from non-existing commit"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             workspace = new File(System.getProperty("user.dir"), "workspace")

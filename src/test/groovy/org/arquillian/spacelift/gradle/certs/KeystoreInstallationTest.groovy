@@ -19,7 +19,7 @@ class KeystoreInstallationTest {
 
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             workspace = new File(System.getProperty("user.dir"), "workspace")

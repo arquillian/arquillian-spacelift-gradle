@@ -212,7 +212,7 @@ class ClosureEvaluationTest {
 
         project.ext.set("defaultPropagatedProperty", "10")
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             profiles profilesClosure

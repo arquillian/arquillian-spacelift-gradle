@@ -15,7 +15,7 @@ public class KillJavasTest {
     public void killJavas() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools {

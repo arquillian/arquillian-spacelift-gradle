@@ -20,7 +20,7 @@ public class InstallationParsingTest {
     public void noHomeInstallation() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools { rhc {  command "rhc" } }
@@ -42,7 +42,7 @@ public class InstallationParsingTest {
 
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools {
@@ -75,7 +75,7 @@ public class InstallationParsingTest {
         testProject.ext.set("defaultPropagatedProperty", "10")
 
         def project = testProject
-        testProject.apply plugin: 'spacelift'
+        testProject.apply plugin: 'org.arquillian.spacelift'
 
         testProject.spacelift {
             installations {

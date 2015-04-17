@@ -22,7 +22,7 @@ class SpaceliftToolBinaryTest {
 
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools {
@@ -56,7 +56,7 @@ class SpaceliftToolBinaryTest {
 
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools {
@@ -88,7 +88,7 @@ class SpaceliftToolBinaryTest {
     public void multipleTools() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools {
@@ -123,7 +123,7 @@ class SpaceliftToolBinaryTest {
     public void binaryAsString() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools { ant { command "ant" } }
@@ -147,7 +147,7 @@ class SpaceliftToolBinaryTest {
     public void binaryAsMap() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools {
@@ -175,7 +175,7 @@ class SpaceliftToolBinaryTest {
     public void binaryAsClosure() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tools {
@@ -211,7 +211,7 @@ class SpaceliftToolBinaryTest {
     public void binaryAsMapOfClosures() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.ext.set("androidHome", "foobar")
 
@@ -245,7 +245,7 @@ class SpaceliftToolBinaryTest {
     public void binaryAsMapOfArrays() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.ext.set("androidHome", "foobar")
 

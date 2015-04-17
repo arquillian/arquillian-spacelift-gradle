@@ -29,7 +29,7 @@ public class ScriptParsingTest {
     public void executeTestReport() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // enable eap6 profile
         project.ext.set("eap6", "true")

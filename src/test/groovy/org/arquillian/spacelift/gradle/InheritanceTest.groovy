@@ -20,7 +20,7 @@ class InheritanceTest {
     void "inherit installation properties"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             installations {
@@ -62,7 +62,7 @@ class InheritanceTest {
     void "inherit installation direct reference"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
         project.spacelift {
             installations {
                 firstInstallation {
@@ -103,7 +103,7 @@ class InheritanceTest {
     void "inherit test execution"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tests {
@@ -130,7 +130,7 @@ class InheritanceTest {
     void "inherit test execution direct reference"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
 
@@ -159,7 +159,7 @@ class InheritanceTest {
     void "inherit profile definition"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // enable second profile
         project.ext.set("profile2", "true")
@@ -188,7 +188,7 @@ class InheritanceTest {
     void "inherit profile definition direct reference"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // enable second profile
         project.ext.set("profile2", "true")
@@ -217,7 +217,7 @@ class InheritanceTest {
     void "inherit profile reference wrong type"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         // enable second profile
         project.ext.set("profile2", "true")

@@ -69,7 +69,7 @@ class DefaultTestExecutionLifecycleTest {
             array = "first,second"
         }
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             tests {
@@ -102,7 +102,7 @@ class DefaultTestExecutionLifecycleTest {
     void "dataProvider with ext: ext after spacelift is applied"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.ext {
             defaultArray = ["first", "second"]
@@ -280,7 +280,7 @@ class DefaultTestExecutionLifecycleTest {
     void runAsSpaceliftScript(Closure buildScript) {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift buildScript
 

@@ -22,7 +22,7 @@ public class SpaceliftToolFromInstallationTest {
     void "install android sdk and provide android tool"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.ext.set("androidTargets", [
             "19",
@@ -101,7 +101,7 @@ public class SpaceliftToolFromInstallationTest {
     void "install from android sdk installation definition"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             workspace = new File(System.getProperty("user.dir"), "workspace")
@@ -156,7 +156,7 @@ public class SpaceliftToolFromInstallationTest {
     void "android targets are always collection"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
             workspace = new File(System.getProperty("user.dir"), "workspace")

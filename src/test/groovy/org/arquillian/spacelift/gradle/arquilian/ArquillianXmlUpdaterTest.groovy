@@ -12,7 +12,7 @@ class ArquillianXmlUpdaterTest {
     @BeforeClass
     public static void initializeSpacelift() {
         Project project = ProjectBuilder.builder().build()
-        project.apply plugin: 'spacelift'
+        project.apply plugin: 'org.arquillian.spacelift'
     }
 
     @Test
