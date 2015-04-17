@@ -1,4 +1,4 @@
-= Arquillian Spacelift Gradle Plugin image:https://travis-ci.org/arquillian/arquillian-spacelift-gradle-plugin.svg["Build Status", link="https://travis-ci.org/arquillian/arquillian-spacelift-gradle-plugin"]
+= Arquillian Spacelift Gradle Plugin image:https://travis-ci.org/arquillian/arquillian-spacelift-gradle.svg["Build Status", link="https://travis-ci.org/arquillian/arquillian-spacelift-gradle"]
 
 This Gradle plugin is able to prepare test environment and execute tests.
 Plugin is using Arquillian Spacelift project to execute external commands. Compatible with Gradle 2.
@@ -7,7 +7,7 @@ In order to enable the plugin, define:
 
 [source,groovy]
 ----
-apply plugin: 'spacelift'
+apply plugin: 'org.arquillian.spacelift'
 
 // build dependencies
 buildscript {
@@ -22,7 +22,7 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath 'org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-5'
+        classpath 'org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-14'
     }
 }
 
