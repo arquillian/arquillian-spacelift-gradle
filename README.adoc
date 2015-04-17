@@ -21,7 +21,7 @@ buildscript {
 apply plugin: "org.arquillian.spacelift"
 ----
 
-Alternatively, you can use incubating https://gradle.org/docs/current/userguide/plugins.html:[incubating Gradle plugin DSL]
+Alternatively, you can use https://gradle.org/docs/current/userguide/plugins.html[incubating Gradle plugin DSL]:
 
 [source,groovy]
 ----
