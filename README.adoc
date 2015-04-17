@@ -7,36 +7,26 @@ In order to enable the plugin, define:
 
 [source,groovy]
 ----
-apply plugin: 'org.arquillian.spacelift'
-
-// build dependencies
 buildscript {
-    repositories {
-        mavenCentral()
-        // you need this only if you plan to use staged version of this plugin
-        maven {
-            name 'jboss-staging-repository-group'
-            url 'https://repository.jboss.org/nexus/content/groups/staging'
-        }
-        // you need this only if you plan to use version in your local Maven repository
-        mavenLocal()
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
     }
-    dependencies {
-        classpath 'org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-14'
-    }
+  }
+  dependencies {
+    classpath "gradle.plugin.org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-14"
+  }
 }
 
-// following elements are needed only if you are willing to use _testreport_ task
-repositories {
-    mavenCentral()
-}
+apply plugin: "org.arquillian.spacelift"
+----
 
-configurations {
-    junitreport
-}
+Alternatively, you can use incubating https://gradle.org/docs/current/userguide/plugins.html:[incubating Gradle plugin DSL]
 
-dependencies {
-    junitreport 'org.apache.ant:ant-junit:1.9.4'
+[source,groovy]
+----
+plugins {
+  id "org.arquillian.spacelift" version "1.0.0-alpha-14"
 }
 ----
 
@@ -73,8 +63,6 @@ spacelift {
     installationsDir value
     localRepository value
     killServers value
-    keystoreFile value
-    truststoreFile value
     enableStaging value
     enableSnapshots value
 
@@ -108,8 +96,6 @@ globalSetupProperties::
 * +installationsDir+ - a directory where installation files are cached
 * +localRepository+ - Maven local repository path
 * +killServers+ - {true|false} whether to kill Java processes first
-* +keystoreFile+ - path to JKS keystore file
-* +truststoreFile+ - path to JKS truststore file
 * +enableStaging+ - enable JBoss Staging repository
 * +enableSnapshots+ - enable JBoss Snapshots repository
 
