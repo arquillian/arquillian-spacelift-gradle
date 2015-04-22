@@ -30,12 +30,15 @@ class DSLInstrumenter {
     }
 
     static void generateDeferredValueMethods(Object object) {
-        availableDeferredValues(object).each { Field field ->
+        availableDeferredValues(object.getClass()).each { Field field ->
+
+            field.setAccessible(true)
+            DeferredValue<?> deferredValue = (DeferredValue<?>) field.get(object)
 
             // setup name of all deferred values
-            object.@"${field.name}".named(field.name)
+            deferredValue.named(field.name)
             // setup owner of all deferred values
-            object.@"${field.name}".ownedBy(object)
+            deferredValue.ownedBy(object)
 
             // define all DSL setters, note delegate will become this object
             if(!object.metaClass.respondsTo(object, field.name, Object[].class)) {
@@ -63,7 +66,7 @@ class DSLInstrumenter {
     }
 
     static void generateContainerMethods(Object object) {
-        availableContainers(object).each { Field field ->
+        availableContainers(object.getClass()).each { Field field ->
             if(!object.metaClass.respondsTo(object, field.name, Closure.class)) {
                 object.metaClass."${field.name}" = { Closure configureClosure ->
                     //println "Calling ${field.name}(Closure) at ${delegate.class.simpleName} ${delegate.name}"
@@ -74,19 +77,31 @@ class DSLInstrumenter {
         }
     }
 
-    private static List<Field> availableContainers(Object object) {
-        // using fields here on purpose, MetaProperty will use getter if available, changing type
-        return object.class.declaredFields.findAll { Field field ->
+    private static List<Field> availableContainers(Class<?> cls) {
+        return getAllDeclaredFields(cls).findAll { Field field ->
             // find all properties that are of type Closure
             InheritanceAwareContainer.class.isAssignableFrom(field.type)
         }
     }
 
-    private static List<Field> availableDeferredValues(Object object) {
-        // using fields here on purpose, MetaProperty will use getter if available, changing type
-        return object.class.declaredFields.findAll { Field field ->
-            // find all properties that are of type DelayedValue
+    private static List<Field> availableDeferredValues(Class<?> cls) {
+        return getAllDeclaredFields(cls).findAll { Field field ->
+            // find all properties that are of type DeferredValue
             DeferredValue.class.isAssignableFrom(field.type)
         }
+    }
+
+    private static List<Field> getAllDeclaredFields(Class<?> cls) {
+        ArrayList<Field> fields = new ArrayList<>()
+
+        Class<?> current = cls
+        // We do not want to parse Object.class
+        while(current.getSuperclass() != null) {
+            // using fields here on purpose, MetaProperty will use getter if available, changing type
+            fields.addAll(current.declaredFields)
+            current = current.superclass
+        }
+
+        return fields
     }
 }

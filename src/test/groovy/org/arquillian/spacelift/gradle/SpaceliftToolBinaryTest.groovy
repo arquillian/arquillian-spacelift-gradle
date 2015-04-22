@@ -152,7 +152,7 @@ class SpaceliftToolBinaryTest {
         project.spacelift {
             tools {
                 ant {
-                    command ([linux:"ant", windows:"ant.bat"])
+                    command ([linux:"ant", windows:"ant.bat", mac:'ant'])
                 }
             }
             profiles {
@@ -220,10 +220,13 @@ class SpaceliftToolBinaryTest {
                 android {
                     command ([
                         linux: {
-                            new CommandBuilder(new File(project.androidHome, "tools/android.bat").getAbsolutePath())
+                            new CommandBuilder(new File(project.androidHome, "tools/android").getAbsolutePath())
                         },
                         windows: {
                             new CommandBuilder("cmd.exe", "/C", new File(project.androidHome, "tools/android.bat").getAbsolutePath())
+                        },
+                        mac: {
+                            new CommandBuilder(new File(project.androidHome, "tools/android").getAbsolutePath())
                         }
                     ])
                 }
@@ -254,12 +257,15 @@ class SpaceliftToolBinaryTest {
                 android {
                     command ([
                         linux: [
-                            new File(project.androidHome, "tools/android.bat").getAbsolutePath()
+                            new File(project.androidHome, "tools/android").getAbsolutePath()
                         ],
                         windows: [
                             "cmd.exe",
                             "/C",
                             new File(project.androidHome, "tools/android.bat").getAbsolutePath()
+                        ],
+                        mac: [
+                            new File(project.androidHome, 'tools/android').getAbsolutePath()
                         ]
                     ])
                 }

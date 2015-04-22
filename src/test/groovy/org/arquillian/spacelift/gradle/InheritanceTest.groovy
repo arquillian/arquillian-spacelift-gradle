@@ -127,6 +127,37 @@ class InheritanceTest {
     }
 
     @Test
+    void "class inheritance instruments superclass' fields"() {
+        Project project = ProjectBuilder.builder().build()
+
+        project.apply plugin: 'org.arquillian.spacelift'
+
+        // enable second profile
+        project.ext.set("profile1", "true")
+
+        project.spacelift {
+            profiles {
+                profile1 { tests 'test1' }
+            }
+            tests {
+                test1(from: MyOwnDefaultTestChild) {
+                    randomString { 'Test1' }
+
+                }
+            }
+        }
+
+        project.tasks['init'].execute()
+
+        assertThat project.selectedProfile, is(notNullValue())
+        assertThat project.selectedProfile.name, is('profile1')
+        assertThat project.selectedInstallations.size(), is(0)
+        assertThat project.selectedTests.size(), is(1)
+
+        assertThat project.spacelift.test1.randomString.resolve(), is('Test1')
+    }
+
+    @Test
     void "inherit test execution direct reference"() {
         Project project = ProjectBuilder.builder().build()
 
@@ -245,4 +276,5 @@ class InheritanceTest {
         assertThat project.selectedInstallations.size(), is(0)
         assertThat project.selectedTests.size(), is(2)
     }
+
 }
