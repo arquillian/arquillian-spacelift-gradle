@@ -14,7 +14,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath "gradle.plugin.org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-14"
+    classpath "gradle.plugin.org.arquillian.spacelift.gradle:arquillian-spacelift-gradle:1.0.0-alpha-15"
   }
 }
 
@@ -26,7 +26,7 @@ Alternatively, you can use https://gradle.org/docs/current/userguide/plugins.htm
 [source,groovy]
 ----
 plugins {
-  id "org.arquillian.spacelift" version "1.0.0-alpha-14"
+  id "org.arquillian.spacelift" version "1.0.0-alpha-15"
 }
 ----
 
