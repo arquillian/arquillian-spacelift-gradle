@@ -66,6 +66,10 @@ spacelift {
     enableStaging value
     enableSnapshots value
 
+    configuration {
+        item1 { }
+    }
+
     tools {
         tool1 { }
     }
@@ -89,7 +93,7 @@ spacelift {
 }
 ----
 
-globalSetupProperties::
+=== globalSetupProperties
     There are a few properties with sane default. You can modify them to alter execution flow.
 +
 * +workspace+ - a directory where you work, by default this directory 
@@ -115,7 +119,32 @@ value::
  
 NOTE: If you are using a _map_, you need to use parenthesis around parameters
 
-tools::
+=== configuration
+    Configuration is the new recommended way to declare properties that can be used later in installations and tests. Configuration is immutable and the only way it can be changed is from commandline.
++
+[source,groovy]
+----
+item1 {
+    type value
+    description value
+    converter value
+    defaultValue value
+    value value
+}
+----
++
+type::
+    Type of the configuration item. This can be set to one of the built-in types or a custom one, but a converter needs to be provided. Built-in types: Boolean, Byte, Short, Integer, Long, CharSequence, String, Class, File. Default type is _String_.
+description::
+    Description of the configuration item. This will be printed out when running the _describe_ task.
+converter::
+    An instance of a ConfigurationItemConverter that will be used to convert the input from commandline into the type defined as well as converting the type back into string output.
+defaultValue::
+    Default value that will be used when this configuration item is not input from commandline.
+value::
+    If set, the configuration item cannot be changed from the commandline and is basically read-only.
+
+=== tools
     Tools allow you to define external commands that should be available on local system. Tools can be inherited from previously defined tools.
     Following tools are always expected to be present: _ant_ and _mvn_
 +
@@ -144,7 +173,7 @@ isDaemon::
 environment::
     By default +[:]+. Properties to be added to process environment.
 
-profiles::
+=== profiles
     Profiles consist of installations to be installed and tests to be executed. You can use -P__profileName__ to trigger
     specific profile, otherwise default profile is triggered. _default_ profile is expected to be present. Note, you need
     define profileName quoted in case of _default_. Profiles can be inherited from previous created profiles.
@@ -152,19 +181,20 @@ profiles::
 [source,groovy]
 ----
 profileName {
+    configuration { }
     enabledInstallations 'installation1', 'installation2'
     tests 'test1', 'test3', 'test27'
     excludedTests 'test3'
 }
 ----
 +
+Use the configuration block in profile to declare new configuration items or override those defined in the main _configuration_ block.
 
 You can exclude tests from execution by _excludedTests_ on profile where you specify which tests you do not want to execute. By triggering the above profile, only _test1_ and _test27_ will be executed.
 
 NOTE: You can also use +*+ to enable all defined installations and or tests for profile. And you can also use _value_ notion and construct a list of strings to match installation names.
 
-
-installations::
+=== installations
     Installations provides a way how to bring additional tools to you test environment. Installation is automatically downloaded
     or fetched from local cache and extracted, based on current OS. Installations can be inherited from previously defined installations or you can 
     define your own installation DSL by implementing +Installation+ and point installation to its class.
@@ -228,7 +258,7 @@ extractMapper {
 * tools - allows to define tool(s) that will be available after installation is done, same syntax as _tools_ block_
 * postActions - defines actions to be performed after installation is extracted
 
-tests::
+=== tests
     Tests define a block of commands to be executed in *test* Gradle task. If you provide +dataProvider+ block, test
     execution (including before and after test phases) will iterate over data provided. Tests can inherit from previously defined tests or use your own DSL, same as +Installation+.
     Following description holds for _DefaultTest_:
