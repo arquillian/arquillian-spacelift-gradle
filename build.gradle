@@ -4,7 +4,7 @@ apply plugin: 'maven-publish-auth'
 apply plugin: "com.gradle.plugin-publish"
 
 group 'org.arquillian.spacelift.gradle'
-version '1.0.0-alpha-15'
+version '1.0.0-alpha-16-SNAPSHOT'
 
 allprojects {
     tasks.withType(JavaCompile) { 
