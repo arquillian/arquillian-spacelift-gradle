@@ -26,7 +26,7 @@ class ConfigurationItem<T> extends BaseContainerizableObject<ConfigurationItem<T
 
     boolean set = false
 
-    boolean converterSet
+    boolean converterSet = false
 
     ConfigurationItem(String name, Object parent) {
         super(name, parent)
@@ -34,6 +34,15 @@ class ConfigurationItem<T> extends BaseContainerizableObject<ConfigurationItem<T
 
     ConfigurationItem(String name, ConfigurationItem<T> template) {
         super(name, template)
+
+        type = template.@type.copy()
+        description = template.@description.copy()
+        converter = template.@converter.copy()
+        defaultValue = template.@defaultValue.copy()
+        value = template.@value.copy()
+
+        set = template.@set
+        converterSet = template.@converterSet
     }
 
     boolean isSet() {
