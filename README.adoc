@@ -120,16 +120,20 @@ value::
 NOTE: If you are using a _map_, you need to use parenthesis around parameters
 
 === configuration
-    Configuration is the new recommended way to declare properties that can be used later in installations and tests. Configuration is immutable and the only way it can be changed is from commandline.
+
+Configuration is a recommended way to declare properties that can be used later in installations and tests. Configuration is immutable and the only way it can be changed is from commandline.
 +
 [source,groovy]
 ----
-item1 {
-    type value
-    description value
-    converter value
-    defaultValue value
-    value value
+configuration {
+    item1 {
+        type value
+        description value
+        converter value
+        defaultValue value
+        value value
+    }
+    ...
 }
 ----
 +
@@ -416,7 +420,3 @@ Follow this process to release new version:
     https://plugins.gradle.org/docs/submit 
 4. Tag current commit via +git tag+
 5. Bump version to next development version
-
-== Releasing SNAPSHOT version to local Maven Repository
-
-In order to build and publish SNAPSHOT plugin, use +gradle build publishToMavenLocal+.
