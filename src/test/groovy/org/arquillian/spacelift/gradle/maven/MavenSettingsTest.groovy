@@ -1,13 +1,14 @@
 package org.arquillian.spacelift.gradle.maven
 
-import static org.hamcrest.CoreMatchers.*
-import static org.junit.Assert.assertThat
-
 import org.arquillian.spacelift.Spacelift
-import org.arquillian.spacelift.gradle.maven.SettingsXmlUpdater
+import org.arquillian.spacelift.gradle.SpaceliftPlugin
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Test
+
+import static org.hamcrest.CoreMatchers.containsString
+import static org.hamcrest.CoreMatchers.is
+import static org.junit.Assert.assertThat
 
 class MavenSettingsTest {
 
@@ -23,11 +24,11 @@ class MavenSettingsTest {
     
     @Test
     public void profilesWithoutTests() {
-        Project project = ProjectBuilder.builder().build()
+        Project testProject = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'org.arquillian.spacelift'
+        testProject.apply plugin: 'org.arquillian.spacelift'
 
-        project.spacelift {
+        testProject.spacelift {
             tools {
                 rhc { command "rhc" }
             }
@@ -35,13 +36,18 @@ class MavenSettingsTest {
                 foobar { enabledInstallations ["eap"] }
             }
             installations {
-                eap {
+                maven(from:MavenInstallation) {
+                    alias "mymvn"
                 }
             }
             tests {
             }
         }
 
-        Spacelift.task(SettingsXmlUpdater)
+        testProject.spacelift.installations.each { installation ->
+            SpaceliftPlugin.installInstallation(installation, testProject.logger)
+        }
+
+        Spacelift.task('settings-mymvn').execute().await()
     }
 }

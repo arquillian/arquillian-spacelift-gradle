@@ -32,8 +32,8 @@ class ClosureEvaluationTest {
                         postActions {
                             assertThat project, is(notNullValue())
                             assertThat project.spacelift, is(notNullValue())
-                            assertThat project.spacelift.installationsDir, is(notNullValue())
-                            assertThat fsPath, is(new File(project.spacelift.installationsDir, "test/1/index.html"))
+                            assertThat project.spacelift.cacheDir, is(notNullValue())
+                            assertThat fsPath, is(new File(project.spacelift.cacheDir, "test/1/index.html"))
                             assertThat Spacelift.task('java'), is(notNullValue())
                             assertThat Spacelift.task(AndroidSdkUpdater), is(notNullValue())
                         }
@@ -110,15 +110,15 @@ class ClosureEvaluationTest {
                 version "1"
                 fileName "arquillian-selenium-bom-master.zip"
                 remoteUrl "https://github.com/arquillian/arquillian-selenium-bom/archive/master.zip"
-                home {"arquillian-selenium-${project.propagatedProperty}" }
+                home {"arquillian-selenium-${propagatedProperty}" }
                 extractMapper {
-                    remap("arquillian-selenium-bom-master/*").with("arquillian-selenium-${project.propagatedProperty}/*")
+                    remap("arquillian-selenium-bom-master/*").with("arquillian-selenium-${propagatedProperty}/*")
                 }
                 postActions {
                     assertThat project, is(notNullValue())
                     assertThat project.spacelift, is(notNullValue())
-                    assertThat project.spacelift.installationsDir, is(notNullValue())
-                    assertThat "${home}".toString(), containsString("${project.spacelift.workspace}/arquillian-selenium-${project.propagatedProperty}")
+                    assertThat project.spacelift.cacheDir, is(notNullValue())
+                    assertThat "${home}".toString(), containsString("${project.spacelift.workspace}/arquillian-selenium-${propagatedProperty}")
                 }
             }
         })
@@ -210,11 +210,14 @@ class ClosureEvaluationTest {
 
         Project project = ProjectBuilder.builder().build()
 
-        project.ext.set("defaultPropagatedProperty", "10")
-
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
+            configuration {
+                propagatedProperty {
+                    defaultValue 10
+                }
+            }
             profiles profilesClosure
             installations installationsClosure
             tools toolsClosure

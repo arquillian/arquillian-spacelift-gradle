@@ -23,7 +23,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
     // location of installation cache
     DeferredValue<File> fsPath = DeferredValue.of(File.class).from({
-        return new File((File) parent['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+        return new File((File) parent['cacheDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     })
 
     // url to download from
@@ -200,8 +200,8 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
                 logger.info(":install:${name} Reusing existing installation ${new File(getHome(), getFileName())}")
             }
-            else {
-                logger.info(":install:${name} Copying installation to ${(File) parent['workspace']}")
+            else if(targetFile.exists() && targetFile.isFile()) {
+                logger.info(":install:${name} Copying installation to ${(File) parent['workspace']} from ${getFsPath()}")
                 // FIXME
                 new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: getFsPath(), tofile: new File(getHome(), getFileName())])
             }

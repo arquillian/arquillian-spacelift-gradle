@@ -83,6 +83,9 @@ class DSLClosureCallTest {
             }
         }
 
+        // ensure that workspace is created, this is handled by assemble task by default
+        project.ant.mkdir(dir: "${project.spacelift.workspace}")
+
         project.spacelift.installations.each { installation ->
             SpaceliftPlugin.installInstallation(installation, project.logger)
         }

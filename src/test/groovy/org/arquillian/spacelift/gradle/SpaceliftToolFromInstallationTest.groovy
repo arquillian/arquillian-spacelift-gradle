@@ -31,7 +31,7 @@ public class SpaceliftToolFromInstallationTest {
         ])
 
         project.spacelift {
-            workspace = new File(System.getProperty("user.dir"), "workspace")
+            workspace {new File(System.getProperty("user.dir"), "workspace")}
             installations {
                 androidSdk {
                     product 'aerogear'
@@ -104,7 +104,7 @@ public class SpaceliftToolFromInstallationTest {
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
-            workspace = new File(System.getProperty("user.dir"), "workspace")
+            workspace {new File(System.getProperty("user.dir"), "workspace")}
             installations {
                 androidSdk(from:AndroidSdkInstallation) {
                     // define AndroidTargets, alternative syntax is just list of name and use default abi
@@ -159,7 +159,7 @@ public class SpaceliftToolFromInstallationTest {
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
-            workspace = new File(System.getProperty("user.dir"), "workspace")
+            workspace { new File(System.getProperty("user.dir"), "workspace") }
             installations {
                 androidSdk(from:AndroidSdkInstallation) {
                     // define AndroidTargets

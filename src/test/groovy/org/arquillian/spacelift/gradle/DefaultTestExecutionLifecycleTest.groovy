@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
 
 import org.gradle.api.Project
+import org.arquillian.spacelift.gradle.configuration.BuiltinConfigurationItemConverters
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
 import org.junit.Test
@@ -64,20 +65,32 @@ class DefaultTestExecutionLifecycleTest {
     void "dataProvider with ext: ext before spacelift is applied"() {
         Project project = ProjectBuilder.builder().build()
 
-        project.ext {
-            defaultArray = ["first", "secord"]
-            array = "first,second"
-        }
+        project.ext.array = '["second", "first"]'
+
 
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
+            configuration {
+                array {
+                    defaultValue { ["first", "second"] }
+                    converter BuiltinConfigurationItemConverters.getConverter(String[])
+                }
+            }
+            profiles {
+                "default" {
+                    tests "foo"
+                }
+            }
             tests {
                 foo {
                     def counter = 0
-                    def value = { if(counter<3) { counter++; return "first" } else return "second" }
+                    def value = { if(counter<3) { counter++; return "second" } else return "first" }
 
-                    dataProvider { project.array }
+                    dataProvider {
+                        println array
+                        return array
+                    }
                     beforeSuite { }
                     beforeTest { data ->
                         assertThat data, is(value())
@@ -93,6 +106,7 @@ class DefaultTestExecutionLifecycleTest {
             }
         }
 
+        project.tasks['init'].execute()
         project.spacelift.tests.each { test ->
             test.executeTest(project.logger)
         }
@@ -105,23 +119,27 @@ class DefaultTestExecutionLifecycleTest {
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.ext {
-            defaultArray = ["first", "second"]
-            array = "first,second"
+            array = '["first", "second"]'
         }
 
         project.spacelift {
+            configuration {
+                array {
+                    defaultValue { ["first", "second"] }
+                    converter BuiltinConfigurationItemConverters.getConverter(String[])
+                }
+            }
             profiles {
                 "default" {
                     tests '*'
                 }
             }
-
             tests {
                 foo {
                     def counter = 0
                     def value = { if(counter<3) { counter++; return "first" } else return "second" }
 
-                    dataProvider { project.array }
+                    dataProvider { array }
                     beforeSuite { }
                     beforeTest { data ->
                         assertThat data, is(value())

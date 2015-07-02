@@ -23,7 +23,11 @@ public class InstallationParsingTest {
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
-            tools { rhc {  command "rhc" } }
+            tools {
+                rhc {
+                    command "rhc"
+                }
+            }
             profiles {
             }
             installations { eap { } }
@@ -33,7 +37,6 @@ public class InstallationParsingTest {
 
         project.spacelift.installations.each { installation ->
             assertThat installation.home, is(notNullValue())
-            assertThat installation.home.exists(), is(true)
         }
     }
 
@@ -72,16 +75,15 @@ public class InstallationParsingTest {
     public void extractMapperCutsdirTest() {
         Project testProject = ProjectBuilder.builder().build()
 
-        testProject.ext.set("defaultPropagatedProperty", "10")
-
         def project = testProject
         testProject.apply plugin: 'org.arquillian.spacelift'
 
         testProject.spacelift {
+            workspace { new File(System.getProperty("user.dir"), "workspace") }
             installations {
                 foo {
-                    product "test"
-                    version "1"
+                    product "selenium-bom"
+                    version "whatever"
                     remoteUrl "https://github.com/arquillian/arquillian-selenium-bom/archive/master.zip"
                     home "mydirectory"
                     extractMapper {
@@ -91,7 +93,7 @@ public class InstallationParsingTest {
                     postActions {
                         org.junit.Assert.assertThat project, is(notNullValue())
                         org.junit.Assert.assertThat project.spacelift, is(notNullValue())
-                        org.junit.Assert.assertThat project.spacelift.installationsDir, is(notNullValue())
+                        org.junit.Assert.assertThat project.spacelift.cacheDir, is(notNullValue())
                         org.junit.Assert.assertThat "${home}".toString(), containsString("${project.spacelift.workspace}/mydirectory")                        
                         org.junit.Assert.assertThat home.exists(), is(true)
                         org.junit.Assert.assertThat new File(home, "pom.xml").exists(), is(true)

@@ -23,10 +23,11 @@ class InheritanceTest {
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
+            workspace { new File(System.getProperty("user.dir"), "workspace") }
             installations {
                 firstInstallation {
-                    product "test"
-                    version "1"
+                    product "selenium"
+                    version "whatever"
                     remoteUrl "https://github.com/arquillian/arquillian-selenium-bom/archive/master.zip"
                     home "mydirectory"
                     extractMapper {
@@ -36,7 +37,7 @@ class InheritanceTest {
                     postActions {
                         assertThat project, is(notNullValue())
                         assertThat project.spacelift, is(notNullValue())
-                        assertThat project.spacelift.installationsDir, is(notNullValue())
+                        assertThat project.spacelift.cacheDir, is(notNullValue())
                         assertThat "${home}".toString(), containsString("${project.spacelift.workspace}/mydirectory")
                         assertThat home.exists(), is(true)
                         assertThat new File(home, "pom.xml").exists(), is(true)
@@ -64,6 +65,7 @@ class InheritanceTest {
 
         project.apply plugin: 'org.arquillian.spacelift'
         project.spacelift {
+            workspace { new File(System.getProperty("user.dir"), "workspace") }
             installations {
                 firstInstallation {
                     product "test"
@@ -77,7 +79,7 @@ class InheritanceTest {
                     postActions {
                         assertThat project, is(notNullValue())
                         assertThat project.spacelift, is(notNullValue())
-                        assertThat project.spacelift.installationsDir, is(notNullValue())
+                        assertThat project.spacelift.cacheDir, is(notNullValue())
                         assertThat "${home}".toString(), containsString("${project.spacelift.workspace}/mydirectory")
                         assertThat home.exists(), is(true)
                         assertThat new File(home, "pom.xml").exists(), is(true)

@@ -1,12 +1,13 @@
 package org.arquillian.spacelift.gradle.maven
 
-import groovy.transform.CompileStatic
-
 import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.BaseContainerizableObject
 import org.arquillian.spacelift.gradle.DeferredValue
 import org.arquillian.spacelift.gradle.GradleSpaceliftDelegate
 import org.arquillian.spacelift.gradle.Installation
+import org.arquillian.spacelift.gradle.xml.XmlFileLoader
+import org.arquillian.spacelift.gradle.xml.XmlTextLoader
+import org.arquillian.spacelift.gradle.xml.XmlUpdater
 import org.arquillian.spacelift.process.CommandBuilder
 import org.arquillian.spacelift.task.Task
 import org.arquillian.spacelift.task.TaskFactory
@@ -15,9 +16,13 @@ import org.arquillian.spacelift.task.archive.UnzipTool
 import org.arquillian.spacelift.task.net.DownloadTool
 import org.arquillian.spacelift.task.os.CommandTool
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-@CompileStatic
+import java.text.MessageFormat
+
 class MavenInstallation extends BaseContainerizableObject<MavenInstallation> implements Installation {
+
+    private static Logger log = LoggerFactory.getLogger('Maven')
 
     DeferredValue<String> product = DeferredValue.of(String.class).from("maven")
 
@@ -36,6 +41,18 @@ class MavenInstallation extends BaseContainerizableObject<MavenInstallation> imp
     DeferredValue<String> alias = DeferredValue.of(String.class).from("mvn")
 
     DeferredValue<Map> environment = DeferredValue.of(Map.class).from([:])
+
+    DeferredValue<File> settingsXml = DeferredValue.of(File.class).from({
+        return new File((File) parent['workspace'], "${getAlias()}-settings.xml")
+    })
+
+    DeferredValue<File> localRepository = DeferredValue.of(File.class).from({
+        return new File((File) parent['workspace'], ".${getAlias()}-repository")
+    })
+
+    DeferredValue<Boolean> enableJBossStaging = DeferredValue.of(Boolean.class).from(false)
+
+    DeferredValue<Boolean> enableJBossSnapshots = DeferredValue.of(Boolean.class).from(false)
 
     MavenInstallation(String name, Object parent) {
         super(name, parent)
@@ -96,6 +113,22 @@ class MavenInstallation extends BaseContainerizableObject<MavenInstallation> imp
         environment.resolve()
     }
 
+    public File getSettingsXml() {
+        return settingsXml.resolve()
+    }
+
+    public File getLocalRepository() {
+        return localRepository.resolve()
+    }
+
+    public Boolean isEnableJBossSnapshots() {
+        return enableJBossSnapshots.resolve()
+    }
+
+    public Boolean isEnableJBossStaging() {
+        return enableJBossStaging.resolve()
+    }
+
     @Override
     public void install(Logger logger) {
 
@@ -115,8 +148,6 @@ class MavenInstallation extends BaseContainerizableObject<MavenInstallation> imp
         logger.info(":install:${name} Extracting installation from ${getFileName()}")
         Spacelift.task(getFsPath(),UnzipTool).toDir(((File)getHome()).parentFile.canonicalFile).execute().await()
 
-        println getHome()
-
         new GradleSpaceliftDelegate().project().getAnt().invokeMethod("chmod", [dir: "${getHome()}/bin", perm:"a+x", includes:"*"])
     }
 
@@ -134,10 +165,40 @@ class MavenInstallation extends BaseContainerizableObject<MavenInstallation> imp
 
             Collection aliases() { [ mavenAlias ]}
         })
+
+        final String settingsXmlAlias = "settings-${mavenAlias}"
+
+        registry.register(SettingsXmlUpdater, new TaskFactory() {
+            Task create() {
+                Task task = new SettingsXmlUpdater()
+                task.executionService = Spacelift.service()
+                return task
+            }
+
+            Collection aliases() { [ settingsXmlAlias ]}
+        })
+
+
+        // create settings.xml with local repository
+        SettingsXmlUpdater createSettings = (SettingsXmlUpdater) Spacelift.task(settingsXmlAlias)
+
+        if(isEnableJBossStaging()) {
+            // here it is named logger, because it is a part of Plugin<Project> implementation
+            log.info("JBoss Staging repository will be enabled for ${name}")
+            createSettings.repository("jboss-staging-repository-group", new URI("https://repository.jboss.org/nexus/content/groups/staging"), true)
+        }
+
+        if(isEnableJBossSnapshots()) {
+            // here it is named logger, because it is a part of Plugin<Project> implementation
+            log.info("JBoss Snapshots repository will be enabled for ${name}")
+            createSettings.repository("jboss-snapshots-repository", new URI("https://repository.jboss.org/nexus/content/repositories/snapshots"), true).execute().await()
+        }
+
+        createSettings.execute().await()
     }
 
     private File getFsPath() {
-        return new File((File) parent['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+        return new File((File) parent['cacheDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
     private Map<String, String> getMavenEnvironmentProperties() {
@@ -167,8 +228,11 @@ class MavenInstallation extends BaseContainerizableObject<MavenInstallation> imp
         MavenTool() {
             super()
             List command = nativeCommand.resolve()
-            def quietParameters = System.getenv("TRAVIS") != null ? [ "-B", "-q" ] : []
-            this.commandBuilder = new CommandBuilder(command as CharSequence[]).parameters(quietParameters)
+            def parameters = System.getenv("TRAVIS") != null ? [ "-B", "-q" ] : []
+            parameters.addAll(["-s", getSettingsXml().getCanonicalPath()])
+            parameters.add("-Dorg.apache.maven.user-settings=${getSettingsXml().getCanonicalPath()}")
+
+            this.commandBuilder = new CommandBuilder(command as CharSequence[]).parameters(parameters)
             this.interaction = GradleSpaceliftDelegate.ECHO_OUTPUT
 
             // we need to use 'super' here, because it means we want to access
@@ -182,6 +246,126 @@ class MavenInstallation extends BaseContainerizableObject<MavenInstallation> imp
         @Override
         public String toString() {
             return "MavenTool (${commandBuilder})"
+        }
+    }
+
+    class SettingsXmlUpdater extends Task<Object, Void> {
+
+        def static final PROFILE_TEMPLATE = '''
+        <profile>
+            <id>{0}</id>
+
+            <repositories>
+                <repository>
+                    <id>{0}</id>
+                    <name>{0}</name>
+                    <url>{1}</url>
+                    <layout>default</layout>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>never</updatePolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>{2}</enabled>
+                        <updatePolicy>never</updatePolicy>
+                    </snapshots>
+                </repository>
+            </repositories>
+            <!-- plugin repositories are required to fetch dependencies for plugins (e.g. gwt-maven-plugin) -->
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>{0}</id>
+                    <name>{0}</name>
+                    <url>{1}</url>
+                    <layout>default</layout>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>never</updatePolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>{2}</enabled>
+                        <updatePolicy>never</updatePolicy>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    '''
+
+        def static final PROFILE_ACTIVATION_TEMPLATE = '''
+        <activeProfile>{0}</activeProfile>
+    '''
+
+        List repositories = []
+
+        SettingsXmlUpdater() {
+
+            def project = new GradleSpaceliftDelegate().project()
+            def ant = project.ant
+
+            // ensure there is a settings.xml file
+            if (!getSettingsXml().exists()) {
+                log.warn("No settings.xml file found for Maven installation ${name}, trying to copy the one from default location")
+                def defaultFile = new File(new File(System.getProperty("user.home")), '.m2/settings.xml')
+
+                if (!defaultFile.exists()) {
+                    log.warn("No settings.xml file found in ${defaultFile.getAbsolutePath()}, using fallback template")
+                    defaultFile = File.createTempFile("settings.xml", "-spacelift");
+                    this.getClass().getResource("/settings.xml-template").withInputStream { ris ->
+                        defaultFile.withOutputStream { fos -> fos << ris }
+                    }
+                }
+
+                ant.copy(file: "${defaultFile}", tofile: "${getSettingsXml()}")
+            }
+        }
+
+        SettingsXmlUpdater repository(repositoryId, repositoryUri, snapshotsEnabled) {
+            repositories.add(["repositoryId": repositoryId, "repositoryUri": repositoryUri, "snapshotsEnabled": snapshotsEnabled])
+            this
+        }
+
+        @Override
+        protected Void process(Object input) throws Exception {
+            def settings = Spacelift.task(getSettingsXml(), XmlFileLoader).execute().await()
+
+            // in case there is not any 'profiles' or 'activeProfiles' element, add them to settings.xml
+            if (settings.profiles.isEmpty()) {
+                settings.children().add(0, new Node(null, 'profiles'))
+            }
+
+            if (settings.activeProfiles.isEmpty()) {
+                settings.children().add(0, new Node(null, 'activeProfiles'))
+            }
+
+            // update with defined repositories
+            repositories.each { r ->
+                def profileElement = Spacelift.task(MessageFormat.format(PROFILE_TEMPLATE, r.repositoryId, r.repositoryUri, r.snapshotsEnabled), XmlTextLoader).execute().await()
+                def profileActivationElement = Spacelift.task(MessageFormat.format(PROFILE_ACTIVATION_TEMPLATE, r.repositoryId), XmlTextLoader).execute().await()
+
+                // profiles
+
+                // remove previous profiles with the same id
+                settings.profiles.profile.findAll { p -> p.id.text() == "${r.repositoryId}" }.each { it.replaceNode {} }
+                // append profiles
+                settings.profiles.each { it.append(profileElement) }
+
+                // activeProfiles
+
+                // remove previous profile activations
+                settings.activeProfiles.activeProfile.findAll { ap -> ap.text() == "${r.repositoryId}" }.each {
+                    it.replaceNode {}
+                }
+                // append profile activations
+                settings.activeProfiles.each { it.append(profileActivationElement) }
+            }
+
+            // update with local repository
+            // delete <localRepository> if present
+            settings.localRepository.each { it.replaceNode {} }
+            settings.children().add(0, new Node(null, 'localRepository', "${getLocalRepository().getCanonicalPath()}"))
+
+            Spacelift.task(settings, XmlUpdater).file(getSettingsXml()).execute().await()
+            return null;
         }
     }
 }

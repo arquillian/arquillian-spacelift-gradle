@@ -3,7 +3,7 @@ package org.arquillian.spacelift.gradle
 import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.gradle.configuration.ConfigurationItem
 import org.arquillian.spacelift.gradle.configuration.IllegalConfigurationException
-import org.arquillian.spacelift.gradle.maven.SettingsXmlUpdater
+
 import org.arquillian.spacelift.gradle.configuration.BuiltinConfigurationItemConverters
 import org.arquillian.spacelift.gradle.utils.KillJavas
 import org.gradle.api.GradleException
@@ -17,6 +17,7 @@ class SpaceliftPlugin implements Plugin<Project> {
      * Static helper method to install an installation. It is used mainly to verify installation process in tests
      */
     static void installInstallation(Installation installation, Logger logger) {
+
         if(installation.isInstalled()) {
             logger.lifecycle(":install:${installation.name} was already installed, registering tools")
         }
@@ -35,10 +36,6 @@ class SpaceliftPlugin implements Plugin<Project> {
         // set current project reference
         GradleSpaceliftDelegate.currentProject(project)
 
-        // set default values if not specified from command line
-        setDefaultDataProviders(project, project.logger);
-
-
         project.extensions.create("spacelift", SpaceliftExtension, project)
 
         // set current project and initialize tools
@@ -51,9 +48,6 @@ class SpaceliftPlugin implements Plugin<Project> {
             group "Spacelift"
             task << {
                 logger.lifecycle(":init:defaultValues")
-                // we are calling default data provider once again in case ext {} block is defined after plugin is applied
-                // ext values will not be correctly initialized
-                setDefaultDataProviders(project, logger);
 
                 // find default profile and propagate enabled installations and tests
                 // check for -Pprofile=profileName and then for Mavenism -PprofileName
@@ -164,7 +158,7 @@ class SpaceliftPlugin implements Plugin<Project> {
             group "Spacelift"
             task << {
                 println "Spacelift Workspace:          ${project.spacelift.workspace}"
-                println "Spacelift Installations Cache Dir:  ${project.spacelift.installationsDir}"
+                println "Spacelift Installations Cache Dir:  ${project.spacelift.cacheDir}"
                 println "Spacelift configuration: \n${project.spacelift.configuration.toString()}"
                 println "Spacelift Profiles: "
 
@@ -178,23 +172,10 @@ class SpaceliftPlugin implements Plugin<Project> {
             task << {
                 logger.lifecycle(":assemble:profile-${project.selectedProfile.name}")
 
-                if(project.spacelift.killServers) {
+                ant.mkdir(dir: "${project.spacelift.workspace}")
+
+                if(project.spacelift.isKillServers()) {
                     Spacelift.task(KillJavas).execute().await()
-                }
-
-                // create settings.xml with local repository
-                Spacelift.task(SettingsXmlUpdater).execute().await()
-
-                if(project.spacelift.enableStaging) {
-                    // here it is named logger, because it is a part of Plugin<Project> implementation
-                    logger.lifecycle(":assemble:enableJBossStagingRepository")
-                    Spacelift.task(SettingsXmlUpdater).repository("jboss-staging-repository-group", new URI("https://repository.jboss.org/nexus/content/groups/staging"), true).execute().await()
-
-                }
-
-                if(project.spacelift.enableSnapshots) {
-                    logger.lifecycle(":assemble:enableJBossSnapshotsRepository")
-                    Spacelift.task(SettingsXmlUpdater).repository("jboss-snapshots-repository", new URI("https://repository.jboss.org/nexus/content/repositories/snapshots"), true).execute().await()
                 }
 
                 project.selectedInstallations.each { Installation installation ->
@@ -247,8 +228,8 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
         }
 
-        project.getTasks().create(name:"cleanInstallations", dependsOn:["init"]) { task ->
-            description "Cleans selected Spacelift installations"
+        project.getTasks().create(name:"cleanCache", dependsOn:["init"]) { task ->
+            description "Cleans selected Spacelift installations from cache and installation location"
             group "Spacelift"
             task << {
                 project.selectedInstallations.each { installation ->
@@ -263,23 +244,13 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
         }
 
-        project.getTasks().create(name:"cleanRepository", dependsOn:["init"]) { task ->
-            description "Cleans Spacelift Maven repository"
-            group "Spacelift"
-            task << {
-                logger.lifecycle(":clean:repository Maven repository will be wiped (${project.spacelift.localRepository})")
-                ant.delete(dir: new File(project.spacelift.localRepository), failonerror: false)
-            }
-        }
-
         // task aliases and aggregators
 
         project.getTasks().create(name:"cleanAll", dependsOn:[
-            "cleanRepository",
-            "cleanInstallations",
+            "cleanCache",
             "cleanWorkspace",
         ]) {
-            description "Cleans Spacelift workspace, selected installations and Maven repository cache"
+            description "Cleans Spacelift workspace and selected installations from Spacelift cache and installation location"
             group "Spacelift"
         }
 
@@ -291,36 +262,6 @@ class SpaceliftPlugin implements Plugin<Project> {
         project.getTasks().create(name:"prepare-env", dependsOn:["assemble"]) {
             description "Alias for assemble task"
             group "Spacelift"
-        }
-    }
-
-    private void setDefaultDataProviders(Project project, Object logger) {
-        // parse both properties defined deprecated way and project.ext way. find the ones starting with default
-        def defaultValues = project.getProperties()
-                .findAll {key, value -> return (key.startsWith("default") && !key.startsWith("defaultTask") && key!="default") } << project.ext.properties
-                .findAll {key, value -> return (key.startsWith("default") && key!="default")}
-
-        defaultValues.each { key, value ->
-            def overrideKey = key.substring("default".length(), key.length())
-            overrideKey = overrideKey[0].toLowerCase() + overrideKey.substring(1)
-            if(project.hasProperty(overrideKey)) {
-                // get and parse command line defined value
-                def newValue = project.property(overrideKey)
-
-                // if we have current as array, we want to model command line override as array as well
-                if((value!=null && value.getClass().isArray()) || value instanceof List) {
-                    newValue = Arrays.asList(newValue.toString().split(","))
-                }
-
-                // new set default value
-                project.ext.set(overrideKey, newValue)
-                logger.lifecycle(":init:default ${overrideKey} was set to ${newValue} from command line")
-            }
-            else {
-                //project.setProperty(overrideKey, value)
-                project.ext.set(overrideKey, value)
-                logger.lifecycle(":init:default ${overrideKey} was set to ${value} from defaults")
-            }
         }
     }
 

@@ -14,31 +14,21 @@ import org.slf4j.LoggerFactory
 class SpaceliftExtension {
     private static final Logger logger = LoggerFactory.getLogger(SpaceliftExtension)
 
-    // FIXME, workspace and installationDir should be provided by Arquillian Spacelift itself
+    // FIXME, workspace and cacheDir should be provided by Arquillian Spacelift itself
     // workspace configuration
-    File workspace
+    DeferredValue<File> workspace = DeferredValue.of(File).from({
+        return new File(project.rootDir, "ws")
+    })
 
-    // base path to get local binaries
-    File installationsDir
+    // base path to local cache, by default shared cache per all spacelift projects
+    DeferredValue<File> cacheDir = DeferredValue.of(File).from({
+        File cacheParentDir = new File(System.getProperty("user.home", "."))
+        return new File(cacheParentDir, ".spacelift/cache")
+    })
 
     // FIXME this should be better defined
     // flag to kill already running servers
-    boolean killServers
-
-    // FIXME, this should be moved to Maven related Installation
-    // local Maven repository
-    File localRepository
-
-    // staging JBoss repository
-    boolean enableStaging
-
-    // snapshots JBoss repository
-    boolean enableSnapshots
-
-    // FIXME, deprecated these properties, you should install KeystoreInstallation if you need these values
-    // keystore and truststore files
-    File keystoreFile
-    File truststoreFile
+    DeferredValue<Boolean> killServers = DeferredValue.of(Boolean).from(false)
 
     // internal DSL
     ConfigurationContainer configuration
@@ -50,14 +40,7 @@ class SpaceliftExtension {
     Project project
 
     SpaceliftExtension(Project project) {
-        this.workspace = project.rootDir
-        this.installationsDir = new File(workspace, "installations")
-
-        this.localRepository = new File(workspace, ".repository")
-        this.keystoreFile = new File(project.rootDir, "patches/certs/aerogear.keystore")
-        this.truststoreFile = new File(project.rootDir, "patches/certs/aerogear.truststore")
-        this.enableStaging = false
-        this.enableSnapshots = false
+        DSLInstrumenter.instrument(this)
         this.project = project
         this.configuration = new ConfigurationContainer(this)
         this.profiles = new InheritanceAwareContainer(this, Profile, Profile)
@@ -97,22 +80,36 @@ class SpaceliftExtension {
         return this
     }
 
-    def setWorkspace(workspace) {
-        // update also dependant repositories when workspace is updated
-        if (localRepository.parentFile == this.workspace) {
-            this.localRepository = new File(workspace, ".repository")
-        }
-        // update also dependant repositories when workspace is updated
-        if (installationsDir.parentFile == this.workspace) {
-            this.installationsDir = new File(workspace, "installations")
-        }
+    SpaceliftExtension workspace(Object... lazyClosure) {
+        workspace.from(lazyClosure)
+        return this
+    }
 
-        this.workspace = workspace
+    def getWorkspace() {
+        return workspace.resolve()
+    }
+
+    SpaceliftExtension cacheDir(Object... lazyClosure) {
+        cacheDir.from(lazyClosure)
+        return this
+    }
+
+    def getCacheDir() {
+        return cacheDir.resolve()
+    }
+
+    SpaceliftExtension isKillServers(Object... lazyClosure) {
+        killServers.from(lazyClosure)
+        return this
+    }
+
+    def isKillServers() {
+        return killServers.resolve()
     }
 
     @Override
     public String toString() {
-        return "SpaceliftExtension" + (project.buildFile ? "(${project.buildFile.canonicalPath})" : "")
+        return "Spacelift " + (project.buildFile ? "(${project.buildFile.canonicalPath})" : "")
     }
 
     /**

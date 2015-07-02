@@ -182,11 +182,6 @@ public class ProfileParsingTest {
 
         project.tasks['init'].execute()
 
-        project.spacelift.installations.each { installation ->
-            assertThat installation.home, is(notNullValue())
-            assertThat installation.home.exists(), is(true)
-        }
-
         assertThat project.selectedProfile, is(notNullValue())
         assertThat project.selectedProfile.name, is('foobar')
 

@@ -6,7 +6,7 @@ import org.arquillian.spacelift.gradle.SpaceliftPlugin
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
 
-import org.arquillian.spacelift.execution.ExecutionException;
+import org.arquillian.spacelift.execution.ExecutionException
 import org.arquillian.spacelift.gradle.Installation
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -21,12 +21,12 @@ class GitBasedInstallationTest {
 
     @Test
     void "install from commit and master"() {
-        Project project = ProjectBuilder.builder().build()
+        Project testProject = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'org.arquillian.spacelift'
+        testProject.apply plugin: 'org.arquillian.spacelift'
 
-        project.spacelift {
-            workspace = new File(System.getProperty("user.dir"), "workspace")
+        testProject.spacelift {
+            workspace { new File(System.getProperty("user.dir"), "workspace") }
             installations {
 
                 def counter = 0
@@ -67,9 +67,9 @@ class GitBasedInstallationTest {
             }
         }
 
-        project.spacelift.installations.each { Installation installation ->
+        testProject.spacelift.installations.each { Installation installation ->
             assertThat installation.isInstalled(), is(false)
-            SpaceliftPlugin.installInstallation(installation, project.logger)
+            SpaceliftPlugin.installInstallation(installation, testProject.logger)
             assertThat installation.isInstalled(), is(true)
         }
     }
@@ -81,7 +81,7 @@ class GitBasedInstallationTest {
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
-            workspace = new File(System.getProperty("user.dir"), "workspace")
+            workspace { new File(System.getProperty("user.dir"), "workspace") }
             installations {
 
                 def counter = 0
@@ -126,7 +126,7 @@ class GitBasedInstallationTest {
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
-            workspace = new File(System.getProperty("user.dir"), "workspace")
+            workspace {new File(System.getProperty("user.dir"), "workspace") }
             installations {
                 theCommit(from:GitBasedInstallation) {
                     repository "https://github.com/smiklosovic/test.git"

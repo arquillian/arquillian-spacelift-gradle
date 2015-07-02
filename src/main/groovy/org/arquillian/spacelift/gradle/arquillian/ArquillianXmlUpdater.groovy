@@ -47,7 +47,7 @@ class ArquillianXmlUpdater extends Task<Object, Void>{
             "**/arquillian-domain.xml"
         ])
         def excludes = args.get('excludes', [
-            "${project.spacelift.localRepository}/**",
+            ".*-repository/**",
             "**/target/**"
         ])
 

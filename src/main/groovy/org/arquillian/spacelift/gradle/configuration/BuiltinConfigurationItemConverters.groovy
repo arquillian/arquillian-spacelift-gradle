@@ -8,7 +8,6 @@ import groovy.transform.CompileStatic
 /**
  * Created by tkriz on 25/03/15.
  */
-@CompileStatic
 class BuiltinConfigurationItemConverters {
 
     private static

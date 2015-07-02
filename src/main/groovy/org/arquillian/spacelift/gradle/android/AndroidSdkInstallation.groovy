@@ -301,7 +301,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     }
 
     private File getFsPath() {
-        return new File((File) parent['installationsDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+        return new File((File) parent['cacheDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
     private Map<String, String> getAndroidEnvironmentProperties() {

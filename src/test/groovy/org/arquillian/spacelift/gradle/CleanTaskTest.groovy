@@ -19,8 +19,11 @@ class CleanTaskTest {
 
         project.apply plugin: 'org.arquillian.spacelift'
         project.spacelift {
-            profiles { 'default' { enabledInstallations 'someInstallation'
-                } }
+            profiles {
+                'default' {
+                    enabledInstallations 'someInstallation'
+                }
+            }
             installations {
                 someInstallation {
                     product 'test'
@@ -37,9 +40,9 @@ class CleanTaskTest {
         project.getTasks()['assemble'].execute()
 
         assertThat project.spacelift.workspace.exists(), is(true)
-        assertThat project.spacelift.installationsDir.exists(), is(true)
+        assertThat project.spacelift.cacheDir.exists(), is(true)
 
-        project.getTasks()['cleanInstallations'].execute()
+        project.getTasks()['cleanCache'].execute()
         assertThat project.spacelift.workspace.exists(), is(true)
         assertThat project.spacelift.installations['someInstallation'].home.exists(), is(false)
 
@@ -49,12 +52,15 @@ class CleanTaskTest {
 
     @Test
     void "clean installation without home"() {
-        Project project = ProjectBuilder.builder().build()
+        Project testProject = ProjectBuilder.builder().build()
 
-        project.apply plugin: 'org.arquillian.spacelift'
-        project.spacelift {
-            profiles { 'default' { enabledInstallations 'someInstallation'
-                } }
+        testProject.apply plugin: 'org.arquillian.spacelift'
+        testProject.spacelift {
+            profiles {
+                'default' {
+                    enabledInstallations 'someInstallation'
+                }
+            }
             installations {
                 someInstallation {
                     product 'test'
@@ -64,16 +70,16 @@ class CleanTaskTest {
         }
 
         // direct task execution does not support dependencies
-        project.getTasks()['init'].execute()
-        project.getTasks()['assemble'].execute()
+        testProject.getTasks()['init'].execute()
+        testProject.getTasks()['assemble'].execute()
 
-        assertThat project.spacelift.workspace.exists(), is(true)        
+        assertThat testProject.spacelift.workspace.exists(), is(true)
 
-        project.getTasks()['cleanInstallations'].execute()
-        assertThat project.spacelift.workspace.exists(), is(true)
-        assertThat "Installation home dir was not deleted as it equals workspace", project.spacelift.installations['someInstallation'].home.exists(), is(true)
+        testProject.getTasks()['cleanCache'].execute()
+        assertThat testProject.spacelift.workspace.exists(), is(true)
+        assertThat "Installation home dir was not deleted as it equals workspace", testProject.spacelift.installations['someInstallation'].home.exists(), is(true)
 
-        project.getTasks()['cleanWorkspace'].execute()
-        assertThat project.spacelift.workspace.exists(), is(false)
+        testProject.getTasks()['cleanWorkspace'].execute()
+        assertThat testProject.spacelift.workspace.exists(), is(false)
     }
 }
