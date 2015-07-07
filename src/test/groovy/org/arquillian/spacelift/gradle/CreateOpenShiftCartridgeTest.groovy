@@ -5,7 +5,7 @@ import org.arquillian.spacelift.process.ProcessResult
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.arquillian.spacelift.gradle.openshift.CreateOpenShiftCartridge;
-import org.arquillian.spacelift.gradle.utils.KillJavas
+import org.arquillian.spacelift.gradle.utils.KillTask
 import org.junit.Ignore;
 import org.junit.Test
 

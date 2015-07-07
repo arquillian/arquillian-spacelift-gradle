@@ -10,9 +10,9 @@ import org.arquillian.spacelift.task.os.CommandTool
 /**
  * Helper class that will clean up environment by killing all processes that might collide with test execution
  */
-class KillJavas extends Task<Object, Void>{
+class KillTask extends Task<Object, Void>{
 
-    def static final logger = Logger.getLogger(KillJavas.class.getName())
+    def static final logger = Logger.getLogger(KillTask.class.getName())
 
     // definition of what would be killed
     def processNames = [
@@ -26,21 +26,21 @@ class KillJavas extends Task<Object, Void>{
 
     def processPorts = [4444, 14444, 8080, 9999]
 
-    KillJavas addProcessNames(List<String> processNames) {
+    KillTask addProcessNames(List<String> processNames) {
         if (processNames && !processNames.isEmpty()) {
             this.processNames.addAll(processNames)
         }
         this
     }
 
-    KillJavas addProcessName(String processName) {
+    KillTask addProcessName(String processName) {
         if (processName) {
             processNames.add(processName)
         }
         this
     }
 
-    KillJavas addProcessPort(int port) {
+    KillTask addProcessPort(int port) {
         if (port < 0 || port > 65535) {
             logger.warn(String.format("You want to kill a service bound to port having illegal value: %s.", port))
         }
@@ -54,7 +54,7 @@ class KillJavas extends Task<Object, Void>{
         this
     }
 
-    KillJavas addProcessPort(String port) {
+    KillTask addProcessPort(String port) {
         try {
             addProcessPort(Integer.parseInt(port))
         } catch (NumberFormatException ex) {
@@ -63,7 +63,7 @@ class KillJavas extends Task<Object, Void>{
         this
     }
 
-    KillJavas addProcessPorts(List<String> ports) {
+    KillTask addProcessPorts(List<String> ports) {
         if (ports && !ports.isEmpty()) {
             ports.each { port -> addProcessPort(port) }
         }
