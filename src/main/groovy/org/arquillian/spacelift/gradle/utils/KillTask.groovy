@@ -43,6 +43,7 @@ class KillTask extends Task<Object, Void>{
     KillTask addProcessPort(int port) {
         if (port < 0 || port > 65535) {
             logger.warn(String.format("You want to kill a service bound to port having illegal value: %s.", port))
+            return this
         }
 
         if (port < 1024) {
