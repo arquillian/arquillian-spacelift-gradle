@@ -41,9 +41,16 @@ class KillJavas extends Task<Object, Void>{
     }
 
     KillJavas addProcessPort(int port) {
-        if (port > 1024 && port < 65535) {
-            processPorts.add(port)
+        if (port < 0 || port > 65535) {
+            logger.warn(String.format("You want to kill a service bound to port having illegal value: %s.", port))
         }
+
+        if (port < 1024) {
+            logger.warn(String.format("You want to kill a service bound to privileged port %s for which you may not have rights and operation can fail.", port))
+        }
+
+        processPorts.add(port)
+
         this
     }
 
