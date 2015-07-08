@@ -22,7 +22,7 @@ class KeystoreInstallationTest {
         project.apply plugin: 'org.arquillian.spacelift'
 
         project.spacelift {
-            workspace = new File(System.getProperty("user.dir"), "workspace")
+            workspace { new File(System.getProperty("user.dir"), "workspace") }
             tools {
                 keytool {
                     command  "keytool"
