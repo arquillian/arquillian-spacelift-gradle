@@ -68,7 +68,7 @@ class InheritanceTest {
             workspace { new File(System.getProperty("user.dir"), "workspace") }
             installations {
                 firstInstallation {
-                    product "test"
+                    product "seleniumbom"
                     version "1"
                     remoteUrl "https://github.com/arquillian/arquillian-selenium-bom/archive/master.zip"
                     home "mydirectory"
