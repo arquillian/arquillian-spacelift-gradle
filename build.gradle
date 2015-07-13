@@ -1,6 +1,4 @@
 apply plugin: 'groovy'
-apply plugin: 'maven-publish'
-apply plugin: 'maven-publish-auth'
 apply plugin: "com.gradle.plugin-publish"
 
 group 'org.arquillian.spacelift.gradle'
@@ -34,16 +32,14 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // publishing to maven repository
-        classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
         // publishing to Gradle repository
-        classpath 'com.gradle.publish:plugin-publish-plugin:0.9.0'
+        classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
   }
 }
 
 dependencies {
     compile gradleApi()
-    compile 'org.codehaus.groovy:groovy-all:2.3.9'
+    compile localGroovy()
 
     // commons lang is used to do platform checks
     compile 'org.apache.commons:commons-lang3:3.1'
@@ -92,77 +88,6 @@ pluginBundle {
   }
 }   
 
-
-// publish plugin to Maven Repository
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-
-            from components.java
-
-            artifact sourcesJar {
-                classifier "sources"
-            }
-
-            pom.withXml {
-                def Node root = asNode();
-
-                root.appendNode('name', 'Gradle Plugin for Arquillian Spacelift')
-                root.appendNode('description', 'Gradle Plugin to provide test environment')
-                root.appendNode('url', 'https://github.com/arquillian/arquillian-spacelift-gradle')
-
-                def org = root.appendNode( 'organization' )
-                org.appendNode( 'name', 'Arquillian.org' )
-                org.appendNode( 'url', 'https://arquillian.org' )
-
-                def issues = root.appendNode( 'issueManagement' )
-                issues.appendNode( 'system', 'JIRA' )
-                issues.appendNode( 'url', 'https://issues.jboss.org/browse/ARQ' )
-
-                def scm = root.appendNode( 'scm' )
-                scm.appendNode( 'url', 'https://github.com/arquillian/arquillian-spacelift-gradle' )
-                scm.appendNode( 'connection', 'scm:git:https://github.com/arquillian/arquillian-spacelift-gradle.git' )
-                scm.appendNode( 'developerConnection', 'scm:git:git@github.com:arquillian/arquillian-spacelift-gradle.git' )
-
-                def license = root.appendNode( 'licenses' ).appendNode( 'license' )
-                license.appendNode( 'name', 'Apache License, Version 2.0' )
-                license.appendNode( 'url', 'http://www.apache.org/licenses/LICENSE-2.0.txt' )
-                license.appendNode( 'distribution', 'repo' )
-
-                def devs = root.appendNode( 'developers' )
-                def kpiwko = devs.appendNode( 'developer' )
-                kpiwko.appendNode( 'name', 'Karel Piwko' )
-                kpiwko.appendNode( 'email', 'kpiwko@redhat.com' )
-                def smikloso = devs.appendNode( 'developer' )
-                smikloso.appendNode( 'name', 'Stefan Miklosovic' )
-                smikloso.appendNode( 'email', 'smikloso@redhat.com' )
-                def tkriz = devs.appendNode( 'developer' )
-                tkriz.appendNode( 'name', 'Tadeas Kriz' )
-                tkriz.appendNode( 'email', 'tkriz@redhat.com' )
-
-                // TEMPORARY : currently Gradle Publishing feature is exporting dependencies as 'runtime' scope,
-                // rather than 'compile'; fix that.
-                asNode().dependencies[0].dependency.each {
-                    it.scope[0].value = 'compile'
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            if ( project.version.endsWith( "SNAPSHOT" ) ) {
-                name 'jboss-snapshots-repository'
-                url 'https://repository.jboss.org/nexus/content/repositories/snapshots/'
-            }
-            else {
-                name 'jboss-releases-repository'
-                url 'https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/'
-            }
-        }
-    }
-}
-
 // construct package with sources
 task sourcesJar(type: Jar, dependsOn: compileGroovy) {
     from sourceSets.main.allSource
@@ -170,5 +95,5 @@ task sourcesJar(type: Jar, dependsOn: compileGroovy) {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
+    gradleVersion = '2.5'
 }
