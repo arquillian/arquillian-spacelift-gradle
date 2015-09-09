@@ -36,17 +36,12 @@ class CleanTaskTest {
         }
 
         // direct task execution does not support dependencies
-        project.getTasks()['init'].execute()
-        project.getTasks()['assemble'].execute()
-
+        project.getTasks()['test'].execute()
+        project.getTasks()['default'].execute()
         assertThat project.spacelift.workspace.exists(), is(true)
         assertThat project.spacelift.cacheDir.exists(), is(true)
 
-        project.getTasks()['cleanCache'].execute()
-        assertThat project.spacelift.workspace.exists(), is(true)
-        assertThat project.spacelift.installations['someInstallation'].home.exists(), is(false)
-
-        project.getTasks()['cleanWorkspace'].execute()
+        project.getTasks()['clean'].execute()
         assertThat project.spacelift.workspace.exists(), is(false)
     }
 
@@ -70,16 +65,12 @@ class CleanTaskTest {
         }
 
         // direct task execution does not support dependencies
-        testProject.getTasks()['init'].execute()
-        testProject.getTasks()['assemble'].execute()
+        testProject.getTasks()['test'].execute()
+        testProject.getTasks()['default'].execute()
 
         assertThat testProject.spacelift.workspace.exists(), is(true)
 
-        testProject.getTasks()['cleanCache'].execute()
-        assertThat testProject.spacelift.workspace.exists(), is(true)
-        assertThat "Installation home dir was not deleted as it equals workspace", testProject.spacelift.installations['someInstallation'].home.exists(), is(true)
-
-        testProject.getTasks()['cleanWorkspace'].execute()
+        testProject.getTasks()['clean'].execute()
         assertThat testProject.spacelift.workspace.exists(), is(false)
     }
 }

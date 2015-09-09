@@ -26,13 +26,10 @@ import org.junit.Test
  */
 public class ScriptParsingTest {
     @Test
-    public void executeTestReport() {
+    public void scriptParsing() {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'org.arquillian.spacelift'
-
-        // enable eap6 profile
-        project.ext.set("eap6", "true")
 
         project.spacelift {
             configuration {
@@ -78,7 +75,7 @@ public class ScriptParsingTest {
         }
 
         project.extensions.add('profile', 'eap6')
-        project.getTasks()['init'].execute()
         project.getTasks()['test'].execute()
+        project.getTasks()['eap6'].execute()
     }
 }

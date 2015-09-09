@@ -27,4 +27,9 @@ class ConfigurationContainer extends InheritanceAwareContainer<ConfigurationItem
 
         return builder.toString();
     }
+
+    @Override
+    public ConfigurationContainer clone() {
+        return new ConfigurationContainer(this)
+    }
 }

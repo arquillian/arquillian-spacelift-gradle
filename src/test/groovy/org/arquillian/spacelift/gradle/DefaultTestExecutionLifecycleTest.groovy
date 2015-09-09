@@ -88,7 +88,6 @@ class DefaultTestExecutionLifecycleTest {
                     def value = { if(counter<3) { counter++; return "second" } else return "first" }
 
                     dataProvider {
-                        println array
                         return array
                     }
                     beforeSuite { }
@@ -106,7 +105,7 @@ class DefaultTestExecutionLifecycleTest {
             }
         }
 
-        project.tasks['init'].execute()
+        project.tasks['assemble'].execute()
         project.spacelift.tests.each { test ->
             test.executeTest(project.logger)
         }
@@ -155,10 +154,12 @@ class DefaultTestExecutionLifecycleTest {
             }
         }
 
-        project.tasks['init'].execute()
+        project.tasks['assemble'].execute()
+        /*
         project.spacelift.tests.each { test ->
             test.executeTest(project.logger)
         }
+        */
     }
 
     @Test

@@ -109,7 +109,8 @@ class SpaceliftExtension {
 
     @Override
     public String toString() {
-        return "Spacelift " + (project.buildFile ? "(${project.buildFile.canonicalPath})" : "")
+        return "Spacelift " + (project.buildFile ? "(${project.buildFile.canonicalPath})" : "") +
+                "${this.getProfiles()}"
     }
 
     /**
@@ -123,11 +124,13 @@ class SpaceliftExtension {
         def object, objectType
 
         def containers = [configuration, installations, tests, tools, profiles]
+
         // FIXME We should not need to ask `project` for the selected profile (issue #50)
         if (project.hasProperty("selectedProfile")) {
             // The selected profile configuration needs to be first for it to override the main configuration
             containers.add(0, project.selectedProfile.configuration)
         }
+
 
         for (def container : containers) {
             def resolved = resolve(container, name)

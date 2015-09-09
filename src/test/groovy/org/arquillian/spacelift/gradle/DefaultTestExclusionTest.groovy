@@ -33,7 +33,9 @@ class DefaultTestExclusionTest {
             }
         }
 
-        project.getTasks()['init'].execute()
+        project.getTasks()['assemble'].execute()
+        project.getTasks()['default'].execute()
+
         assertThat project.selectedProfile, is(notNullValue())
         assertThat project.selectedProfile.name, is('default')
         assertThat project.selectedTests.size(), is(1) // only 'bar' test is selected

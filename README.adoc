@@ -35,21 +35,23 @@ plugins {
 This plugin provides following tasks. You can get same info by running +./gradlew tasks+:
 
 assemble::
-    Installs all installations defined by profile
-check/test::
-    Executes tests defined in profile. Depends on +assemble+.
-testreport::
-    Gathers all test results in JUnit format from workspace and creates a combined report. Requires additional configuration in _build.gradle_ file
+    Installs all installations.
+test::
+    Installs all installations. Executes all tests.
 describe::
-    Shows global configuration and available profiles and more
-cleanCache::
-    Wipes cached installations and extracted installation artifacts for currently activated installations
-cleanWorkspace::
-    Wipes Spacelift workspace directory
-cleanRepository::
-    Wipes Maven repository used by Spacelift
-cleanAll::
-    Executes all the +clean+ tasks
+    Shows global configuration, available profiles and more
+clean::
+    Wipes Spacelift workspace
+
+=== Profile related tests
+
+You can additionally run a profile by calling a combination of tasks. In such case, only installations and tests
+defined in a profile are executed. You can run multiple profiles in sequence.
+
++./gradlew assemble myProfile+::
+    Installs all installations defined by _myProfile_
++./gradlew test myProfile+
+    Installs all installations and executes all tests defined by _myProfile_
 
 == DSL
 
@@ -177,9 +179,8 @@ environment::
 
 === User profiles
 
-Profiles consist of installations to be installed and tests to be executed. You can use -P__profileName__ to trigger
-specific profile, otherwise default profile is triggered. _default_ profile is expected to be present. Note, you need
-define profileName quoted in case of _default_. Profiles can be inherited from previous created profiles.
+Profiles consist of installations to be installed and tests to be executed. You can use either __assemble {{profileName}}__ or __test {{profileName}}__ to trigger
+specific profile. Profiles can be inherited from previous created profiles.
 
 [source,groovy]
 ----
@@ -338,7 +339,7 @@ For instance, following call installs all installations from *default* profile b
 
 [code,bash]
 ----
-gradle -Pdefault -Ptests=myTestName test
+gradle test -Ptests=myTestName
 ----
 
 Whereas this call completely ignores profile and installs *myTestNameRequirement* and then executes *myTestName*:
@@ -348,7 +349,7 @@ Whereas this call completely ignores profile and installs *myTestNameRequirement
 gradle -Pinstallations=myTestNameRequirement -Ptests=myTestName test
 ----
 
-NOTE: If you want to skip tests or installations altogether, use following syntax +gradle -Pinstallations= test+
+NOTE: If you want to skip tests or installations altogether, use following syntax +gradle -Pinstallations= test
 
 
 == Spacelift Tools and Task

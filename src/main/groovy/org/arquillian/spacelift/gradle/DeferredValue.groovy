@@ -32,7 +32,7 @@ class DeferredValue<TYPE> {
     // holder of deferred value
     Closure valueBlock = {}
 
-    List<Callback<DeferredValue<TYPE>>> valueBlockSetCallbacks = []
+    List<Closure> valueBlockSetCallbacks = []
 
     // name of deferred value
     String name
@@ -121,8 +121,9 @@ class DeferredValue<TYPE> {
      */
     DeferredValue<TYPE> from(Object... data) {
         this.valueBlock = defer(data)
-        this.valueBlockSetCallbacks.each { callback ->
-            callback.call(this)
+        this.valueBlockSetCallbacks.each { Closure callback ->
+            // we are referring to callback owner that was reassigned during copy() operation
+            callback.doCall(callback.owner)
         }
         return this
     }
@@ -130,6 +131,11 @@ class DeferredValue<TYPE> {
     TYPE apply(TYPE delegate) {
         this.valueBlock.resolveStrategy = Closure.DELEGATE_FIRST
         return resolveWith(delegate, null)
+    }
+
+    DeferredValue<TYPE> valueBlockSet(Closure callback) {
+        valueBlockSetCallbacks << callback
+        return this
     }
 
     /**
@@ -213,52 +219,32 @@ class DeferredValue<TYPE> {
     }
 
     /**
+     * Atomic operation that copies current DeferredValue and also changes owner of the object
+     * @param owner new owner
+     * @return
+     */
+    DeferredValue<TYPE> copyAndReassign(Object owner) {
+        DeferredValue copy = new DeferredValue(type)
+        copy.valueBlock = (Closure) valueBlock.clone()
+        copy.valueBlockSetCallbacks = new ArrayList<Closure>(this.valueBlockSetCallbacks.size())
+        // reassign callback so they are called on the right object
+        valueBlockSetCallbacks.each { Closure callback ->
+            copy.valueBlockSetCallbacks.add((Closure) callback.dehydrate().rehydrate(owner, owner, owner))
+        }
+        copy.owner = owner
+        copy.name = this.name
+        return copy
+
+
+    }
+
+    /**
      * Creates a copy of deferred value, allowing to use it in different context
      * @return
      */
     DeferredValue<TYPE> copy() {
-        DeferredValue copy = new DeferredValue(type)
-        copy.valueBlock = (Closure) valueBlock.clone()
-        copy.owner = this.owner
-        copy.name = this.name
-        return copy
+        return copyAndReassign(this.owner)
     }
-
-    DeferredValue<TYPE> valueBlockSet(Callback<DeferredValue<TYPE>> callback) {
-        valueBlockSetCallbacks << callback
-        return this
-    }
-
-    /**
-     * NOT YET IMPLEMENTED
-     * @param callback
-     * @return
-     */
-    DeferredValue<TYPE> done(DoneCallback<TYPE> callback) {
-
-    }
-
-    /**
-     * NOT YET IMPLEMENTED
-     * @param callback
-     * @return
-     */
-    DeferredValue<TYPE> fail(FailCallback<TYPE> callback) {
-
-    }
-
-    public static interface Callback<T> {
-        void call(T value);
-    }
-
-    public static interface DoneCallback<X> {
-        X call(X value);
-    }
-
-    public static interface FailCallback<X> {
-        X call(Exception error, X value);
-    }
-
 
     private Closure defer(Object... data) {
         // if nothing is defined, return empty closure, e.g. closure that returns null

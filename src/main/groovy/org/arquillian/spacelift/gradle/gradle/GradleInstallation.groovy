@@ -143,7 +143,7 @@ class GradleInstallation extends BaseContainerizableObject<GradleInstallation> i
     }
 
     private File getFsPath() {
-        return new File((File) parent['cacheDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+        return Spacelift.configuration().cachePath("${getProduct()}/${getVersion()}/${getFileName()}")
     }
     
     private Map<String, String> getGradleEnvironmentProperties() {

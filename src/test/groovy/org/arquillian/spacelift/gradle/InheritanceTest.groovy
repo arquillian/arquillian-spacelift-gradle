@@ -149,7 +149,8 @@ class InheritanceTest {
             }
         }
 
-        project.tasks['init'].execute()
+        project.tasks['assemble'].execute()
+        project.tasks['profile1'].execute()
 
         assertThat project.selectedProfile, is(notNullValue())
         assertThat project.selectedProfile.name, is('profile1')
@@ -194,9 +195,6 @@ class InheritanceTest {
 
         project.apply plugin: 'org.arquillian.spacelift'
 
-        // enable second profile
-        project.ext.set("profile2", "true")
-
         project.spacelift {
             profiles {
                 profile1 { tests 'firstTest', 'secondTest', 'toBeIgnoredTest' }
@@ -209,7 +207,8 @@ class InheritanceTest {
             }
         }
 
-        project.tasks['init'].execute()
+        project.tasks['assemble'].execute()
+        project.tasks['profile2'].execute()
 
         assertThat project.selectedProfile, is(notNullValue())
         assertThat project.selectedProfile.name, is('profile2')
@@ -223,8 +222,7 @@ class InheritanceTest {
 
         project.apply plugin: 'org.arquillian.spacelift'
 
-        // enable second profile
-        project.ext.set("profile2", "true")
+
 
         project.spacelift {
             profiles {
@@ -238,7 +236,8 @@ class InheritanceTest {
             }
         }
 
-        project.tasks['init'].execute()
+        project.tasks['assemble'].execute()
+        project.tasks['profile2'].execute()
 
         assertThat project.selectedProfile, is(notNullValue())
         assertThat project.selectedProfile.name, is('profile2')
@@ -251,9 +250,6 @@ class InheritanceTest {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'org.arquillian.spacelift'
-
-        // enable second profile
-        project.ext.set("profile2", "true")
 
         exception.expect(MissingPropertyException)
         exception.expectMessage("tool1")
@@ -271,7 +267,8 @@ class InheritanceTest {
             }
         }
 
-        project.tasks['init'].execute()
+        project.tasks['assemble'].execute()
+        project.tasks['profile2'].execute()
 
         assertThat project.selectedProfile, is(notNullValue())
         assertThat project.selectedProfile.name, is('profile2')

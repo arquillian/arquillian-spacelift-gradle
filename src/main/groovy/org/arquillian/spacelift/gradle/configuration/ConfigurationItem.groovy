@@ -14,14 +14,14 @@ class ConfigurationItem<T> extends BaseContainerizableObject<ConfigurationItem<T
 
     DeferredValue<String> description = DeferredValue.of(String.class).from("No description.")
 
-    DeferredValue<ConfigurationItemConverter<T>> converter = DeferredValue.of(ConfigurationItemConverter.class).valueBlockSet {
-        converterSet = true
+    DeferredValue<ConfigurationItemConverter<T>> converter = DeferredValue.of(ConfigurationItemConverter.class).valueBlockSet { ConfigurationItem<T> newValue ->
+        newValue.converterSet = true
     }
 
     DeferredValue<T> defaultValue = DeferredValue.of(T.class)
 
-    DeferredValue<T> value = DeferredValue.of(T.class).valueBlockSet {
-        set = true
+    DeferredValue<T> value = DeferredValue.of(T.class).valueBlockSet { ConfigurationItem<T> newValue ->
+        newValue.set = true
     }
 
     boolean set = false
@@ -35,14 +35,13 @@ class ConfigurationItem<T> extends BaseContainerizableObject<ConfigurationItem<T
     ConfigurationItem(String name, ConfigurationItem<T> template) {
         super(name, template)
 
-        type = template.@type.copy()
-        description = template.@description.copy()
-        converter = template.@converter.copy()
-        defaultValue = template.@defaultValue.copy()
-        value = template.@value.copy()
-
-        set = template.@set
-        converterSet = template.@converterSet
+        this.type = template.@type.copyAndReassign(this)
+        this.description = template.@description.copyAndReassign(this)
+        this.converter = template.@converter.copyAndReassign(this)
+        this.defaultValue = template.@defaultValue.copyAndReassign(this)
+        this.value = template.@value.copy().copyAndReassign(this)
+        this.set = template.@set
+        this.converterSet = template.@converterSet
     }
 
     boolean isSet() {
@@ -60,14 +59,11 @@ class ConfigurationItem<T> extends BaseContainerizableObject<ConfigurationItem<T
         } else {
             output = defaultValue
         }
-        return output.resolve() //DeferredValue.of(type.resolve()).from(output.resolve()).ownedBy(output.getOwner()).resolve()
+        return output.resolve()
     }
 
     @Override
     ConfigurationItem<T> clone(String name) {
-        return null
+        return new ConfigurationItem(name, this)
     }
-
-// jbossHome type: File, description: "Hello", defaultValue: new File()
-
 }

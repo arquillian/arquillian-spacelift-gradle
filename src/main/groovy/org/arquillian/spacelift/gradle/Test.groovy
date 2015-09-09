@@ -1,9 +1,10 @@
 package org.arquillian.spacelift.gradle
 
+import org.gradle.api.Task
 import org.slf4j.Logger
 
 /**
- * Test a
+ * A test execution controlled by Spacelift
  * @author kpiwko
  *
  */

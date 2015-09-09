@@ -1,6 +1,7 @@
 package org.arquillian.spacelift.gradle
 
 import org.arquillian.spacelift.task.TaskRegistry
+import org.gradle.api.Task
 import org.slf4j.Logger
 
 

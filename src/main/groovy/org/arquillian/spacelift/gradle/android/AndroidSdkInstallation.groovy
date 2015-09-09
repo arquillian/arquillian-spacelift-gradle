@@ -20,7 +20,6 @@ import org.arquillian.spacelift.task.net.DownloadTool
 import org.arquillian.spacelift.task.os.CommandTool
 import org.slf4j.Logger
 
-@CompileStatic
 class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstallation> implements Installation {
 
     DeferredValue<String> product = DeferredValue.of(String.class).from("android")
@@ -187,11 +186,11 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             // based on installation type, we might want to unzip/untar/something else
             switch(getFileName()) {
                 case ~/.*zip/:
-                    Spacelift.task(getFsPath(),UnzipTool).toDir((File)parent['workspace']).execute().await()
+                    Spacelift.task(getFsPath(),UnzipTool).toDir(Spacelift.configuration().workspace()).execute().await()
                     break
                 case ~/.*tgz/:
                 case ~/.*tar\.gz/:
-                    Spacelift.task(getFsPath(),UntarTool).toDir((File)parent['workspace']).execute().await()
+                    Spacelift.task(getFsPath(),UntarTool).toDir(Spacelift.configuration().workspace()).execute().await()
                     break
                 default:
                     logger.warn(":install:${name} Unable to extract ${getFileName()}, unknown archive type")
@@ -237,13 +236,13 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
             // and then update unique system images
             if (getUpdateImages()) {
                 getAndroidTargets()
-                    .collect(new HashSet<String>(), { AndroidTarget target -> target.images })
+                    .collect(new HashSet<String>(), { AndroidTarget target -> target.getImages() })
                     .flatten()
                     .unique()
-                    .each { image ->
+                    .each { String image ->
                         logger.info("Updating system images for target: " + image)
                         Spacelift.task(AndroidSdkUpdater)
-                            .image((String) image)
+                            .image(image)
                             .execute().await()
                     }
             }
@@ -301,7 +300,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
     }
 
     private File getFsPath() {
-        return new File((File) parent['cacheDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+        return Spacelift.configuration().cachePath("${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
     private Map<String, String> getAndroidEnvironmentProperties() {
@@ -310,7 +309,7 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         File androidHome = getHome()
 
         envProperties.put("ANDROID_HOME", androidHome.canonicalPath)
-        envProperties.put("ANDROID_SDK_HOME", ((File) parent['workspace']).canonicalPath)
+        envProperties.put("ANDROID_SDK_HOME", Spacelift.configuration().workspace().canonicalPath)
         envProperties.put("ANDROID_SDK_ROOT", androidHome.canonicalPath)
         envProperties.put("ANDROID_TOOLS", new File(androidHome, "tools").canonicalPath)
         envProperties.put("ANDROID_PLATFORM_TOOLS", new File(androidHome, "platform-tools").canonicalPath)
@@ -448,10 +447,10 @@ class AndroidSdkInstallation extends BaseContainerizableObject<AndroidSdkInstall
         }
 
         public String getAbi() {
-            abi
+            return abi
         }
 
-        public List<String> images() {
+        public List<String> getImages() {
             return images
         }
 

@@ -7,7 +7,7 @@ import org.gradle.api.Project
  *
  * Name must be unique across all objects in Spacelift DSL.
  *
- * Also, all objects must provide Constructor(String name, Project gradleProject)
+ * Also, all objects must provide Constructor(String name, Object parent)
  *
  * @author kpiwko
  *

@@ -1,6 +1,7 @@
 package org.arquillian.spacelift.gradle
 
 import org.arquillian.spacelift.Spacelift
+import org.arquillian.spacelift.gradle.configuration.ConfigurationContainer
 import org.arquillian.spacelift.gradle.configuration.ConfigurationItem
 import org.arquillian.spacelift.gradle.configuration.IllegalConfigurationException
 
@@ -22,11 +23,17 @@ class SpaceliftPlugin implements Plugin<Project> {
             logger.lifecycle(":install:${installation.name} was already installed, registering tools")
         }
         else {
-            logger.lifecycle(":install:${installation.name} will be installed")
+            logger.lifecycle(":install:${installation.name} ...")
             installation.install(logger)
             logger.lifecycle(":install:${installation.name} is now installed, registering tools")
         }
         installation.registerTools(Spacelift.registry())
+    }
+
+    static void testTest(Test test, Logger logger) {
+        logger.lifecycle(":test:${test.name} is now executed")
+        test.executeTest(logger)
+        logger.lifecycle(":test:${test.name} execution is finished")
     }
 
 
@@ -36,120 +43,108 @@ class SpaceliftPlugin implements Plugin<Project> {
         // set current project reference
         GradleSpaceliftDelegate.currentProject(project)
 
-        project.extensions.create("spacelift", SpaceliftExtension, project)
+        SpaceliftExtension spacelift = project.extensions.create("spacelift", SpaceliftExtension, project)
 
-        // set current project and initialize tools
-        // this task make following properties available
-        // * project.selectedProfile
-        // * project.selectedInstallations
-        // * project.selectedTests
-        project.getTasks().create(name:"init") { task ->
-            description "Initialize Spacelift environment"
-            group "Spacelift"
-            task << {
-                logger.lifecycle(":init:defaultValues")
+        project.getTasks().create(name:"assemble") { assembleTask ->
+            assembleTask << {
 
-                // find default profile and propagate enabled installations and tests
-                // check for -Pprofile=profileName and then for Mavenism -PprofileName
-                // fallback to default if not defined
-                def profileName = 'default'
-                if(project.hasProperty('profile')){
-                    profileName = project.profile
-                }
-                else {
-                    try {
-                        // try to find profile by Maven based -PprofileName
-                        profileName = project.spacelift.profiles.find { p -> project.hasProperty(p.name) }.name
+                ConfigurationContainer originalConfiguration = spacelift.configuration
+                List<String> specifiedTasks = project.getGradle().startParameter.taskNames
+                // if no profile was specified, run all installations and tests
+                if(specifiedTasks.disjoint(project.spacelift.profiles.collect { it.name})) {
+
+                    def (List<Installation> installations, List<Test> tests) = loadAll(project, null, originalConfiguration, logger)
+
+                    // assemble phase
+                    logger.lifecycle(":assemble")
+                    ant.mkdir(dir: "${project.spacelift.workspace}")
+
+                    if (project.spacelift.isKillServers()) {
+                        Spacelift.task(KillJavas).execute().await()
                     }
-                    catch(NullPointerException e) {
-                        logger.warn(":init: Please select profile by -Pprofile=name, now using default")
+
+                    installations.each { Installation installation ->
+                        installInstallation(installation, logger)
                     }
                 }
 
-                // find if such profile is available
-                def profile = project.spacelift.profiles.find { p -> p.name == profileName }
-                if(profile==null) {
-                    def availableProfiles = project.spacelift.profiles.collect { it.name }.join(', ')
-                    throw new GradleException("Unable to find ${profileName} profile in build.gradle file, available profiles were: ${availableProfiles}")
-                }
+                // create profile tasks
+                project.spacelift.profiles.each { Profile profile ->
+                    project.getTasks().create(name: "${profile.name}") { task ->
+                        description "${profile.description}"
+                        group "Spacelift"
+                        task << {
 
-                // make selected profile global
-                logger.lifecycle(":init:profile-" + profile.name)
-                project.ext.set("selectedProfile", profile)
+                            def (List<Installation> installations, List<Test> tests) = loadAll(project, profile, originalConfiguration, logger)
 
-                logger.lifecycle(":init:configuration")
-                loadConfiguration(project, logger)
-
-                // find installations that were specified by profile or enabled manually from command line
-                def installations = []
-                def installationNames = []
-                if(project.hasProperty('installations')) {
-                    installationNames = project.installations.split(',').findAll { return !it.isEmpty() }
-                }
-                else if(profile.enabledInstallations==null) {
-                    installationNames = []
-                }
-                else if(profile.enabledInstallations.contains('*')) {
-                    installationNames = project.spacelift.installations.collect(new ArrayList()) {installation -> installation.name}
-                }
-                else {
-                    installationNames = profile.enabledInstallations
-                }
-                installations = installationNames.inject(new ArrayList()) { list, installationName ->
-                    def installation = project.spacelift.installations[installationName]
-                    if(installation) {
-                        logger.info(":init: Installation ${installationName} will be installed.")
-                        list << installation
-                        return list
+                            // assemble phase
+                            logger.lifecycle(":assemble:${profile.name}")
+                            ant.mkdir(dir: "${project.spacelift.workspace}")
+                            if (project.spacelift.isKillServers()) {
+                                Spacelift.task(KillJavas).execute().await()
+                            }
+                            installations.each { Installation installation ->
+                                installInstallation(installation, logger)
+                            }
+                        }
                     }
-                    logger.warn(":init: Selected installation ${installationName} does not exist and will be ignored")
-                    return list
                 }
+            }
+        }
 
-                // make selected installations global
-                project.ext.set("selectedInstallations", installations)
 
-                // find tests that were specified by profile or enabled manually from command line
-                def testNames = []
-                if(project.hasProperty('tests')) {
-                    testNames = project.tests.split(',').findAll { return !it.isEmpty() }
-                }
-                else if(profile.tests==null) {
-                    testNames = []
-                }
-                else if(profile.tests.contains('*')) {
-                    testNames = project.spacelift.tests.collect(new ArrayList()) {test -> test.name}
-                }
-                else {
-                    testNames = profile.tests
-                }
+        project.getTasks().create(name:"test") { testTask ->
+            testTask << {
 
-                def excludedTestNames = []
-                if (project.hasProperty('excludedTests')) {
-                    excludedTestNames = project.excludedTests.split(',').findAll { return !it.isEmpty() }
-                }
-                else if (profile.excludedTests == null) {
-                    excludedTestNames = []
-                }
-                else {
-                    excludedTestNames = profile.excludedTests
-                }
+                ConfigurationContainer originalConfiguration = spacelift.configuration
+                List<String> specifiedTasks = project.getGradle().startParameter.taskNames
+                // if no profile was specified, run all installations and tests
+                if(specifiedTasks.disjoint(project.spacelift.profiles.collect { it.name})) {
 
-                def testsToExecute = testNames - excludedTestNames
+                    def (List<Installation> installations, List<Test> tests) = loadAll(project, null, originalConfiguration, logger)
 
-                def tests = testsToExecute.inject(new ArrayList()) { list, testName ->
-                    def test = project.spacelift.tests[testName]
-                    if(test) {
-                        logger.info(":init: Selected test ${testName} will be tested (if task 'test' is run).")
-                        list << test
-                        return list
+                    // assemble phase
+                    logger.lifecycle(":assemble")
+                    ant.mkdir(dir: "${project.spacelift.workspace}")
+
+                    if (project.spacelift.isKillServers()) {
+                        Spacelift.task(KillJavas).execute().await()
                     }
-                    logger.warn(":init: Selected tests ${testName} does not exist and will be ignored")
-                    return list
+                    installations.each { Installation installation ->
+                        installInstallation(installation, logger)
+                    }
+                    // test phase
+                    tests.each { Test test ->
+                        testTest(test, logger)
+                    }
                 }
 
-                // make selected installations global
-                project.ext.set("selectedTests", tests)
+                // create profile tasks
+                project.spacelift.profiles.each { Profile profile ->
+                    project.getTasks().create(name: "${profile.name}") { task ->
+                        description "${profile.description}"
+                        group "Spacelift"
+                        task << {
+
+                            def (List<Installation> installations, List<Test> tests) = loadAll(project, profile, originalConfiguration, logger)
+
+                            // assemble phase
+                            logger.lifecycle(":assemble:${profile.name}")
+                            ant.mkdir(dir: "${project.spacelift.workspace}")
+                            if (project.spacelift.isKillServers()) {
+                                Spacelift.task(KillJavas).execute().await()
+                            }
+                            installations.each { Installation installation ->
+                                installInstallation(installation, logger)
+                            }
+
+                            // test phase
+                            tests.each { Test test ->
+                                testTest(test, logger)
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -166,60 +161,8 @@ class SpaceliftPlugin implements Plugin<Project> {
             }
         }
 
-        project.getTasks().create(name:"assemble", dependsOn:["init"]) { task ->
-            description "Fetches and installs environment required for test execution"
-            group "Spacelift"
-            task << {
-                logger.lifecycle(":assemble:profile-${project.selectedProfile.name}")
 
-                ant.mkdir(dir: "${project.spacelift.workspace}")
-
-                if(project.spacelift.isKillServers()) {
-                    Spacelift.task(KillJavas).execute().await()
-                }
-
-                project.selectedInstallations.each { Installation installation ->
-                    installInstallation(installation, logger)
-                }
-            }
-        }
-
-        project.getTasks().create(name:"test", dependsOn:["assemble"]) { task ->
-            description "Executes Spacelift defined tests"
-            group "Spacelift"
-            task << {
-                project.selectedTests.each { test ->
-                    logger.lifecycle(":test:test-${test.name} will be executed")
-                    test.executeTest(logger)
-                }
-            }
-        }
-
-        project.getTasks().create(name:"testreport", dependsOn:["assemble"]) { task ->
-            description "Collects all tests results into single JUnit report"
-            group "Spacelift"
-            task << {
-                logger.lifecycle(":testreport:generating JUnit report for all tests in ${project.spacelift.workspace}")
-
-                ant.mkdir(dir: "${project.spacelift.workspace}/test-reports")
-                ant.mkdir(dir: "${project.spacelift.workspace}/test-reports/html")
-                ant.taskdef(name: 'junitreport',
-                classname: 'org.apache.tools.ant.taskdefs.optional.junit.XMLResultAggregator',
-                classpath: project.configurations.junitreport.asPath)
-                ant.junitreport(todir: "${project.spacelift.workspace}/test-reports") {
-                    fileset(dir: "${project.spacelift.workspace}") {
-                        include(name: "**/TEST*.xml")
-                        exclude(name: "test-reports/*.xml")
-                        exclude(name: "test-reports/html/*")
-                    }
-                    report(format: "noframes", todir: "${project.spacelift.workspace}/test-reports/html")
-                }
-
-                logger.lifecycle(":testreport:test report available in file://${project.spacelift.workspace}/test-reports/html/junit-noframes.html")
-            }
-        }
-
-        project.getTasks().create(name:"cleanWorkspace", dependsOn:["init"]) { task ->
+        project.getTasks().create(name:"clean") { task ->
             description "Cleans Spacelift workspace"
             group "Spacelift"
             task << {
@@ -227,52 +170,43 @@ class SpaceliftPlugin implements Plugin<Project> {
                 ant.delete(dir: project.spacelift.workspace, failonerror: false)
             }
         }
-
-        project.getTasks().create(name:"cleanCache", dependsOn:["init"]) { task ->
-            description "Cleans selected Spacelift installations from cache and installation location"
-            group "Spacelift"
-            task << {
-                project.selectedInstallations.each { installation ->
-                    logger.lifecycle(":clean:installation-${installation.name} artifacts (cache and home) will be wiped")
-                    // delete installation cache
-                    ant.delete(file: installation.fileName, failonerror: false)
-                    // delete installation only if it is not workspace
-                    if(installation.home.canonicalPath!=project.spacelift.workspace.canonicalPath) {
-                        ant.delete(dir: installation.home, failonerror: false)
-                    }
-                }
-            }
-        }
-
-        // task aliases and aggregators
-
-        project.getTasks().create(name:"cleanAll", dependsOn:[
-            "cleanCache",
-            "cleanWorkspace",
-        ]) {
-            description "Cleans Spacelift workspace and selected installations from Spacelift cache and installation location"
-            group "Spacelift"
-        }
-
-        project.getTasks().create(name:"check", dependsOn:["test"]) {
-            description "Alias for test task"
-            group "Spacelift"
-        }
-
-        project.getTasks().create(name:"prepare-env", dependsOn:["assemble"]) {
-            description "Alias for assemble task"
-            group "Spacelift"
-        }
     }
 
-    private void loadConfiguration(Project project, Object logger) {
+    private Object[] loadAll(Project project, Profile profile, ConfigurationContainer originalConfiguration, Object logger) {
+
+        // make selected profile global, if any
+        if(profile) {
+            project.ext.set("selectedProfile", profile)
+        }
+
+        ConfigurationContainer configuration = loadConfiguration(project, profile, originalConfiguration, logger)
+        List<Installation> installations = loadInstallations(project, profile, logger)
+        List<Test> tests = loadTests(project, profile, logger)
+
+        // this allows to invoke multiple profiles at the same time
+        project.spacelift.configuration = configuration
+
+        // FIXME this might not be needed - hopefully can be removed to make to increase encapsulation
+        // make selected installations global
+        project.ext.set("selectedInstallations", installations)
+        // make selected installations global
+        project.ext.set("selectedTests", tests)
+
+        return [installations, tests]
+    }
+
+    private ConfigurationContainer loadConfiguration(Project project, Profile profile, ConfigurationContainer originalConfiguration, Object logger) {
+
+        ConfigurationContainer configuration = originalConfiguration.clone()
         List<ConfigurationItem<?>> configurationItems = new ArrayList<>()
 
         // We want all configuration items from the selected profile
-        configurationItems.addAll(project.selectedProfile.configuration)
+        if(profile) {
+            configurationItems.addAll(profile.configuration.clone())
+        }
 
         // We add properties that are not overridden in profile
-        project.spacelift.configuration.each { ConfigurationItem<?> item ->
+        configuration.each { ConfigurationItem<?> item ->
             def profileItem = configurationItems.find { ConfigurationItem<?> profileItem ->
                 profileItem.name.equals(item.name)
             }
@@ -299,11 +233,76 @@ class SpaceliftPlugin implements Plugin<Project> {
                     }
 
                     def value = item.converter.resolve().fromString(stringValue)
-
                     item.value(value)
-                    logger.lifecycle(":init:config ${item.name} was set to ${stringValue} from command line")
+                    logger.lifecycle(":init:config ${item.name} was set to ${stringValue} ${item.getValue()} from command line")
                 }
             }
+        }
+        return configuration
+    }
+
+    private List<Installation> loadInstallations(Project project, Profile profile, Object logger) {
+
+        def installationNames = []
+        // if profile is defined, use data from there
+        if(profile) {
+            installationNames = profile.enabledInstallations
+        }
+        else {
+            if(project.hasProperty('installations')) {
+                installationNames = project.installations.split(',').findAll { return !it.isEmpty() }
+            }
+            else {
+                installationNames = ['*']
+            }
+        }
+
+        if(installationNames.contains('*')) {
+            installationNames = project.spacelift.installations.collect(new ArrayList()) {installation -> installation.name}
+        }
+
+        return installationNames.inject(new ArrayList()) { list, installationName ->
+            def installation = project.spacelift.installations[installationName]
+            if(installation) {
+                list << installation
+                return list
+            }
+            logger.warn(":init: installation ${installationName} does not exist and will be ignored")
+            return list
+        }
+    }
+
+    private List<Test> loadTests(Project project, Profile profile, Object logger) {
+
+        def testNames = []
+
+        // if profile is defined, use data from there
+        if(profile) {
+            testNames = profile.tests - profile.excludedTests
+        }
+        // create all or custom profile based on what user provided
+        else {
+            if(project.hasProperty('tests')) {
+                testNames = project.tests.split(',').findAll { return !it.isEmpty() }
+            }
+            else {
+                testNames = ['*']
+            }
+        }
+
+        // apply wildcard
+        if(testNames.contains('*')) {
+            testNames = project.spacelift.tests.collect(new ArrayList()) { test -> test.name}
+        }
+
+        return testNames.inject(new ArrayList()) { list, testName ->
+            def test = project.spacelift.tests[testName]
+            if(test) {
+                list << test
+                return list
+            }
+            logger.warn(":init: test ${testName} does not exist and will be ignored")
+            return list
         }
     }
 }

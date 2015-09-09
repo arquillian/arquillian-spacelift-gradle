@@ -36,7 +36,7 @@ class ConfigurationItemParseTest {
                 }
             }
             profiles {
-                'default' {
+                activateMe {
                     tests {
                         'test'
                     }
@@ -72,7 +72,7 @@ class ConfigurationItemParseTest {
                 }
             }
             profiles {
-                'default' {
+                activateMe {
                     configuration {
                         item3 {
                             type String
@@ -117,7 +117,7 @@ class ConfigurationItemParseTest {
                 }
             }
             profiles {
-                'default' {
+                activateMe {
                     configuration {
                         item3 {
                             type Boolean
@@ -152,7 +152,11 @@ class ConfigurationItemParseTest {
 
         project.spacelift buildScript
         project.getTasks()['describe'].execute()
-        project.getTasks()['init'].execute()
-        project.getTasks()['test'].execute()
+        project.getTasks()['assemble'].execute()
+        project.getTasks()['activateMe'].execute()
+
+        project.selectedTests.each { test ->
+            test.executeTest(project.logger)
+        }
     }
 }

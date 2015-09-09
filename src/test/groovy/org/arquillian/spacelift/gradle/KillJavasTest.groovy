@@ -1,4 +1,7 @@
-package org.arquillian.spacelift.gradle;
+package org.arquillian.spacelift.gradle
+
+import org.arquillian.spacelift.gradle.utils.EnvironmentUtils
+import org.junit.Assume;
 
 import static org.hamcrest.CoreMatchers.*
 import static org.junit.Assert.assertThat
@@ -13,6 +16,9 @@ public class KillJavasTest {
 
     @Test
     public void killJavas() {
+
+        Assume.assumeThat EnvironmentUtils.runsOnLinux(), is(true)
+
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'org.arquillian.spacelift'

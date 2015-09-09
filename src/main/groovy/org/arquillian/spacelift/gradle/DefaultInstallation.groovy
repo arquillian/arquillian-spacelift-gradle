@@ -23,7 +23,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
 
     // location of installation cache
     DeferredValue<File> fsPath = DeferredValue.of(File.class).from({
-        return new File((File) parent['cacheDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+        return Spacelift.configuration().cachePath("${getProduct()}/${getVersion()}/${getFileName()}")
     })
 
     // url to download from
@@ -42,10 +42,10 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
     DeferredValue<File> home = DeferredValue.of(File.class).from({
         URL url = getRemoteUrl()
         if(url!=null) {
-            return new File((File) parent['workspace'], guessDirNameFromUrl(url))
+            return Spacelift.configuration().workpath(guessDirNameFromUrl(url))
         }
         else {
-            return (File) parent['workspace'] //project.spacelift.workspace
+            return Spacelift.configuration().workspace()
         }
     })
 
@@ -170,21 +170,21 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
             // based on installation type, we might want to unzip/untar/something else
             switch(getFileName()) {
                 case ~/.*jar/:
-                    UnzipTool tool = (UnzipTool) Spacelift.task(getFsPath(), UnzipTool).toDir(new File((File) parent['workspace'], getFileName()))
+                    UnzipTool tool = (UnzipTool) Spacelift.task(getFsPath(), UnzipTool).toDir(Spacelift.configuration().workpath(getFileName()))
                     dest = extractMapper.apply(tool).execute().await()
                     break
                 case ~/.*zip/:
-                    UnzipTool tool = (UnzipTool) Spacelift.task(getFsPath(), UnzipTool).toDir((File) parent['workspace'])
+                    UnzipTool tool = (UnzipTool) Spacelift.task(getFsPath(), UnzipTool).toDir(Spacelift.configuration().workspace())
                     dest = extractMapper.apply(tool).execute().await()
                     break
                 case ~/.*tgz/:
                 case ~/.*tar\.gz/:
-                    UntarTool tool = (UntarTool) Spacelift.task(getFsPath(), UntarTool).toDir((File) parent['workspace'])
+                    UntarTool tool = (UntarTool) Spacelift.task(getFsPath(), UntarTool).toDir(Spacelift.configuration().workspace())
                     dest = extractMapper.apply(tool).execute().await()
                     break
                 case ~/.*tbz/:
                 case ~/.*tar\.bz2/:
-                    UntarTool tool = (UntarTool) Spacelift.task(getFsPath(), UntarTool).bzip2(true).toDir((File) parent['workspace'])
+                    UntarTool tool = (UntarTool) Spacelift.task(getFsPath(), UntarTool).bzip2(true).toDir(Spacelift.configuration().workspace())
                     dest = extractMapper.apply(tool).execute().await()
                     break
                 default:
@@ -201,7 +201,7 @@ class DefaultInstallation extends BaseContainerizableObject<DefaultInstallation>
                 logger.info(":install:${name} Reusing existing installation ${new File(getHome(), getFileName())}")
             }
             else if(targetFile.exists() && targetFile.isFile()) {
-                logger.info(":install:${name} Copying installation to ${(File) parent['workspace']} from ${getFsPath()}")
+                logger.info(":install:${name} Copying installation to ${Spacelift.configuration().workspace()} from ${getFsPath()}")
                 // FIXME
                 new GradleSpaceliftDelegate().project().getAnt().invokeMethod("copy", [file: getFsPath(), tofile: new File(getHome(), getFileName())])
             }

@@ -164,9 +164,6 @@ public class ProfileParsingTest {
 
         project.apply plugin: 'org.arquillian.spacelift'
 
-        // enable foobar profile
-        project.ext.set("foobar", "true")
-
         project.spacelift {
             tools { rhc { command "rhc" } }
             profiles { foobar profileDefinition }
@@ -180,7 +177,9 @@ public class ProfileParsingTest {
             }
         }
 
-        project.tasks['init'].execute()
+        project.tasks['assemble'].execute()
+        project.tasks['foobar'].execute()
+
 
         assertThat project.selectedProfile, is(notNullValue())
         assertThat project.selectedProfile.name, is('foobar')

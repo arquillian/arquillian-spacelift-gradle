@@ -37,7 +37,7 @@ class MyOwnInstallationDefinition extends BaseContainerizableObject<MyOwnInstall
 
     @Override
     public File getHome() {
-        return (File) parent['workspace']
+        return Spacelift.configuration().workspace()
     }
 
     @Override

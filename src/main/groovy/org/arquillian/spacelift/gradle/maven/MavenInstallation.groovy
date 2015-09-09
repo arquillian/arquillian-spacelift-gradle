@@ -43,11 +43,11 @@ class MavenInstallation extends BaseContainerizableObject<MavenInstallation> imp
     DeferredValue<Map> environment = DeferredValue.of(Map.class).from([:])
 
     DeferredValue<File> settingsXml = DeferredValue.of(File.class).from({
-        return new File((File) parent['workspace'], "${getAlias()}-settings.xml")
+        return Spacelift.configuration().workpath("${getAlias()}-settings.xml")
     })
 
     DeferredValue<File> localRepository = DeferredValue.of(File.class).from({
-        return new File((File) parent['workspace'], ".${getAlias()}-repository")
+        return Spacelift.configuration().workpath(".${getAlias()}-repository")
     })
 
     DeferredValue<Boolean> enableJBossStaging = DeferredValue.of(Boolean.class).from(false)
@@ -198,7 +198,7 @@ class MavenInstallation extends BaseContainerizableObject<MavenInstallation> imp
     }
 
     private File getFsPath() {
-        return new File((File) parent['cacheDir'], "${getProduct()}/${getVersion()}/${getFileName()}")
+        return Spacelift.configuration().cachePath("${getProduct()}/${getVersion()}/${getFileName()}")
     }
 
     private Map<String, String> getMavenEnvironmentProperties() {
@@ -315,7 +315,8 @@ class MavenInstallation extends BaseContainerizableObject<MavenInstallation> imp
                     }
                 }
 
-                ant.copy(file: "${defaultFile}", tofile: "${getSettingsXml()}")
+                log.warn("Copied from ${defaultFile} to ${getSettingsXml().canonicalPath}")
+                ant.copy(file: "${defaultFile}", tofile: "${getSettingsXml().canonicalPath}", verbose: true)
             }
         }
 

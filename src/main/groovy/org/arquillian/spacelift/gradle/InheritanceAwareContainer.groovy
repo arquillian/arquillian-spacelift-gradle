@@ -33,8 +33,14 @@ class InheritanceAwareContainer<TYPE extends ContainerizableObject<TYPE>, DEFAUL
 
     InheritanceAwareContainer(InheritanceAwareContainer<TYPE, DEFAULT_TYPE> other) {
         this.type = other.type
+        this.defaultType = other.defaultType
         this.parent = other.parent
-        this.objects = new LinkedHashSet<TYPE>(other.objects)
+        this.objects = new LinkedHashSet<TYPE>(other.objects.size())
+        other.objects.each { DEFAULT_TYPE item ->
+            DEFAULT_TYPE copy = item.clone(item.name)
+            DSLInstrumenter.instrument(copy)
+            this.objects.add(copy)
+        }
     }
 
     @Override
