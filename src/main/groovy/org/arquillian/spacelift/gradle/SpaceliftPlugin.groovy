@@ -5,7 +5,7 @@ import org.arquillian.spacelift.gradle.configuration.ConfigurationItem
 import org.arquillian.spacelift.gradle.configuration.IllegalConfigurationException
 
 import org.arquillian.spacelift.gradle.configuration.BuiltinConfigurationItemConverters
-import org.arquillian.spacelift.gradle.utils.KillJavas
+import org.arquillian.spacelift.gradle.utils.KillTask
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -175,7 +175,7 @@ class SpaceliftPlugin implements Plugin<Project> {
                 ant.mkdir(dir: "${project.spacelift.workspace}")
 
                 if(project.spacelift.isKillServers()) {
-                    Spacelift.task(KillJavas).execute().await()
+                    Spacelift.task(KillTask).execute().await()
                 }
 
                 project.selectedInstallations.each { Installation installation ->

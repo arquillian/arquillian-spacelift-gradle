@@ -1,16 +1,18 @@
 package org.arquillian.spacelift.gradle.utils
 
+import java.util.logging.Logger
+
 import org.apache.commons.lang.SystemUtils
 import org.arquillian.spacelift.Spacelift
 import org.arquillian.spacelift.task.Task
 import org.arquillian.spacelift.task.os.CommandTool
-import org.slf4j.LoggerFactory
 
 /**
  * Helper class that will clean up environment by killing all processes that might collide with test execution
  */
-class KillJavas extends Task<Object, Void>{
-    def static final log = LoggerFactory.getLogger('Killer')
+class KillTask extends Task<Object, Void>{
+
+    def static final logger = Logger.getLogger(KillTask.class.getName())
 
     // definition of what would be killed
     def processNames = [
@@ -24,6 +26,50 @@ class KillJavas extends Task<Object, Void>{
 
     def processPorts = [4444, 14444, 8080, 9999]
 
+    KillTask addProcessNames(List<String> processNames) {
+        if (processNames && !processNames.isEmpty()) {
+            this.processNames.addAll(processNames)
+        }
+        this
+    }
+
+    KillTask addProcessName(String processName) {
+        if (processName) {
+            processNames.add(processName)
+        }
+        this
+    }
+
+    KillTask addProcessPort(int port) {
+        if (port < 0 || port > 65535) {
+            logger.warn(String.format("You want to kill a service bound to port having illegal value: %s.", port))
+            return this
+        }
+
+        if (port < 1024) {
+            logger.warn(String.format("You want to kill a service bound to privileged port %s for which you may not have rights and operation can fail.", port))
+        }
+
+        processPorts.add(port)
+
+        this
+    }
+
+    KillTask addProcessPort(String port) {
+        try {
+            addProcessPort(Integer.parseInt(port))
+        } catch (NumberFormatException ex) {
+            logger.warn(String.format("Unable to parse port %s to Integer", port))
+        }
+        this
+    }
+
+    KillTask addProcessPorts(List<String> ports) {
+        if (ports && !ports.isEmpty()) {
+            ports.each { port -> addProcessPort(port) }
+        }
+        this
+    }
 
     @Override
     protected Void process(Object input) throws Exception {
@@ -31,12 +77,13 @@ class KillJavas extends Task<Object, Void>{
             ["-SIGTERM", "-9"].each { signal ->
                 def totalKilled = 0
 
-                println "Sending kill ${signal} to all java processes named ${processNames}"
+                logger.info("Sending kill ${signal} to all java processes named ${processNames}")
+
                 processNames.each { proc ->
                     totalKilled += jpsKill(proc, signal)
                 }
 
-                println "Sending kill ${signal} to all processes listening on ports ${processPorts}"
+                logger.info("Sending kill ${signal} to all processes listening on ports ${processPorts}")
                 processPorts.each { port ->
                     totalKilled += netstatKill(port, signal)
                 }
@@ -48,7 +95,7 @@ class KillJavas extends Task<Object, Void>{
             }
         }
         catch (Throwable e) {
-            println "Cleanup environment failed with ${e.getMessage()}"
+            logger.warn("Cleanup environment failed with ${e.getMessage()}")
             e.printStackTrace()
         }
 
@@ -111,6 +158,6 @@ class KillJavas extends Task<Object, Void>{
             executeCmd("taskkill /F /T /PID ${pid}")
         }
 
-        println "Killed ${pid}"
+        logger.info("Killed ${pid}")
     }
 }

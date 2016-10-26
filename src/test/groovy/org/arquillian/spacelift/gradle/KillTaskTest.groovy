@@ -6,13 +6,13 @@ import static org.junit.Assert.assertThat
 import org.arquillian.spacelift.Spacelift
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
-import org.arquillian.spacelift.gradle.utils.KillJavas
+import org.arquillian.spacelift.gradle.utils.KillTask
 import org.junit.Test
 
-public class KillJavasTest {
+public class KillTaskTest {
 
     @Test
-    public void killJavas() {
+    public void killTaskTest() {
         Project project = ProjectBuilder.builder().build()
 
         project.apply plugin: 'org.arquillian.spacelift'
@@ -29,6 +29,6 @@ public class KillJavasTest {
         }
 
         // kill servers
-        Spacelift.task(KillJavas).execute().await()
+        Spacelift.task(KillTask).execute().await()
     }
 }
