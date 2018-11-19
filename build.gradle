@@ -45,7 +45,7 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.1'
 
     // Spacelift abstracts execution of external commands
-    compile 'org.arquillian.spacelift:arquillian-spacelift:1.0.0.Alpha7'
+    compile 'org.arquillian.spacelift:arquillian-spacelift:1.0.2'
     compile 'org.jboss.aerogear.test:spacelift-jboss-manager:0.9.0'
 
     // FIXME manually include ShrinkWrap Resolver Depchain as pom typed import does not play well with Gradle and Eclipse
