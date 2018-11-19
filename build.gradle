@@ -33,7 +33,7 @@ buildscript {
     }
     dependencies {
         // publishing to Gradle repository
-        classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
+        classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
   }
 }
 
