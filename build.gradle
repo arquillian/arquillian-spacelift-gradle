@@ -51,7 +51,7 @@ dependencies {
     // FIXME manually include ShrinkWrap Resolver Depchain as pom typed import does not play well with Gradle and Eclipse
     compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api:2.1.1'
     compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi:2.1.1'
-    compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api-maven:2.1.1'
+    compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api-maven:3.1.3'
     compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi-maven:2.1.1'
     compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:2.1.1'
     compile('org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:2.1.1') {
