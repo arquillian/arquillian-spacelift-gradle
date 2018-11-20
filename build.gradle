@@ -42,7 +42,7 @@ dependencies {
     compile localGroovy()
 
     // commons lang is used to do platform checks
-    compile 'org.apache.commons:commons-lang3:3.1'
+    compile 'org.apache.commons:commons-lang3:3.8.1'
 
     // Spacelift abstracts execution of external commands
     compile 'org.arquillian.spacelift:arquillian-spacelift:1.0.0.Alpha7'
