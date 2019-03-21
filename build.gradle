@@ -53,7 +53,7 @@ dependencies {
     compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi:2.1.1'
     compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api-maven:2.1.1'
     compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi-maven:2.1.1'
-    compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:2.1.1'
+    compile 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:2.2.6'
     compile('org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:2.1.1') {
         // FIXME Sisu Plexus depends on Guava 10 while Gradle API requires Guava 11
         exclude group: "com.google.guava", module: "guava"
